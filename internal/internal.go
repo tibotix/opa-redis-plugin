@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	PluginName         = "RedisPlugin"
+	PluginName         = "redis"
 	defaultEnabled     = true
 	defaultAddress     = "redis://localhost:6379/0"
 	defaultMaxRetries  = 3
