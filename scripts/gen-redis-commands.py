@@ -58,7 +58,6 @@ skip_cmd_classes = (
     "XInfoConsumersCmd",
     "ZWithKeyCmd",
     "ZSliceCmd",
-    "TimeCmd",
     "ClusterSlotsCmd",
     "GeoPosCmd",
     "GeoLocationCmd",
@@ -67,11 +66,14 @@ skip_cmd_classes = (
 # TODO: implement some of these
 
 class RegoScalarType(enum.Enum):
-    STRING = "String"
-    INTNUMBER = "IntNumber"
-    UINTNUMBER = "UIntNumber"
-    FLOATNUMBER = "FloatNumber"
-    BOOL = "Bool"
+    STRING = 0
+    INTNUMBER = 1
+    UINTNUMBER = 2
+    FLOATNUMBER = 3
+    BOOL = 4
+    DURATION = 5
+    TIME = 6
+
 
     @classmethod
     def from_go_type(cls, go_type: str):
@@ -83,8 +85,8 @@ class RegoScalarType(enum.Enum):
             "uint64": cls.UINTNUMBER,
             "float64": cls.FLOATNUMBER,
             "interface{}": cls.STRING,
-            "time.Duration": cls.INTNUMBER,
-            "time.Time": cls.INTNUMBER,
+            "time.Duration": cls.DURATION,
+            "time.Time": cls.TIME,
         }
         return mapping[go_type]
     
@@ -94,10 +96,10 @@ class RegoScalarType(enum.Enum):
             "StringCmd": cls.STRING,
             "IntCmd": cls.INTNUMBER,
             "BoolCmd": cls.BOOL,
-            "DurationCmd": cls.INTNUMBER,
+            "DurationCmd": cls.DURATION,
             "StatusCmd": cls.STRING,
             "FloatCmd": cls.FLOATNUMBER,
-
+            "TimeCmd": cls.TIME,
         }
         return mapping.get(cmd_class, None)
     
@@ -107,18 +109,29 @@ class RegoScalarType(enum.Enum):
             self.INTNUMBER.value: "Number",
             self.UINTNUMBER.value: "Number",
             self.FLOATNUMBER.value: "Number",
-            self.BOOL.value: "Boolean"
+            self.BOOL.value: "Boolean",
+            self.DURATION.value: "Number",
+            self.TIME.value: "Number",
         }
         return f"types.{mapping[self.value]}{{}}"
     
-    def to_go_ast_term(self, var_name):
+    def to_go_ast_term(self, var_name, cmd_name):
+        duration_mapping = {
+            "PTTL": "IntNumberTerm(int({var_name}.Milliseconds()))",
+            "TTL": "IntNumberTerm(int({var_name}.Seconds()))",
+            "OBJECTIDLETIME": "IntNumberTerm(int({var_name}.Seconds()))"
+        }
         mapping = {
             self.STRING.value: "StringTerm({var_name})",
             self.BOOL.value: "BooleanTerm({var_name})",
             self.INTNUMBER.value: "IntNumberTerm(int({var_name}))",
             self.UINTNUMBER.value: "UintNumberTerm(uint({var_name}))",
-            self.FLOATNUMBER.value: "FloatNumberTerm(float64({var_name}))"
+            self.FLOATNUMBER.value: "FloatNumberTerm(float64({var_name}))",
+            self.DURATION.value: duration_mapping,
+            self.TIME.value: "IntNumberTerm(int({var_name}.UnixMicro()))"
         }
+        if isinstance(mapping[self.value], dict):
+            return f"ast.{mapping[self.value][cmd_name].format(var_name=var_name)}"
         return f"ast.{mapping[self.value].format(var_name=var_name)}"
 
 class RegoType:
@@ -158,13 +171,13 @@ class RegoType:
             return var_name
         return f"{var_name}..."
     
-    def to_go_ast_term_return_statement(self, var_name):
+    def to_go_ast_term_return_statement(self, var_name, cmd_name):
         if not self.is_composite:
-            return f"return {self.scalar_type.to_go_ast_term(var_name)}, nil"
+            return f"return {self.scalar_type.to_go_ast_term(var_name, cmd_name)}, nil"
         return f"""
         var ret []*ast.Term
         for _, v := range {var_name} {{
-            ret = append(ret, {self.scalar_type.to_go_ast_term("v")})
+            ret = append(ret, {self.scalar_type.to_go_ast_term("v", cmd_name)})
         }}
         return ast.ArrayTerm(ret...), nil
                 """
@@ -300,7 +313,7 @@ func register{signature.cmd_name.upper()}(p *redisPlugin) {{
             case err != nil:
                 return nil, err
             default:
-                {signature.return_type.to_go_ast_term_return_statement("val")}
+                {signature.return_type.to_go_ast_term_return_statement("val", signature.cmd_name.upper())}
             }}
         }},
     )

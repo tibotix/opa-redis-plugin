@@ -750,7 +750,7 @@ func registerOBJECTIDLETIME(p *redisPlugin) {
             case err != nil:
                 return nil, err
             default:
-                return ast.IntNumberTerm(int(val)), nil
+                return ast.IntNumberTerm(int(val.Seconds())), nil
             }
         },
     )
@@ -900,7 +900,7 @@ func registerPTTL(p *redisPlugin) {
             case err != nil:
                 return nil, err
             default:
-                return ast.IntNumberTerm(int(val)), nil
+                return ast.IntNumberTerm(int(val.Milliseconds())), nil
             }
         },
     )
@@ -1170,7 +1170,7 @@ func registerTTL(p *redisPlugin) {
             case err != nil:
                 return nil, err
             default:
-                return ast.IntNumberTerm(int(val)), nil
+                return ast.IntNumberTerm(int(val.Seconds())), nil
             }
         },
     )
@@ -6958,6 +6958,36 @@ func registerSLAVEOF(p *redisPlugin) {
 }
 
 
+func registerTIME(p *redisPlugin) {
+    rego.RegisterBuiltinDyn(
+        &rego.Function{
+            Name: "redis.time",
+            Decl: types.NewFunction(types.Args(), types.Number{}),
+            Memoize: true,
+            Nondeterministic: true,
+        },
+        func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
+            rdb, err := p.redisProxy.Get()
+            if err != nil {
+                return nil, err
+            }
+
+
+
+            val, err := rdb.Time(p.redisContext).Result()
+            switch {
+            case err == redis.Nil:
+                return ast.NullTerm(), nil
+            case err != nil:
+                return nil, err
+            default:
+                return ast.IntNumberTerm(int(val.UnixMicro())), nil
+            }
+        },
+    )
+}
+
+
 func registerDEBUGOBJECT(p *redisPlugin) {
     rego.RegisterBuiltinDyn(
         &rego.Function{
@@ -8279,6 +8309,7 @@ func (p *redisPlugin) registerRedisCommands() {
     registerSHUTDOWNSAVE(p)
     registerSHUTDOWNNOSAVE(p)
     registerSLAVEOF(p)
+    registerTIME(p)
     registerDEBUGOBJECT(p)
     registerREADONLY(p)
     registerREADWRITE(p)
