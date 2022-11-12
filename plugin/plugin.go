@@ -14,7 +14,7 @@ const PluginName = internal.PluginName
 
 // New returns the object initialized with a valid plugin configuration.
 func (Factory) New(m *plugins.Manager, config any) plugins.Plugin {
-	return internal.New(m, config.(*internal.Config))
+	return internal.New(m, config.(*internal.ParsedConfig))
 }
 
 // Validate returns a valid configuration to instantiate the plugin.

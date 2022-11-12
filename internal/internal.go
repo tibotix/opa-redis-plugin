@@ -17,27 +17,32 @@ const (
 	defaultEnabled     = true
 	defaultAddress     = "redis://localhost:6379/0"
 	defaultMaxRetries  = 3
-	defaultDialTimeout = 8 * time.Second
-	defaultReadTimeout = 2 * time.Second
+	defaultDialTimeout = 8
+	defaultReadTimeout = 2
 )
 
-type Config struct {
+type config struct {
 	Enabled     bool          `json:"enabled"`
 	Address     string        `json:"address"`
 	MaxRetries  int           `json:"max_retries"`
-	DialTimeout time.Duration `json:"dial_timeout"`
-	ReadTimeout time.Duration `json:"read_timeout"`
+	DialTimeout time.Duration `json:"dial_timeout_in_seconds"`
+	ReadTimeout time.Duration `json:"read_timeout_in_seconds"`
 	// TODO: support TLS config
 }
 
+type ParsedConfig struct {
+	Enabled bool
+	Options *redis.Options
+}
+
 type redisPlugin struct {
-	cfg          Config
+	parsedConfig ParsedConfig
 	redisProxy   proxy.Proxy[*redis.Client]
 	redisContext context.Context
 }
 
-func Validate(m *plugins.Manager, bs []byte) (*Config, error) {
-	cfg := Config{
+func Validate(m *plugins.Manager, bs []byte) (*ParsedConfig, error) {
+	config := config{
 		Enabled:     defaultEnabled,
 		Address:     defaultAddress,
 		MaxRetries:  defaultMaxRetries,
@@ -45,17 +50,30 @@ func Validate(m *plugins.Manager, bs []byte) (*Config, error) {
 		ReadTimeout: defaultReadTimeout,
 	}
 
-	if err := util.Unmarshal(bs, &cfg); err != nil {
+	if err := util.Unmarshal(bs, &config); err != nil {
 		return nil, err
 	}
 
-	return &cfg, nil
+	opt, err := redis.ParseURL(config.Address)
+	if err != nil {
+		return nil, err
+	}
+	opt.MaxRetries = config.MaxRetries
+	opt.DialTimeout = time.Second * config.DialTimeout
+	opt.ReadTimeout = time.Second * config.ReadTimeout
+
+	parsedConfig := ParsedConfig{
+		Enabled: config.Enabled,
+		Options: opt,
+	}
+
+	return &parsedConfig, nil
 
 }
 
-func New(m *plugins.Manager, cfg *Config) plugins.Plugin {
+func New(m *plugins.Manager, parsedConfig *ParsedConfig) plugins.Plugin {
 	plugin := &redisPlugin{
-		cfg:          *cfg,
+		parsedConfig: *parsedConfig,
 		redisContext: context.Background(),
 	}
 
@@ -63,24 +81,16 @@ func New(m *plugins.Manager, cfg *Config) plugins.Plugin {
 }
 
 func (p *redisPlugin) startRedisClient() {
-	opt, err := redis.ParseURL(p.cfg.Address)
-	if err != nil {
-		return
-	}
-	opt.MaxRetries = p.cfg.MaxRetries
-	opt.DialTimeout = p.cfg.DialTimeout
-	p.redisProxy.Set(redis.NewClient(opt))
+	p.redisProxy.Set(redis.NewClient(p.parsedConfig.Options))
 }
 
 func (p *redisPlugin) Start(ctx context.Context) error {
-	if !p.cfg.Enabled {
+	if !p.parsedConfig.Enabled {
 		return nil
 	}
 	go p.startRedisClient()
 
-	p.registerGET()
-	p.registerEXISTS()
-	p.registerSISMEMBER()
+	p.registerRedisCommands()
 
 	return nil
 }
@@ -94,8 +104,9 @@ func (p *redisPlugin) Stop(ctx context.Context) {
 	p.redisProxy.Unset()
 }
 
-func (p *redisPlugin) Reconfigure(ctx context.Context, cfg interface{}) {
+func (p *redisPlugin) Reconfigure(ctx context.Context, parsedConfig interface{}) {
+	// TODO: add testing using redismock and test reconfigure
 	p.Stop(ctx)
-	p.cfg = cfg.(Config)
+	p.parsedConfig = parsedConfig.(ParsedConfig)
 	go p.startRedisClient()
 }
