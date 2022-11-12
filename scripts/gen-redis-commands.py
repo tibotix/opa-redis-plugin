@@ -64,7 +64,7 @@ skip_cmd_classes = (
     "GeoLocationCmd",
     "GeoSearchLocationCmd"
 )
-
+# TODO: implement some of these
 
 class RegoScalarType(enum.Enum):
     STRING = "String"
