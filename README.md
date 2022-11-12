@@ -253,6 +253,7 @@ This plugin depends on the following modules:
 - SHUTDOWNSAVE
 - SHUTDOWNNOSAVE
 - SLAVEOF
+- TIME
 - DEBUGOBJECT
 - READONLY
 - READWRITE
