@@ -46,11 +46,11 @@ config.yaml:
 ```yaml
 plugins:
   redis:
-    enabled: true
-    address: "redis://${REDIS_USERNAME}:${REDIS_PASSWORD}@${REDIS_HOST}:${REDIS_PORT}/0"
-    max_retries: 5 # OPTIONAL
-    dial_timeout_in_seconds: 1.0 # OPTIONAL
-    read_timeout_in_seconds: 1.0 # OPTIONAL
+    enabled: true # DEFAULT: true
+    address: "redis://${REDIS_USERNAME}:${REDIS_PASSWORD}@${REDIS_HOST}:${REDIS_PORT}/0" # REQUIRED
+    max_retries: 3 # DEFAULT: 3
+    dial_timeout_in_seconds: 8.0 # DEFAULT: 8
+    read_timeout_in_seconds: 2.0 # DEFAULT: 2
 ```
 
 # Example
