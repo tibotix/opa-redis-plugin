@@ -162,11 +162,11 @@ class RegoType:
         if not self.is_composite:
             return f"return {self.scalar_type.to_go_ast_term(var_name)}, nil"
         return f"""
-                var ret []*ast.Term
-                for _, v := range {var_name} {{
-                    ret = append(ret, {self.scalar_type.to_go_ast_term("v")})
-                }}
-                return ast.ArrayTerm(ret...), nil
+        var ret []*ast.Term
+        for _, v := range {var_name} {{
+            ret = append(ret, {self.scalar_type.to_go_ast_term("v")})
+        }}
+        return ast.ArrayTerm(ret...), nil
                 """
 
 class CmdSignature:
@@ -225,14 +225,14 @@ def main():
     print("// Code generated! DO NOT EDIT")
     print("package internal")
     print("""
-    import (
-        "time"
+import (
+    "time"
 
-        "github.com/go-redis/redis/v8"
-        "github.com/open-policy-agent/opa/ast"
-	    "github.com/open-policy-agent/opa/rego"
-	    "github.com/open-policy-agent/opa/types"
-    )
+    "github.com/go-redis/redis/v8"
+    "github.com/open-policy-agent/opa/ast"
+    "github.com/open-policy-agent/opa/rego"
+    "github.com/open-policy-agent/opa/types"
+)
     """)
     register_functions = list()
     for signature in filter(lambda s:s.cmd_name not in skip_command_names, parse_command_signatures(command_signatures)):
@@ -243,12 +243,12 @@ def main():
         print(code)
 
     register_main_func = """
-    func (p *redisPlugin) registerRedisCommands() {"""
+func (p *redisPlugin) registerRedisCommands() {"""
     for f in register_functions:
         register_main_func += f"""
-            {f}(p)"""
+    {f}(p)"""
     register_main_func += """
-    }"""
+}"""
     print(register_main_func)
 
     return 0
@@ -263,49 +263,49 @@ def generate_function_code_for_signature(signature: CmdSignature):
     args = ",".join(map(lambda p:p.to_go_rego_types_api_code(), signature.parameter_types))
 
     code = f"""
-    func register{signature.cmd_name.upper()}(p *redisPlugin) {{
-        rego.RegisterBuiltinDyn(
-            &rego.Function{{
-                Name: \"redis.{signature.cmd_name.lower()}\",
-                Decl: types.NewFunction(types.Args({args}), {signature.return_type.to_go_rego_types_api_code()}),
-                Memoize: true,
-                Nondeterministic: true,
-            }},
-            func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {{
-                rdb, err := p.redisProxy.Get()
-                if err != nil {{
-                    return nil, err
-                }}
+func register{signature.cmd_name.upper()}(p *redisPlugin) {{
+    rego.RegisterBuiltinDyn(
+        &rego.Function{{
+            Name: \"redis.{signature.cmd_name.lower()}\",
+            Decl: types.NewFunction(types.Args({args}), {signature.return_type.to_go_rego_types_api_code()}),
+            Memoize: true,
+            Nondeterministic: true,
+        }},
+        func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {{
+            rdb, err := p.redisProxy.Get()
+            if err != nil {{
+                return nil, err
+            }}
 
-    """
+"""
 
     parameter_args = ["p.redisContext"]
     for idx, p in enumerate(signature.parameter_types):
         var_name = f"v{idx!s}"
         parameter_args.append(p.to_go_parameter_code(var_name))
         code += f"""
-                {p.to_go_var_declaration(var_name)}
-                if err := ast.As(terms[{idx!s}].Value, &{var_name}); err != nil {{
-                    return nil, err
-                }}
-                """
+            {p.to_go_var_declaration(var_name)}
+            if err := ast.As(terms[{idx!s}].Value, &{var_name}); err != nil {{
+                return nil, err
+            }}
+            """
     parameter_args = ",".join(parameter_args)
 
     code += f"""
 
-                val, err := rdb.{signature.cmd_name}({parameter_args}).Result()
-                switch {{
-                case err == redis.Nil:
-                    return ast.NullTerm(), nil
-                case err != nil:
-                    return nil, err
-                default:
-                    {signature.return_type.to_go_ast_term_return_statement("val")}
-                }}
-            }},
-        )
-    }}
-    """
+            val, err := rdb.{signature.cmd_name}({parameter_args}).Result()
+            switch {{
+            case err == redis.Nil:
+                return ast.NullTerm(), nil
+            case err != nil:
+                return nil, err
+            default:
+                {signature.return_type.to_go_ast_term_return_statement("val")}
+            }}
+        }},
+    )
+}}
+"""
     return code
 
 
