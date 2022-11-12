@@ -2,6 +2,7 @@ package internal
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/open-policy-agent/opa/plugins"
@@ -15,7 +16,7 @@ import (
 const (
 	PluginName         = "redis"
 	defaultEnabled     = true
-	defaultAddress     = "redis://localhost:6379/0"
+	defaultAddress     = ""
 	defaultMaxRetries  = 3
 	defaultDialTimeout = 8
 	defaultReadTimeout = 2
@@ -52,6 +53,10 @@ func Validate(m *plugins.Manager, bs []byte) (*ParsedConfig, error) {
 
 	if err := util.Unmarshal(bs, &config); err != nil {
 		return nil, err
+	}
+
+	if config.Address == defaultAddress {
+		return nil, errors.New("No Redis Address Provided.")
 	}
 
 	opt, err := redis.ParseURL(config.Address)
