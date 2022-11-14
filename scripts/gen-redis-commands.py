@@ -290,7 +290,7 @@ import (
             print(code)
         else:
             args = ", ".join(map(lambda p:p.to_go_rego_types_api_code(), signature.parameter_types))
-            print(f" - ´{signature.cmd_name.upper()}( {args!s} ) -> {signature.return_type.to_go_rego_types_api_code()}´")
+            print(f" - `{signature.cmd_name.upper()}( {args!s} ) -> {signature.return_type.to_go_rego_types_api_code()}`")
 
     register_main_func = """
 func (p *redisPlugin) registerAutogenCommands() {"""

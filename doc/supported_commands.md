@@ -1,217 +1,217 @@
 # Supported Commands:
 
- - ´CLIENTGETNAME(  ) -> types.String{}´
- - ´ECHO( types.Any{} ) -> types.String{}´
- - ´PING(  ) -> types.String{}´
- - ´QUIT(  ) -> types.String{}´
- - ´DEL( types.NewArray([]types.Type{}, types.String{}) ) -> types.Number{}´
- - ´UNLINK( types.NewArray([]types.Type{}, types.String{}) ) -> types.Number{}´
- - ´DUMP( types.String{} ) -> types.String{}´
- - ´EXISTS( types.NewArray([]types.Type{}, types.String{}) ) -> types.Number{}´
- - ´EXPIRE( types.String{}, types.Number{} ) -> types.Boolean{}´
- - ´EXPIREAT( types.String{}, types.Number{} ) -> types.Boolean{}´
- - ´EXPIRENX( types.String{}, types.Number{} ) -> types.Boolean{}´
- - ´EXPIREXX( types.String{}, types.Number{} ) -> types.Boolean{}´
- - ´EXPIREGT( types.String{}, types.Number{} ) -> types.Boolean{}´
- - ´EXPIRELT( types.String{}, types.Number{} ) -> types.Boolean{}´
- - ´KEYS( types.String{} ) -> types.NewArray([]types.Type{}, types.String{})´
- - ´MIGRATE( types.String{}, types.String{}, types.String{}, types.Number{}, types.Number{} ) -> types.String{}´
- - ´MOVE( types.String{}, types.Number{} ) -> types.Boolean{}´
- - ´OBJECTREFCOUNT( types.String{} ) -> types.Number{}´
- - ´OBJECTENCODING( types.String{} ) -> types.String{}´
- - ´OBJECTIDLETIME( types.String{} ) -> types.Number{}´
- - ´PERSIST( types.String{} ) -> types.Boolean{}´
- - ´PEXPIRE( types.String{}, types.Number{} ) -> types.Boolean{}´
- - ´PEXPIREAT( types.String{}, types.Number{} ) -> types.Boolean{}´
- - ´PTTL( types.String{} ) -> types.Number{}´
- - ´RANDOMKEY(  ) -> types.String{}´
- - ´RENAME( types.String{}, types.String{} ) -> types.String{}´
- - ´RENAMENX( types.String{}, types.String{} ) -> types.Boolean{}´
- - ´RESTORE( types.String{}, types.Number{}, types.String{} ) -> types.String{}´
- - ´RESTOREREPLACE( types.String{}, types.Number{}, types.String{} ) -> types.String{}´
- - ´TOUCH( types.NewArray([]types.Type{}, types.String{}) ) -> types.Number{}´
- - ´TTL( types.String{} ) -> types.Number{}´
- - ´TYPE( types.String{} ) -> types.String{}´
- - ´APPEND( types.String{}, types.String{} ) -> types.Number{}´
- - ´DECR( types.String{} ) -> types.Number{}´
- - ´DECRBY( types.String{}, types.Number{} ) -> types.Number{}´
- - ´GET( types.String{} ) -> types.String{}´
- - ´GETRANGE( types.String{}, types.Number{}, types.Number{} ) -> types.String{}´
- - ´GETSET( types.String{}, types.Any{} ) -> types.String{}´
- - ´GETEX( types.String{}, types.Number{} ) -> types.String{}´
- - ´GETDEL( types.String{} ) -> types.String{}´
- - ´INCR( types.String{} ) -> types.Number{}´
- - ´INCRBY( types.String{}, types.Number{} ) -> types.Number{}´
- - ´INCRBYFLOAT( types.String{}, types.Number{} ) -> types.Number{}´
- - ´MGET( types.NewArray([]types.Type{}, types.String{}) ) -> types.NewArray([]types.Type{}, types.Any{})´
- - ´MSET( types.NewArray([]types.Type{}, types.Any{}) ) -> types.String{}´
- - ´MSETNX( types.NewArray([]types.Type{}, types.Any{}) ) -> types.Boolean{}´
- - ´SET( types.String{}, types.Any{}, types.Number{} ) -> types.String{}´
- - ´SETEX( types.String{}, types.Any{}, types.Number{} ) -> types.String{}´
- - ´SETNX( types.String{}, types.Any{}, types.Number{} ) -> types.Boolean{}´
- - ´SETXX( types.String{}, types.Any{}, types.Number{} ) -> types.Boolean{}´
- - ´SETRANGE( types.String{}, types.Number{}, types.String{} ) -> types.Number{}´
- - ´STRLEN( types.String{} ) -> types.Number{}´
- - ´COPY( types.String{}, types.String{}, types.Number{}, types.Boolean{} ) -> types.Number{}´
- - ´GETBIT( types.String{}, types.Number{} ) -> types.Number{}´
- - ´SETBIT( types.String{}, types.Number{}, types.Number{} ) -> types.Number{}´
- - ´BITOPAND( types.String{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.Number{}´
- - ´BITOPOR( types.String{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.Number{}´
- - ´BITOPXOR( types.String{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.Number{}´
- - ´BITOPNOT( types.String{}, types.String{} ) -> types.Number{}´
- - ´BITPOS( types.String{}, types.Number{}, types.NewArray([]types.Type{}, types.Number{}) ) -> types.Number{}´
- - ´BITFIELD( types.String{}, types.NewArray([]types.Type{}, types.Any{}) ) -> types.NewArray([]types.Type{}, types.Number{})´
- - ´HDEL( types.String{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.Number{}´
- - ´HEXISTS( types.String{}, types.String{} ) -> types.Boolean{}´
- - ´HGET( types.String{}, types.String{} ) -> types.String{}´
- - ´HINCRBY( types.String{}, types.String{}, types.Number{} ) -> types.Number{}´
- - ´HINCRBYFLOAT( types.String{}, types.String{}, types.Number{} ) -> types.Number{}´
- - ´HKEYS( types.String{} ) -> types.NewArray([]types.Type{}, types.String{})´
- - ´HLEN( types.String{} ) -> types.Number{}´
- - ´HMGET( types.String{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.NewArray([]types.Type{}, types.Any{})´
- - ´HSET( types.String{}, types.NewArray([]types.Type{}, types.Any{}) ) -> types.Number{}´
- - ´HMSET( types.String{}, types.NewArray([]types.Type{}, types.Any{}) ) -> types.Boolean{}´
- - ´HSETNX( types.String{}, types.String{}, types.Any{} ) -> types.Boolean{}´
- - ´HVALS( types.String{} ) -> types.NewArray([]types.Type{}, types.String{})´
- - ´HRANDFIELD( types.String{}, types.Number{}, types.Boolean{} ) -> types.NewArray([]types.Type{}, types.String{})´
- - ´BLPOP( types.Number{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.NewArray([]types.Type{}, types.String{})´
- - ´BRPOP( types.Number{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.NewArray([]types.Type{}, types.String{})´
- - ´BRPOPLPUSH( types.String{}, types.String{}, types.Number{} ) -> types.String{}´
- - ´LINDEX( types.String{}, types.Number{} ) -> types.String{}´
- - ´LINSERT( types.String{}, types.String{}, types.Any{}, types.Any{} ) -> types.Number{}´
- - ´LINSERTBEFORE( types.String{}, types.Any{}, types.Any{} ) -> types.Number{}´
- - ´LINSERTAFTER( types.String{}, types.Any{}, types.Any{} ) -> types.Number{}´
- - ´LLEN( types.String{} ) -> types.Number{}´
- - ´LPOP( types.String{} ) -> types.String{}´
- - ´LPOPCOUNT( types.String{}, types.Number{} ) -> types.NewArray([]types.Type{}, types.String{})´
- - ´LPUSH( types.String{}, types.NewArray([]types.Type{}, types.Any{}) ) -> types.Number{}´
- - ´LPUSHX( types.String{}, types.NewArray([]types.Type{}, types.Any{}) ) -> types.Number{}´
- - ´LRANGE( types.String{}, types.Number{}, types.Number{} ) -> types.NewArray([]types.Type{}, types.String{})´
- - ´LREM( types.String{}, types.Number{}, types.Any{} ) -> types.Number{}´
- - ´LSET( types.String{}, types.Number{}, types.Any{} ) -> types.String{}´
- - ´LTRIM( types.String{}, types.Number{}, types.Number{} ) -> types.String{}´
- - ´RPOP( types.String{} ) -> types.String{}´
- - ´RPOPCOUNT( types.String{}, types.Number{} ) -> types.NewArray([]types.Type{}, types.String{})´
- - ´RPOPLPUSH( types.String{}, types.String{} ) -> types.String{}´
- - ´RPUSH( types.String{}, types.NewArray([]types.Type{}, types.Any{}) ) -> types.Number{}´
- - ´RPUSHX( types.String{}, types.NewArray([]types.Type{}, types.Any{}) ) -> types.Number{}´
- - ´LMOVE( types.String{}, types.String{}, types.String{}, types.String{} ) -> types.String{}´
- - ´BLMOVE( types.String{}, types.String{}, types.String{}, types.String{}, types.Number{} ) -> types.String{}´
- - ´SADD( types.String{}, types.NewArray([]types.Type{}, types.Any{}) ) -> types.Number{}´
- - ´SCARD( types.String{} ) -> types.Number{}´
- - ´SDIFF( types.NewArray([]types.Type{}, types.String{}) ) -> types.NewArray([]types.Type{}, types.String{})´
- - ´SDIFFSTORE( types.String{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.Number{}´
- - ´SINTER( types.NewArray([]types.Type{}, types.String{}) ) -> types.NewArray([]types.Type{}, types.String{})´
- - ´SINTERSTORE( types.String{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.Number{}´
- - ´SISMEMBER( types.String{}, types.Any{} ) -> types.Boolean{}´
- - ´SMISMEMBER( types.String{}, types.NewArray([]types.Type{}, types.Any{}) ) -> types.NewArray([]types.Type{}, types.Boolean{})´
- - ´SMEMBERS( types.String{} ) -> types.NewArray([]types.Type{}, types.String{})´
- - ´SMOVE( types.String{}, types.String{}, types.Any{} ) -> types.Boolean{}´
- - ´SPOP( types.String{} ) -> types.String{}´
- - ´SPOPN( types.String{}, types.Number{} ) -> types.NewArray([]types.Type{}, types.String{})´
- - ´SRANDMEMBER( types.String{} ) -> types.String{}´
- - ´SRANDMEMBERN( types.String{}, types.Number{} ) -> types.NewArray([]types.Type{}, types.String{})´
- - ´SREM( types.String{}, types.NewArray([]types.Type{}, types.Any{}) ) -> types.Number{}´
- - ´SUNION( types.NewArray([]types.Type{}, types.String{}) ) -> types.NewArray([]types.Type{}, types.String{})´
- - ´SUNIONSTORE( types.String{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.Number{}´
- - ´XDEL( types.String{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.Number{}´
- - ´XLEN( types.String{} ) -> types.Number{}´
- - ´XGROUPCREATE( types.String{}, types.String{}, types.String{} ) -> types.String{}´
- - ´XGROUPCREATEMKSTREAM( types.String{}, types.String{}, types.String{} ) -> types.String{}´
- - ´XGROUPSETID( types.String{}, types.String{}, types.String{} ) -> types.String{}´
- - ´XGROUPDESTROY( types.String{}, types.String{} ) -> types.Number{}´
- - ´XGROUPCREATECONSUMER( types.String{}, types.String{}, types.String{} ) -> types.Number{}´
- - ´XGROUPDELCONSUMER( types.String{}, types.String{}, types.String{} ) -> types.Number{}´
- - ´XACK( types.String{}, types.String{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.Number{}´
- - ´XTRIM( types.String{}, types.Number{} ) -> types.Number{}´
- - ´XTRIMAPPROX( types.String{}, types.Number{} ) -> types.Number{}´
- - ´XTRIMMAXLEN( types.String{}, types.Number{} ) -> types.Number{}´
- - ´XTRIMMAXLENAPPROX( types.String{}, types.Number{}, types.Number{} ) -> types.Number{}´
- - ´XTRIMMINID( types.String{}, types.String{} ) -> types.Number{}´
- - ´XTRIMMINIDAPPROX( types.String{}, types.String{}, types.Number{} ) -> types.Number{}´
- - ´ZADD( types.String{} ) -> types.Number{}´
- - ´ZADDNX( types.String{} ) -> types.Number{}´
- - ´ZADDXX( types.String{} ) -> types.Number{}´
- - ´ZADDCH( types.String{} ) -> types.Number{}´
- - ´ZADDNXCH( types.String{} ) -> types.Number{}´
- - ´ZADDXXCH( types.String{} ) -> types.Number{}´
- - ´ZCARD( types.String{} ) -> types.Number{}´
- - ´ZCOUNT( types.String{}, types.String{}, types.String{} ) -> types.Number{}´
- - ´ZLEXCOUNT( types.String{}, types.String{}, types.String{} ) -> types.Number{}´
- - ´ZINCRBY( types.String{}, types.Number{}, types.String{} ) -> types.Number{}´
- - ´ZMSCORE( types.String{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.NewArray([]types.Type{}, types.Number{})´
- - ´ZRANGE( types.String{}, types.Number{}, types.Number{} ) -> types.NewArray([]types.Type{}, types.String{})´
- - ´ZRANK( types.String{}, types.String{} ) -> types.Number{}´
- - ´ZREM( types.String{}, types.NewArray([]types.Type{}, types.Any{}) ) -> types.Number{}´
- - ´ZREMRANGEBYRANK( types.String{}, types.Number{}, types.Number{} ) -> types.Number{}´
- - ´ZREMRANGEBYSCORE( types.String{}, types.String{}, types.String{} ) -> types.Number{}´
- - ´ZREMRANGEBYLEX( types.String{}, types.String{}, types.String{} ) -> types.Number{}´
- - ´ZREVRANGE( types.String{}, types.Number{}, types.Number{} ) -> types.NewArray([]types.Type{}, types.String{})´
- - ´ZREVRANK( types.String{}, types.String{} ) -> types.Number{}´
- - ´ZSCORE( types.String{}, types.String{} ) -> types.Number{}´
- - ´ZRANDMEMBER( types.String{}, types.Number{}, types.Boolean{} ) -> types.NewArray([]types.Type{}, types.String{})´
- - ´ZDIFF( types.NewArray([]types.Type{}, types.String{}) ) -> types.NewArray([]types.Type{}, types.String{})´
- - ´ZDIFFSTORE( types.String{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.Number{}´
- - ´PFADD( types.String{}, types.NewArray([]types.Type{}, types.Any{}) ) -> types.Number{}´
- - ´PFCOUNT( types.NewArray([]types.Type{}, types.String{}) ) -> types.Number{}´
- - ´PFMERGE( types.String{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.String{}´
- - ´BGREWRITEAOF(  ) -> types.String{}´
- - ´BGSAVE(  ) -> types.String{}´
- - ´CLIENTKILL( types.String{} ) -> types.String{}´
- - ´CLIENTKILLBYFILTER( types.NewArray([]types.Type{}, types.String{}) ) -> types.Number{}´
- - ´CLIENTLIST(  ) -> types.String{}´
- - ´CLIENTPAUSE( types.Number{} ) -> types.Boolean{}´
- - ´CLIENTID(  ) -> types.Number{}´
- - ´CONFIGGET( types.String{} ) -> types.NewArray([]types.Type{}, types.Any{})´
- - ´CONFIGRESETSTAT(  ) -> types.String{}´
- - ´CONFIGSET( types.String{}, types.String{} ) -> types.String{}´
- - ´CONFIGREWRITE(  ) -> types.String{}´
- - ´DBSIZE(  ) -> types.Number{}´
- - ´FLUSHALL(  ) -> types.String{}´
- - ´FLUSHALLASYNC(  ) -> types.String{}´
- - ´FLUSHDB(  ) -> types.String{}´
- - ´FLUSHDBASYNC(  ) -> types.String{}´
- - ´INFO( types.NewArray([]types.Type{}, types.String{}) ) -> types.String{}´
- - ´LASTSAVE(  ) -> types.Number{}´
- - ´SAVE(  ) -> types.String{}´
- - ´SHUTDOWN(  ) -> types.String{}´
- - ´SHUTDOWNSAVE(  ) -> types.String{}´
- - ´SHUTDOWNNOSAVE(  ) -> types.String{}´
- - ´SLAVEOF( types.String{}, types.String{} ) -> types.String{}´
- - ´TIME(  ) -> types.Number{}´
- - ´DEBUGOBJECT( types.String{} ) -> types.String{}´
- - ´READONLY(  ) -> types.String{}´
- - ´READWRITE(  ) -> types.String{}´
- - ´MEMORYUSAGE( types.String{}, types.NewArray([]types.Type{}, types.Number{}) ) -> types.Number{}´
- - ´EVAL( types.String{}, types.NewArray([]types.Type{}, types.String{}), types.NewArray([]types.Type{}, types.Any{}) ) -> types.Any{}´
- - ´EVALSHA( types.String{}, types.NewArray([]types.Type{}, types.String{}), types.NewArray([]types.Type{}, types.Any{}) ) -> types.Any{}´
- - ´SCRIPTEXISTS( types.NewArray([]types.Type{}, types.String{}) ) -> types.NewArray([]types.Type{}, types.Boolean{})´
- - ´SCRIPTFLUSH(  ) -> types.String{}´
- - ´SCRIPTKILL(  ) -> types.String{}´
- - ´SCRIPTLOAD( types.String{} ) -> types.String{}´
- - ´PUBLISH( types.String{}, types.Any{} ) -> types.Number{}´
- - ´PUBSUBCHANNELS( types.String{} ) -> types.NewArray([]types.Type{}, types.String{})´
- - ´PUBSUBNUMPAT(  ) -> types.Number{}´
- - ´CLUSTERNODES(  ) -> types.String{}´
- - ´CLUSTERMEET( types.String{}, types.String{} ) -> types.String{}´
- - ´CLUSTERFORGET( types.String{} ) -> types.String{}´
- - ´CLUSTERREPLICATE( types.String{} ) -> types.String{}´
- - ´CLUSTERRESETSOFT(  ) -> types.String{}´
- - ´CLUSTERRESETHARD(  ) -> types.String{}´
- - ´CLUSTERINFO(  ) -> types.String{}´
- - ´CLUSTERKEYSLOT( types.String{} ) -> types.Number{}´
- - ´CLUSTERGETKEYSINSLOT( types.Number{}, types.Number{} ) -> types.NewArray([]types.Type{}, types.String{})´
- - ´CLUSTERCOUNTFAILUREREPORTS( types.String{} ) -> types.Number{}´
- - ´CLUSTERCOUNTKEYSINSLOT( types.Number{} ) -> types.Number{}´
- - ´CLUSTERDELSLOTS( types.NewArray([]types.Type{}, types.Number{}) ) -> types.String{}´
- - ´CLUSTERDELSLOTSRANGE( types.Number{}, types.Number{} ) -> types.String{}´
- - ´CLUSTERSAVECONFIG(  ) -> types.String{}´
- - ´CLUSTERSLAVES( types.String{} ) -> types.NewArray([]types.Type{}, types.String{})´
- - ´CLUSTERFAILOVER(  ) -> types.String{}´
- - ´CLUSTERADDSLOTS( types.NewArray([]types.Type{}, types.Number{}) ) -> types.String{}´
- - ´CLUSTERADDSLOTSRANGE( types.Number{}, types.Number{} ) -> types.String{}´
- - ´GEOADD( types.String{} ) -> types.Number{}´
- - ´GEODIST( types.String{}, types.String{}, types.String{}, types.String{} ) -> types.Number{}´
- - ´GEOHASH( types.String{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.NewArray([]types.Type{}, types.String{})´
+ - `CLIENTGETNAME(  ) -> types.String{}`
+ - `ECHO( types.Any{} ) -> types.String{}`
+ - `PING(  ) -> types.String{}`
+ - `QUIT(  ) -> types.String{}`
+ - `DEL( types.NewArray([]types.Type{}, types.String{}) ) -> types.Number{}`
+ - `UNLINK( types.NewArray([]types.Type{}, types.String{}) ) -> types.Number{}`
+ - `DUMP( types.String{} ) -> types.String{}`
+ - `EXISTS( types.NewArray([]types.Type{}, types.String{}) ) -> types.Number{}`
+ - `EXPIRE( types.String{}, types.Number{} ) -> types.Boolean{}`
+ - `EXPIREAT( types.String{}, types.Number{} ) -> types.Boolean{}`
+ - `EXPIRENX( types.String{}, types.Number{} ) -> types.Boolean{}`
+ - `EXPIREXX( types.String{}, types.Number{} ) -> types.Boolean{}`
+ - `EXPIREGT( types.String{}, types.Number{} ) -> types.Boolean{}`
+ - `EXPIRELT( types.String{}, types.Number{} ) -> types.Boolean{}`
+ - `KEYS( types.String{} ) -> types.NewArray([]types.Type{}, types.String{})`
+ - `MIGRATE( types.String{}, types.String{}, types.String{}, types.Number{}, types.Number{} ) -> types.String{}`
+ - `MOVE( types.String{}, types.Number{} ) -> types.Boolean{}`
+ - `OBJECTREFCOUNT( types.String{} ) -> types.Number{}`
+ - `OBJECTENCODING( types.String{} ) -> types.String{}`
+ - `OBJECTIDLETIME( types.String{} ) -> types.Number{}`
+ - `PERSIST( types.String{} ) -> types.Boolean{}`
+ - `PEXPIRE( types.String{}, types.Number{} ) -> types.Boolean{}`
+ - `PEXPIREAT( types.String{}, types.Number{} ) -> types.Boolean{}`
+ - `PTTL( types.String{} ) -> types.Number{}`
+ - `RANDOMKEY(  ) -> types.String{}`
+ - `RENAME( types.String{}, types.String{} ) -> types.String{}`
+ - `RENAMENX( types.String{}, types.String{} ) -> types.Boolean{}`
+ - `RESTORE( types.String{}, types.Number{}, types.String{} ) -> types.String{}`
+ - `RESTOREREPLACE( types.String{}, types.Number{}, types.String{} ) -> types.String{}`
+ - `TOUCH( types.NewArray([]types.Type{}, types.String{}) ) -> types.Number{}`
+ - `TTL( types.String{} ) -> types.Number{}`
+ - `TYPE( types.String{} ) -> types.String{}`
+ - `APPEND( types.String{}, types.String{} ) -> types.Number{}`
+ - `DECR( types.String{} ) -> types.Number{}`
+ - `DECRBY( types.String{}, types.Number{} ) -> types.Number{}`
+ - `GET( types.String{} ) -> types.String{}`
+ - `GETRANGE( types.String{}, types.Number{}, types.Number{} ) -> types.String{}`
+ - `GETSET( types.String{}, types.Any{} ) -> types.String{}`
+ - `GETEX( types.String{}, types.Number{} ) -> types.String{}`
+ - `GETDEL( types.String{} ) -> types.String{}`
+ - `INCR( types.String{} ) -> types.Number{}`
+ - `INCRBY( types.String{}, types.Number{} ) -> types.Number{}`
+ - `INCRBYFLOAT( types.String{}, types.Number{} ) -> types.Number{}`
+ - `MGET( types.NewArray([]types.Type{}, types.String{}) ) -> types.NewArray([]types.Type{}, types.Any{})`
+ - `MSET( types.NewArray([]types.Type{}, types.Any{}) ) -> types.String{}`
+ - `MSETNX( types.NewArray([]types.Type{}, types.Any{}) ) -> types.Boolean{}`
+ - `SET( types.String{}, types.Any{}, types.Number{} ) -> types.String{}`
+ - `SETEX( types.String{}, types.Any{}, types.Number{} ) -> types.String{}`
+ - `SETNX( types.String{}, types.Any{}, types.Number{} ) -> types.Boolean{}`
+ - `SETXX( types.String{}, types.Any{}, types.Number{} ) -> types.Boolean{}`
+ - `SETRANGE( types.String{}, types.Number{}, types.String{} ) -> types.Number{}`
+ - `STRLEN( types.String{} ) -> types.Number{}`
+ - `COPY( types.String{}, types.String{}, types.Number{}, types.Boolean{} ) -> types.Number{}`
+ - `GETBIT( types.String{}, types.Number{} ) -> types.Number{}`
+ - `SETBIT( types.String{}, types.Number{}, types.Number{} ) -> types.Number{}`
+ - `BITOPAND( types.String{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.Number{}`
+ - `BITOPOR( types.String{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.Number{}`
+ - `BITOPXOR( types.String{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.Number{}`
+ - `BITOPNOT( types.String{}, types.String{} ) -> types.Number{}`
+ - `BITPOS( types.String{}, types.Number{}, types.NewArray([]types.Type{}, types.Number{}) ) -> types.Number{}`
+ - `BITFIELD( types.String{}, types.NewArray([]types.Type{}, types.Any{}) ) -> types.NewArray([]types.Type{}, types.Number{})`
+ - `HDEL( types.String{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.Number{}`
+ - `HEXISTS( types.String{}, types.String{} ) -> types.Boolean{}`
+ - `HGET( types.String{}, types.String{} ) -> types.String{}`
+ - `HINCRBY( types.String{}, types.String{}, types.Number{} ) -> types.Number{}`
+ - `HINCRBYFLOAT( types.String{}, types.String{}, types.Number{} ) -> types.Number{}`
+ - `HKEYS( types.String{} ) -> types.NewArray([]types.Type{}, types.String{})`
+ - `HLEN( types.String{} ) -> types.Number{}`
+ - `HMGET( types.String{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.NewArray([]types.Type{}, types.Any{})`
+ - `HSET( types.String{}, types.NewArray([]types.Type{}, types.Any{}) ) -> types.Number{}`
+ - `HMSET( types.String{}, types.NewArray([]types.Type{}, types.Any{}) ) -> types.Boolean{}`
+ - `HSETNX( types.String{}, types.String{}, types.Any{} ) -> types.Boolean{}`
+ - `HVALS( types.String{} ) -> types.NewArray([]types.Type{}, types.String{})`
+ - `HRANDFIELD( types.String{}, types.Number{}, types.Boolean{} ) -> types.NewArray([]types.Type{}, types.String{})`
+ - `BLPOP( types.Number{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.NewArray([]types.Type{}, types.String{})`
+ - `BRPOP( types.Number{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.NewArray([]types.Type{}, types.String{})`
+ - `BRPOPLPUSH( types.String{}, types.String{}, types.Number{} ) -> types.String{}`
+ - `LINDEX( types.String{}, types.Number{} ) -> types.String{}`
+ - `LINSERT( types.String{}, types.String{}, types.Any{}, types.Any{} ) -> types.Number{}`
+ - `LINSERTBEFORE( types.String{}, types.Any{}, types.Any{} ) -> types.Number{}`
+ - `LINSERTAFTER( types.String{}, types.Any{}, types.Any{} ) -> types.Number{}`
+ - `LLEN( types.String{} ) -> types.Number{}`
+ - `LPOP( types.String{} ) -> types.String{}`
+ - `LPOPCOUNT( types.String{}, types.Number{} ) -> types.NewArray([]types.Type{}, types.String{})`
+ - `LPUSH( types.String{}, types.NewArray([]types.Type{}, types.Any{}) ) -> types.Number{}`
+ - `LPUSHX( types.String{}, types.NewArray([]types.Type{}, types.Any{}) ) -> types.Number{}`
+ - `LRANGE( types.String{}, types.Number{}, types.Number{} ) -> types.NewArray([]types.Type{}, types.String{})`
+ - `LREM( types.String{}, types.Number{}, types.Any{} ) -> types.Number{}`
+ - `LSET( types.String{}, types.Number{}, types.Any{} ) -> types.String{}`
+ - `LTRIM( types.String{}, types.Number{}, types.Number{} ) -> types.String{}`
+ - `RPOP( types.String{} ) -> types.String{}`
+ - `RPOPCOUNT( types.String{}, types.Number{} ) -> types.NewArray([]types.Type{}, types.String{})`
+ - `RPOPLPUSH( types.String{}, types.String{} ) -> types.String{}`
+ - `RPUSH( types.String{}, types.NewArray([]types.Type{}, types.Any{}) ) -> types.Number{}`
+ - `RPUSHX( types.String{}, types.NewArray([]types.Type{}, types.Any{}) ) -> types.Number{}`
+ - `LMOVE( types.String{}, types.String{}, types.String{}, types.String{} ) -> types.String{}`
+ - `BLMOVE( types.String{}, types.String{}, types.String{}, types.String{}, types.Number{} ) -> types.String{}`
+ - `SADD( types.String{}, types.NewArray([]types.Type{}, types.Any{}) ) -> types.Number{}`
+ - `SCARD( types.String{} ) -> types.Number{}`
+ - `SDIFF( types.NewArray([]types.Type{}, types.String{}) ) -> types.NewArray([]types.Type{}, types.String{})`
+ - `SDIFFSTORE( types.String{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.Number{}`
+ - `SINTER( types.NewArray([]types.Type{}, types.String{}) ) -> types.NewArray([]types.Type{}, types.String{})`
+ - `SINTERSTORE( types.String{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.Number{}`
+ - `SISMEMBER( types.String{}, types.Any{} ) -> types.Boolean{}`
+ - `SMISMEMBER( types.String{}, types.NewArray([]types.Type{}, types.Any{}) ) -> types.NewArray([]types.Type{}, types.Boolean{})`
+ - `SMEMBERS( types.String{} ) -> types.NewArray([]types.Type{}, types.String{})`
+ - `SMOVE( types.String{}, types.String{}, types.Any{} ) -> types.Boolean{}`
+ - `SPOP( types.String{} ) -> types.String{}`
+ - `SPOPN( types.String{}, types.Number{} ) -> types.NewArray([]types.Type{}, types.String{})`
+ - `SRANDMEMBER( types.String{} ) -> types.String{}`
+ - `SRANDMEMBERN( types.String{}, types.Number{} ) -> types.NewArray([]types.Type{}, types.String{})`
+ - `SREM( types.String{}, types.NewArray([]types.Type{}, types.Any{}) ) -> types.Number{}`
+ - `SUNION( types.NewArray([]types.Type{}, types.String{}) ) -> types.NewArray([]types.Type{}, types.String{})`
+ - `SUNIONSTORE( types.String{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.Number{}`
+ - `XDEL( types.String{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.Number{}`
+ - `XLEN( types.String{} ) -> types.Number{}`
+ - `XGROUPCREATE( types.String{}, types.String{}, types.String{} ) -> types.String{}`
+ - `XGROUPCREATEMKSTREAM( types.String{}, types.String{}, types.String{} ) -> types.String{}`
+ - `XGROUPSETID( types.String{}, types.String{}, types.String{} ) -> types.String{}`
+ - `XGROUPDESTROY( types.String{}, types.String{} ) -> types.Number{}`
+ - `XGROUPCREATECONSUMER( types.String{}, types.String{}, types.String{} ) -> types.Number{}`
+ - `XGROUPDELCONSUMER( types.String{}, types.String{}, types.String{} ) -> types.Number{}`
+ - `XACK( types.String{}, types.String{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.Number{}`
+ - `XTRIM( types.String{}, types.Number{} ) -> types.Number{}`
+ - `XTRIMAPPROX( types.String{}, types.Number{} ) -> types.Number{}`
+ - `XTRIMMAXLEN( types.String{}, types.Number{} ) -> types.Number{}`
+ - `XTRIMMAXLENAPPROX( types.String{}, types.Number{}, types.Number{} ) -> types.Number{}`
+ - `XTRIMMINID( types.String{}, types.String{} ) -> types.Number{}`
+ - `XTRIMMINIDAPPROX( types.String{}, types.String{}, types.Number{} ) -> types.Number{}`
+ - `ZADD( types.String{} ) -> types.Number{}`
+ - `ZADDNX( types.String{} ) -> types.Number{}`
+ - `ZADDXX( types.String{} ) -> types.Number{}`
+ - `ZADDCH( types.String{} ) -> types.Number{}`
+ - `ZADDNXCH( types.String{} ) -> types.Number{}`
+ - `ZADDXXCH( types.String{} ) -> types.Number{}`
+ - `ZCARD( types.String{} ) -> types.Number{}`
+ - `ZCOUNT( types.String{}, types.String{}, types.String{} ) -> types.Number{}`
+ - `ZLEXCOUNT( types.String{}, types.String{}, types.String{} ) -> types.Number{}`
+ - `ZINCRBY( types.String{}, types.Number{}, types.String{} ) -> types.Number{}`
+ - `ZMSCORE( types.String{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.NewArray([]types.Type{}, types.Number{})`
+ - `ZRANGE( types.String{}, types.Number{}, types.Number{} ) -> types.NewArray([]types.Type{}, types.String{})`
+ - `ZRANK( types.String{}, types.String{} ) -> types.Number{}`
+ - `ZREM( types.String{}, types.NewArray([]types.Type{}, types.Any{}) ) -> types.Number{}`
+ - `ZREMRANGEBYRANK( types.String{}, types.Number{}, types.Number{} ) -> types.Number{}`
+ - `ZREMRANGEBYSCORE( types.String{}, types.String{}, types.String{} ) -> types.Number{}`
+ - `ZREMRANGEBYLEX( types.String{}, types.String{}, types.String{} ) -> types.Number{}`
+ - `ZREVRANGE( types.String{}, types.Number{}, types.Number{} ) -> types.NewArray([]types.Type{}, types.String{})`
+ - `ZREVRANK( types.String{}, types.String{} ) -> types.Number{}`
+ - `ZSCORE( types.String{}, types.String{} ) -> types.Number{}`
+ - `ZRANDMEMBER( types.String{}, types.Number{}, types.Boolean{} ) -> types.NewArray([]types.Type{}, types.String{})`
+ - `ZDIFF( types.NewArray([]types.Type{}, types.String{}) ) -> types.NewArray([]types.Type{}, types.String{})`
+ - `ZDIFFSTORE( types.String{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.Number{}`
+ - `PFADD( types.String{}, types.NewArray([]types.Type{}, types.Any{}) ) -> types.Number{}`
+ - `PFCOUNT( types.NewArray([]types.Type{}, types.String{}) ) -> types.Number{}`
+ - `PFMERGE( types.String{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.String{}`
+ - `BGREWRITEAOF(  ) -> types.String{}`
+ - `BGSAVE(  ) -> types.String{}`
+ - `CLIENTKILL( types.String{} ) -> types.String{}`
+ - `CLIENTKILLBYFILTER( types.NewArray([]types.Type{}, types.String{}) ) -> types.Number{}`
+ - `CLIENTLIST(  ) -> types.String{}`
+ - `CLIENTPAUSE( types.Number{} ) -> types.Boolean{}`
+ - `CLIENTID(  ) -> types.Number{}`
+ - `CONFIGGET( types.String{} ) -> types.NewArray([]types.Type{}, types.Any{})`
+ - `CONFIGRESETSTAT(  ) -> types.String{}`
+ - `CONFIGSET( types.String{}, types.String{} ) -> types.String{}`
+ - `CONFIGREWRITE(  ) -> types.String{}`
+ - `DBSIZE(  ) -> types.Number{}`
+ - `FLUSHALL(  ) -> types.String{}`
+ - `FLUSHALLASYNC(  ) -> types.String{}`
+ - `FLUSHDB(  ) -> types.String{}`
+ - `FLUSHDBASYNC(  ) -> types.String{}`
+ - `INFO( types.NewArray([]types.Type{}, types.String{}) ) -> types.String{}`
+ - `LASTSAVE(  ) -> types.Number{}`
+ - `SAVE(  ) -> types.String{}`
+ - `SHUTDOWN(  ) -> types.String{}`
+ - `SHUTDOWNSAVE(  ) -> types.String{}`
+ - `SHUTDOWNNOSAVE(  ) -> types.String{}`
+ - `SLAVEOF( types.String{}, types.String{} ) -> types.String{}`
+ - `TIME(  ) -> types.Number{}`
+ - `DEBUGOBJECT( types.String{} ) -> types.String{}`
+ - `READONLY(  ) -> types.String{}`
+ - `READWRITE(  ) -> types.String{}`
+ - `MEMORYUSAGE( types.String{}, types.NewArray([]types.Type{}, types.Number{}) ) -> types.Number{}`
+ - `EVAL( types.String{}, types.NewArray([]types.Type{}, types.String{}), types.NewArray([]types.Type{}, types.Any{}) ) -> types.Any{}`
+ - `EVALSHA( types.String{}, types.NewArray([]types.Type{}, types.String{}), types.NewArray([]types.Type{}, types.Any{}) ) -> types.Any{}`
+ - `SCRIPTEXISTS( types.NewArray([]types.Type{}, types.String{}) ) -> types.NewArray([]types.Type{}, types.Boolean{})`
+ - `SCRIPTFLUSH(  ) -> types.String{}`
+ - `SCRIPTKILL(  ) -> types.String{}`
+ - `SCRIPTLOAD( types.String{} ) -> types.String{}`
+ - `PUBLISH( types.String{}, types.Any{} ) -> types.Number{}`
+ - `PUBSUBCHANNELS( types.String{} ) -> types.NewArray([]types.Type{}, types.String{})`
+ - `PUBSUBNUMPAT(  ) -> types.Number{}`
+ - `CLUSTERNODES(  ) -> types.String{}`
+ - `CLUSTERMEET( types.String{}, types.String{} ) -> types.String{}`
+ - `CLUSTERFORGET( types.String{} ) -> types.String{}`
+ - `CLUSTERREPLICATE( types.String{} ) -> types.String{}`
+ - `CLUSTERRESETSOFT(  ) -> types.String{}`
+ - `CLUSTERRESETHARD(  ) -> types.String{}`
+ - `CLUSTERINFO(  ) -> types.String{}`
+ - `CLUSTERKEYSLOT( types.String{} ) -> types.Number{}`
+ - `CLUSTERGETKEYSINSLOT( types.Number{}, types.Number{} ) -> types.NewArray([]types.Type{}, types.String{})`
+ - `CLUSTERCOUNTFAILUREREPORTS( types.String{} ) -> types.Number{}`
+ - `CLUSTERCOUNTKEYSINSLOT( types.Number{} ) -> types.Number{}`
+ - `CLUSTERDELSLOTS( types.NewArray([]types.Type{}, types.Number{}) ) -> types.String{}`
+ - `CLUSTERDELSLOTSRANGE( types.Number{}, types.Number{} ) -> types.String{}`
+ - `CLUSTERSAVECONFIG(  ) -> types.String{}`
+ - `CLUSTERSLAVES( types.String{} ) -> types.NewArray([]types.Type{}, types.String{})`
+ - `CLUSTERFAILOVER(  ) -> types.String{}`
+ - `CLUSTERADDSLOTS( types.NewArray([]types.Type{}, types.Number{}) ) -> types.String{}`
+ - `CLUSTERADDSLOTSRANGE( types.Number{}, types.Number{} ) -> types.String{}`
+ - `GEOADD( types.String{} ) -> types.Number{}`
+ - `GEODIST( types.String{}, types.String{}, types.String{}, types.String{} ) -> types.Number{}`
+ - `GEOHASH( types.String{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.NewArray([]types.Type{}, types.String{})`
 
 More Information about all commands can be found [here](https://redis.io/commands)
