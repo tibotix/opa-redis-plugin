@@ -95,7 +95,8 @@ func (p *redisPlugin) Start(ctx context.Context) error {
 	}
 	go p.startRedisClient()
 
-	p.registerRedisCommands()
+	p.registerManualCommands()
+	p.registerAutogenCommands()
 
 	return nil
 }

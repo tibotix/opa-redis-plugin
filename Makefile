@@ -29,7 +29,10 @@ LDFLAGS := "-X github.com/open-policy-agent/opa/version.Version=$(VERSION) \
 
 
 generate:
-	./scripts/gen-redis-commands.py > ./internal/redis_commands_autogen.go
+	./scripts/gen-redis-commands.py impl > ./internal/redis_commands_autogen.go
+
+generate-doc:
+	./scripts/gen-redis-commands.py doc > ./doc/supported_commands.md
 
 build:
 	$(GO) build $(GO_TAGS) -o $(BIN) -ldflags $(LDFLAGS) ./cmd/opa-redis-plugin/...

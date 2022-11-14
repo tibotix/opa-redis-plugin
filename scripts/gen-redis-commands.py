@@ -19,8 +19,6 @@ skip_command_names = (
     "SScan",
     "HScan",
     "ZScan",
-    "Eval",
-    "EvalSha"
 )
 skip_go_types = (
     "*Sort",
@@ -42,7 +40,6 @@ skip_go_types = (
     "*GeoSearchStoreQuery"
 )
 skip_cmd_classes = (
-    "SliceCmd",
     "StringStringMapCmd",
     "StringIntMapCmd",
     "StringStructMapCmd",
@@ -65,137 +62,163 @@ skip_cmd_classes = (
 )
 # TODO: implement some of these
 
+
 class RegoScalarType(enum.Enum):
-    STRING = 0
-    INTNUMBER = 1
-    UINTNUMBER = 2
-    FLOATNUMBER = 3
-    BOOL = 4
-    DURATION = 5
-    TIME = 6
+    ANY = 0
+    STRING = 1
+    INTNUMBER = 2
+    UINTNUMBER = 3
+    FLOATNUMBER = 4
+    BOOL = 5
+    DURATION = 6
+    TIME = 7
 
-
-    @classmethod
-    def from_go_type(cls, go_type: str):
-        mapping = {
-            "bool": cls.BOOL,
-            "string": cls.STRING,
-            "int": cls.INTNUMBER,
-            "int64": cls.INTNUMBER,
-            "uint64": cls.UINTNUMBER,
-            "float64": cls.FLOATNUMBER,
-            "interface{}": cls.STRING,
-            "time.Duration": cls.DURATION,
-            "time.Time": cls.TIME,
-        }
-        return mapping[go_type]
-    
-    @classmethod
-    def from_redis_cmd_class(cls, cmd_class):
-        mapping = {
-            "StringCmd": cls.STRING,
-            "IntCmd": cls.INTNUMBER,
-            "BoolCmd": cls.BOOL,
-            "DurationCmd": cls.DURATION,
-            "StatusCmd": cls.STRING,
-            "FloatCmd": cls.FLOATNUMBER,
-            "TimeCmd": cls.TIME,
-        }
-        return mapping.get(cmd_class, None)
-    
-    def to_go_rego_types_api_code(self):
-        mapping = {
-            self.STRING.value: "String",
-            self.INTNUMBER.value: "Number",
-            self.UINTNUMBER.value: "Number",
-            self.FLOATNUMBER.value: "Number",
-            self.BOOL.value: "Boolean",
-            self.DURATION.value: "Number",
-            self.TIME.value: "Number",
-        }
-        return f"types.{mapping[self.value]}{{}}"
-    
-    def to_go_ast_term(self, var_name, cmd_name):
-        duration_mapping = {
-            "PTTL": "IntNumberTerm(int({var_name}.Milliseconds()))",
-            "TTL": "IntNumberTerm(int({var_name}.Seconds()))",
-            "OBJECTIDLETIME": "IntNumberTerm(int({var_name}.Seconds()))"
-        }
-        mapping = {
-            self.STRING.value: "StringTerm({var_name})",
-            self.BOOL.value: "BooleanTerm({var_name})",
-            self.INTNUMBER.value: "IntNumberTerm(int({var_name}))",
-            self.UINTNUMBER.value: "UintNumberTerm(uint({var_name}))",
-            self.FLOATNUMBER.value: "FloatNumberTerm(float64({var_name}))",
-            self.DURATION.value: duration_mapping,
-            self.TIME.value: "IntNumberTerm(int({var_name}.UnixMicro()))"
-        }
-        if isinstance(mapping[self.value], dict):
-            return f"ast.{mapping[self.value][cmd_name].format(var_name=var_name)}"
-        return f"ast.{mapping[self.value].format(var_name=var_name)}"
-
-class RegoType:
-    @classmethod
-    def from_go_type(cls, go_type):
-        is_composite = "..." in go_type
-        go_type = go_type.replace("...", "")
-        scalar_type = RegoScalarType.from_go_type(go_type)
-        return cls(go_type, scalar_type, is_composite)
-    
-    @classmethod
-    def from_redis_cmd_class(cls, cmd_class):
-        cmd_class = cmd_class.replace("*", "").strip()
-        skip = cmd_class in skip_cmd_classes
-        is_composite = "Slice" in cmd_class
-        cmd_class = cmd_class.replace("Slice", "").strip()
-        scalar_type = RegoScalarType.from_redis_cmd_class(cmd_class)
-        return cls(cmd_class, scalar_type, is_composite), skip
-        
-    def __init__(self, go_type: str, scalar_type: RegoScalarType, is_composite: bool):
+class RegoTypeConvertible:
+    def __init__(self, go_type, scalar_type, composite):
         self.go_type = go_type
         self.scalar_type = scalar_type
-        self.is_composite = is_composite
-    
+        self.is_composite = composite
+
+    def _to_go_rego_types_api_code(self):
+        mapping = {
+            RegoScalarType.ANY: "Any",
+            RegoScalarType.STRING: "String",
+            RegoScalarType.INTNUMBER: "Number",
+            RegoScalarType.UINTNUMBER: "Number",
+            RegoScalarType.FLOATNUMBER: "Number",
+            RegoScalarType.BOOL: "Boolean",
+            RegoScalarType.DURATION: "Number",
+            RegoScalarType.TIME: "Number",
+        }
+        return f"types.{mapping[self.scalar_type]}{{}}"
+
     def to_go_rego_types_api_code(self):
         if not self.is_composite:
-            return self.scalar_type.to_go_rego_types_api_code()
-        return f"types.NewArray([]types.Type{{}}, {self.scalar_type.to_go_rego_types_api_code()})"
-    
-    def to_go_var_declaration(self, var_name):
-        if not self.is_composite:
-            return f"var {var_name} {self.go_type}"
-        return f"var {var_name} []{self.go_type}"
-    
-    def to_go_parameter_code(self, var_name):
-        if not self.is_composite or "interface" in self.go_type:
-            return var_name
-        return f"{var_name}..."
-    
+            return self._to_go_rego_types_api_code()
+        return f"types.NewArray([]types.Type{{}}, {self._to_go_rego_types_api_code()})"
+
+class CmdClass(RegoTypeConvertible):
+    def __init__(self, go_type, scalar_type, composite):
+        super().__init__(go_type, scalar_type, composite)
+
+    @classmethod
+    def from_redis_cmd_class(cls, cmd_class):
+        mapping = {
+            "Cmd": RegoScalarType.ANY,
+            "StringCmd": RegoScalarType.STRING,
+            "IntCmd": RegoScalarType.INTNUMBER,
+            "BoolCmd": RegoScalarType.BOOL,
+            "DurationCmd": RegoScalarType.DURATION,
+            "StatusCmd": RegoScalarType.STRING,
+            "FloatCmd": RegoScalarType.FLOATNUMBER,
+            "TimeCmd": RegoScalarType.TIME,
+        }
+        cmd_class = cmd_class.replace("*", "").strip()
+        is_composite = "Slice" in cmd_class
+        skip = cmd_class in skip_cmd_classes
+        cmd_class = cmd_class.replace("Slice", "").strip()
+        scalar_type = mapping.get(cmd_class, None)
+        return cls(cmd_class, scalar_type, is_composite), skip
+
     def to_go_ast_term_return_statement(self, var_name, cmd_name):
         if not self.is_composite:
-            return f"return {self.scalar_type.to_go_ast_term(var_name, cmd_name)}, nil"
+            return f"""
+                {self._to_go_ast_term("term", var_name, cmd_name)} 
+                return term, nil"""
         return f"""
         var ret []*ast.Term
         for _, v := range {var_name} {{
-            ret = append(ret, {self.scalar_type.to_go_ast_term("v", cmd_name)})
+            {self._to_go_ast_term("term", "v", cmd_name)}
+            ret = append(ret, term)
         }}
         return ast.ArrayTerm(ret...), nil
                 """
 
+    def _to_go_ast_term(self, ret_var_name, var_name, cmd_name):
+        def ast_ret(term):
+            return f"{{ret_var_name}} := ast.{term!s}"
+
+        duration_mapping = {
+            "PTTL": ast_ret("IntNumberTerm(int({var_name}.Milliseconds()))"),
+            "TTL": ast_ret("IntNumberTerm(int({var_name}.Seconds()))"),
+            "OBJECTIDLETIME": ast_ret("IntNumberTerm(int({var_name}.Seconds()))")
+        }
+        mapping = {
+            RegoScalarType.ANY: """
+            {ret_var_name} := ast.NullTerm()
+            if s, ok := {var_name}.(string); ok {{
+                {ret_var_name} = ast.StringTerm(s)
+            }}
+            """,
+            RegoScalarType.STRING: ast_ret("StringTerm({var_name})"),
+            RegoScalarType.BOOL: ast_ret("BooleanTerm({var_name})"),
+            RegoScalarType.INTNUMBER: ast_ret("IntNumberTerm(int({var_name}))"),
+            RegoScalarType.UINTNUMBER: ast_ret("UintNumberTerm(uint({var_name}))"),
+            RegoScalarType.FLOATNUMBER: ast_ret("FloatNumberTerm(float64({var_name}))"),
+            RegoScalarType.DURATION: duration_mapping,
+            RegoScalarType.TIME: ast_ret("IntNumberTerm(int({var_name}.UnixMicro()))")
+        }
+        if isinstance(mapping[self.scalar_type], dict):
+            return f"{mapping[self.scalar_type][cmd_name].format(ret_var_name=ret_var_name, var_name=var_name)}"
+        return f"{mapping[self.scalar_type].format(ret_var_name=ret_var_name, var_name=var_name)}"
+
+class ParameterClass(RegoTypeConvertible):
+    def __init__(self, go_type, scalar_type, composite):
+        super().__init__(go_type, scalar_type, composite)
+
+    @classmethod
+    def from_go_type(cls, go_type):
+        mapping = {
+            "bool": RegoScalarType.BOOL,
+            "string": RegoScalarType.STRING,
+            "int": RegoScalarType.INTNUMBER,
+            "int64": RegoScalarType.INTNUMBER,
+            "uint64": RegoScalarType.UINTNUMBER,
+            "float64": RegoScalarType.FLOATNUMBER,
+            "interface{}": RegoScalarType.ANY,
+            "time.Duration": RegoScalarType.DURATION,
+            "time.Time": RegoScalarType.TIME,
+        }
+
+        is_composite = go_type.startswith("...") or go_type.startswith("[]")
+        go_type = go_type.replace("...", "").replace("[]", "").strip()
+        scalar_type = mapping[go_type]
+        return cls(go_type, scalar_type, is_composite)
+    
+    def to_go_parse_var_code(self, var_name, idx):
+        return  f"""
+            {self._to_go_var_declaration(var_name)}
+            if err := ast.As(terms[{idx!s}].Value, &{var_name}); err != nil {{
+                return nil, err
+            }}
+            """
+    def _to_go_var_declaration(self, var_name):
+        if not self.is_composite:
+            return f"var {var_name} {self.go_type}"
+        return f"var {var_name} []{self.go_type}"
+
+    def to_go_parameter_code(self, var_name, is_last):
+        if not self.is_composite or not is_last:
+            return self._to_go_parameter_code(var_name)
+        return f"{self._to_go_parameter_code(var_name)}..."
+
+    def _to_go_parameter_code(self, var_name):
+        if self.scalar_type == RegoScalarType.ANY:
+            return f"conva({var_name})" if self.is_composite else f"conv({var_name})"
+        return var_name
+
+
+
 class CmdSignature:
     @classmethod
     def from_string(cls, signature):
-        # print(f"Parsing Signature: {signature!s}")
+        # print(f"Parsing Signature: {signature!s}", file=sys.stderr)
         cmd_name = re.match(r"(^.*?)\(", signature).group(1)
         signature = signature[len(cmd_name)+1:].strip()
         signature = re.sub(r"ctx context\.Context(, )?", "", signature)
         parameter_types, skip_go_type = CmdSignature.parse_parameter_list(signature[:signature.index(")")].split(","))
         signature = signature[signature.index(")")+1:].strip()
-        return_type, skip_cmd_class = RegoType.from_redis_cmd_class(signature)
-
-        # print(f"cmd_name: {cmd_name!s}")
-        # print(f"parameter_types: {parameter_types!s}")
-        # print(f"return_type: {signature!s}")
+        return_type, skip_cmd_class = CmdClass.from_redis_cmd_class(signature)
         return cls(cmd_name, parameter_types, return_type, skip_go_type or skip_cmd_class)
     
     @staticmethod
@@ -212,14 +235,14 @@ class CmdSignature:
             if go_type in skip_go_types:
                 skip = True
             try:
-                parameter_types.insert(0, RegoType.from_go_type(go_type))
+                parameter_types.insert(0, ParameterClass.from_go_type(go_type))
             except KeyError as e:
-                print(f"KEY ERROR: {e!s}", file=sys.stderr)
+                # print(f"KEY ERROR: {e!s}, {p}", file=sys.stderr)
                 continue
         return parameter_types, skip
             
 
-    def __init__(self, cmd_name: str, parameter_types: List[RegoType], return_type: RegoType, skip: bool):
+    def __init__(self, cmd_name: str, parameter_types: List[ParameterClass], return_type: CmdClass, skip: bool):
         self.cmd_name = cmd_name
         self.parameter_types = parameter_types
         self.return_type = return_type
@@ -227,6 +250,11 @@ class CmdSignature:
 
 
 def main():
+    if len(sys.argv) != 2 or sys.argv[1] not in ("doc", "impl"):
+        return usage()
+    gen_impl = sys.argv[1] == "impl"
+    
+
     if not commands_file.exists():
         print(f"File: {commands_file.absolute()} not found", file=sys.stderr)
         return 1
@@ -235,9 +263,10 @@ def main():
         return 1
     command_signatures = cmdable.group(1).split("\n")
     
-    print("// Code generated! DO NOT EDIT")
-    print("package internal")
-    print("""
+    if gen_impl:
+        print("// Code generated! DO NOT EDIT")
+        print("package internal")
+        print("""
 import (
     "time"
 
@@ -246,23 +275,34 @@ import (
     "github.com/open-policy-agent/opa/rego"
     "github.com/open-policy-agent/opa/types"
 )
-    """)
+""")
+    else:
+        print("# Supported Commands:\n")
+
+
     register_functions = list()
     for signature in filter(lambda s:s.cmd_name not in skip_command_names, parse_command_signatures(command_signatures)):
         if signature.skip: continue
-        # print(f" Generating Function Code for: {signature.cmd_name}")
-        code = generate_function_code_for_signature(signature)
         register_functions.append(f"register{signature.cmd_name.upper()}")
-        print(code)
+        # print(f" Generating Function Code for: {signature.cmd_name}")
+        if gen_impl:
+            code = generate_function_code_for_signature(signature)
+            print(code)
+        else:
+            args = ", ".join(map(lambda p:p.to_go_rego_types_api_code(), signature.parameter_types))
+            print(f" - {signature.cmd_name.upper()}( {args!s} ) -> {signature.return_type.to_go_rego_types_api_code()}")
 
     register_main_func = """
-func (p *redisPlugin) registerRedisCommands() {"""
+func (p *redisPlugin) registerAutogenCommands() {"""
     for f in register_functions:
         register_main_func += f"""
     {f}(p)"""
     register_main_func += """
 }"""
-    print(register_main_func)
+    if gen_impl:
+        print(register_main_func)
+    else:
+        print("\nMore Information about all commands can be found [here](https://redis.io/commands)")
 
     return 0
 
@@ -295,31 +335,31 @@ func register{signature.cmd_name.upper()}(p *redisPlugin) {{
     parameter_args = ["p.redisContext"]
     for idx, p in enumerate(signature.parameter_types):
         var_name = f"v{idx!s}"
-        parameter_args.append(p.to_go_parameter_code(var_name))
-        code += f"""
-            {p.to_go_var_declaration(var_name)}
-            if err := ast.As(terms[{idx!s}].Value, &{var_name}); err != nil {{
-                return nil, err
-            }}
-            """
+        parameter_args.append(p.to_go_parameter_code(var_name, idx==len(signature.parameter_types)-1))
+        code += p.to_go_parse_var_code(var_name, idx)
     parameter_args = ",".join(parameter_args)
 
     code += f"""
 
             val, err := rdb.{signature.cmd_name}({parameter_args}).Result()
-            switch {{
-            case err == redis.Nil:
+            switch err {{
+            case redis.Nil:
                 return ast.NullTerm(), nil
-            case err != nil:
-                return nil, err
-            default:
+            case nil:
                 {signature.return_type.to_go_ast_term_return_statement("val", signature.cmd_name.upper())}
+            default:
+                return nil, err
             }}
         }},
     )
 }}
 """
     return code
+
+
+def usage():
+    print(f"Usage: {sys.argv[0]} (impl|doc)")
+    return 1
 
 
 if __name__ == "__main__":
