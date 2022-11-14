@@ -1,6 +1,8 @@
 package internal
 
 import (
+	"github.com/tibotix/opa-redis-plugin/utils"
+
 	"github.com/go-redis/redis/v8"
 	"github.com/open-policy-agent/opa/ast"
 	"github.com/open-policy-agent/opa/rego"
@@ -26,7 +28,7 @@ func registerDO(p *redisPlugin) {
 				return nil, err
 			}
 
-			val, err := rdb.Do(p.redisContext, conva(v0)...).Text()
+			val, err := rdb.Do(p.redisContext, utils.Conva(v0)...).Text()
 			switch {
 			case err == redis.Nil:
 				return ast.NullTerm(), nil

@@ -204,7 +204,7 @@ class ParameterClass(RegoTypeConvertible):
 
     def _to_go_parameter_code(self, var_name):
         if self.scalar_type == RegoScalarType.ANY:
-            return f"conva({var_name})" if self.is_composite else f"conv({var_name})"
+            return f"utils.Conva({var_name})" if self.is_composite else f"utils.Conv({var_name})"
         return var_name
 
 
@@ -269,6 +269,7 @@ def main():
         print("""
 import (
     "time"
+    "github.com/tibotix/opa-redis-plugin/utils"
 
     "github.com/go-redis/redis/v8"
     "github.com/open-policy-agent/opa/ast"

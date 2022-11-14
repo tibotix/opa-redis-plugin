@@ -1,8 +1,8 @@
-package internal
+package utils
 
 import "encoding/json"
 
-func conv(v interface{}) interface{} {
+func Conv(v interface{}) interface{} {
 	switch v.(type) {
 	case json.Number:
 		return v.(json.Number).String()
@@ -11,9 +11,9 @@ func conv(v interface{}) interface{} {
 	}
 }
 
-func conva(v []interface{}) []interface{} {
+func Conva(v []interface{}) []interface{} {
 	for i, attr := range v {
-		v[i] = conv(attr)
+		v[i] = Conv(attr)
 	}
 	return v
 }

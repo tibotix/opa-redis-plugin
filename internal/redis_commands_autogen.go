@@ -3,6 +3,7 @@ package internal
 
 import (
     "time"
+    "github.com/tibotix/opa-redis-plugin/utils"
 
     "github.com/go-redis/redis/v8"
     "github.com/open-policy-agent/opa/ast"
@@ -64,7 +65,7 @@ func registerECHO(p *redisPlugin) {
             }
             
 
-            val, err := rdb.Echo(p.redisContext,conv(v0)).Result()
+            val, err := rdb.Echo(p.redisContext,utils.Conv(v0)).Result()
             switch err {
             case redis.Nil:
                 return ast.NullTerm(), nil
@@ -1506,7 +1507,7 @@ func registerGETSET(p *redisPlugin) {
             }
             
 
-            val, err := rdb.GetSet(p.redisContext,v0,conv(v1)).Result()
+            val, err := rdb.GetSet(p.redisContext,v0,utils.Conv(v1)).Result()
             switch err {
             case redis.Nil:
                 return ast.NullTerm(), nil
@@ -1790,7 +1791,7 @@ func registerMSET(p *redisPlugin) {
             }
             
 
-            val, err := rdb.MSet(p.redisContext,conva(v0)...).Result()
+            val, err := rdb.MSet(p.redisContext,utils.Conva(v0)...).Result()
             switch err {
             case redis.Nil:
                 return ast.NullTerm(), nil
@@ -1827,7 +1828,7 @@ func registerMSETNX(p *redisPlugin) {
             }
             
 
-            val, err := rdb.MSetNX(p.redisContext,conva(v0)...).Result()
+            val, err := rdb.MSetNX(p.redisContext,utils.Conva(v0)...).Result()
             switch err {
             case redis.Nil:
                 return ast.NullTerm(), nil
@@ -1874,7 +1875,7 @@ func registerSET(p *redisPlugin) {
             }
             
 
-            val, err := rdb.Set(p.redisContext,v0,conv(v1),v2).Result()
+            val, err := rdb.Set(p.redisContext,v0,utils.Conv(v1),v2).Result()
             switch err {
             case redis.Nil:
                 return ast.NullTerm(), nil
@@ -1921,7 +1922,7 @@ func registerSETEX(p *redisPlugin) {
             }
             
 
-            val, err := rdb.SetEX(p.redisContext,v0,conv(v1),v2).Result()
+            val, err := rdb.SetEX(p.redisContext,v0,utils.Conv(v1),v2).Result()
             switch err {
             case redis.Nil:
                 return ast.NullTerm(), nil
@@ -1968,7 +1969,7 @@ func registerSETNX(p *redisPlugin) {
             }
             
 
-            val, err := rdb.SetNX(p.redisContext,v0,conv(v1),v2).Result()
+            val, err := rdb.SetNX(p.redisContext,v0,utils.Conv(v1),v2).Result()
             switch err {
             case redis.Nil:
                 return ast.NullTerm(), nil
@@ -2015,7 +2016,7 @@ func registerSETXX(p *redisPlugin) {
             }
             
 
-            val, err := rdb.SetXX(p.redisContext,v0,conv(v1),v2).Result()
+            val, err := rdb.SetXX(p.redisContext,v0,utils.Conv(v1),v2).Result()
             switch err {
             case redis.Nil:
                 return ast.NullTerm(), nil
@@ -2497,7 +2498,7 @@ func registerBITFIELD(p *redisPlugin) {
             }
             
 
-            val, err := rdb.BitField(p.redisContext,v0,conva(v1)...).Result()
+            val, err := rdb.BitField(p.redisContext,v0,utils.Conva(v1)...).Result()
             switch err {
             case redis.Nil:
                 return ast.NullTerm(), nil
@@ -2895,7 +2896,7 @@ func registerHSET(p *redisPlugin) {
             }
             
 
-            val, err := rdb.HSet(p.redisContext,v0,conva(v1)...).Result()
+            val, err := rdb.HSet(p.redisContext,v0,utils.Conva(v1)...).Result()
             switch err {
             case redis.Nil:
                 return ast.NullTerm(), nil
@@ -2937,7 +2938,7 @@ func registerHMSET(p *redisPlugin) {
             }
             
 
-            val, err := rdb.HMSet(p.redisContext,v0,conva(v1)...).Result()
+            val, err := rdb.HMSet(p.redisContext,v0,utils.Conva(v1)...).Result()
             switch err {
             case redis.Nil:
                 return ast.NullTerm(), nil
@@ -2984,7 +2985,7 @@ func registerHSETNX(p *redisPlugin) {
             }
             
 
-            val, err := rdb.HSetNX(p.redisContext,v0,v1,conv(v2)).Result()
+            val, err := rdb.HSetNX(p.redisContext,v0,v1,utils.Conv(v2)).Result()
             switch err {
             case redis.Nil:
                 return ast.NullTerm(), nil
@@ -3313,7 +3314,7 @@ func registerLINSERT(p *redisPlugin) {
             }
             
 
-            val, err := rdb.LInsert(p.redisContext,v0,v1,conv(v2),conv(v3)).Result()
+            val, err := rdb.LInsert(p.redisContext,v0,v1,utils.Conv(v2),utils.Conv(v3)).Result()
             switch err {
             case redis.Nil:
                 return ast.NullTerm(), nil
@@ -3360,7 +3361,7 @@ func registerLINSERTBEFORE(p *redisPlugin) {
             }
             
 
-            val, err := rdb.LInsertBefore(p.redisContext,v0,conv(v1),conv(v2)).Result()
+            val, err := rdb.LInsertBefore(p.redisContext,v0,utils.Conv(v1),utils.Conv(v2)).Result()
             switch err {
             case redis.Nil:
                 return ast.NullTerm(), nil
@@ -3407,7 +3408,7 @@ func registerLINSERTAFTER(p *redisPlugin) {
             }
             
 
-            val, err := rdb.LInsertAfter(p.redisContext,v0,conv(v1),conv(v2)).Result()
+            val, err := rdb.LInsertAfter(p.redisContext,v0,utils.Conv(v1),utils.Conv(v2)).Result()
             switch err {
             case redis.Nil:
                 return ast.NullTerm(), nil
@@ -3570,7 +3571,7 @@ func registerLPUSH(p *redisPlugin) {
             }
             
 
-            val, err := rdb.LPush(p.redisContext,v0,conva(v1)...).Result()
+            val, err := rdb.LPush(p.redisContext,v0,utils.Conva(v1)...).Result()
             switch err {
             case redis.Nil:
                 return ast.NullTerm(), nil
@@ -3612,7 +3613,7 @@ func registerLPUSHX(p *redisPlugin) {
             }
             
 
-            val, err := rdb.LPushX(p.redisContext,v0,conva(v1)...).Result()
+            val, err := rdb.LPushX(p.redisContext,v0,utils.Conva(v1)...).Result()
             switch err {
             case redis.Nil:
                 return ast.NullTerm(), nil
@@ -3711,7 +3712,7 @@ func registerLREM(p *redisPlugin) {
             }
             
 
-            val, err := rdb.LRem(p.redisContext,v0,v1,conv(v2)).Result()
+            val, err := rdb.LRem(p.redisContext,v0,v1,utils.Conv(v2)).Result()
             switch err {
             case redis.Nil:
                 return ast.NullTerm(), nil
@@ -3758,7 +3759,7 @@ func registerLSET(p *redisPlugin) {
             }
             
 
-            val, err := rdb.LSet(p.redisContext,v0,v1,conv(v2)).Result()
+            val, err := rdb.LSet(p.redisContext,v0,v1,utils.Conv(v2)).Result()
             switch err {
             case redis.Nil:
                 return ast.NullTerm(), nil
@@ -3973,7 +3974,7 @@ func registerRPUSH(p *redisPlugin) {
             }
             
 
-            val, err := rdb.RPush(p.redisContext,v0,conva(v1)...).Result()
+            val, err := rdb.RPush(p.redisContext,v0,utils.Conva(v1)...).Result()
             switch err {
             case redis.Nil:
                 return ast.NullTerm(), nil
@@ -4015,7 +4016,7 @@ func registerRPUSHX(p *redisPlugin) {
             }
             
 
-            val, err := rdb.RPushX(p.redisContext,v0,conva(v1)...).Result()
+            val, err := rdb.RPushX(p.redisContext,v0,utils.Conva(v1)...).Result()
             switch err {
             case redis.Nil:
                 return ast.NullTerm(), nil
@@ -4166,7 +4167,7 @@ func registerSADD(p *redisPlugin) {
             }
             
 
-            val, err := rdb.SAdd(p.redisContext,v0,conva(v1)...).Result()
+            val, err := rdb.SAdd(p.redisContext,v0,utils.Conva(v1)...).Result()
             switch err {
             case redis.Nil:
                 return ast.NullTerm(), nil
@@ -4413,7 +4414,7 @@ func registerSISMEMBER(p *redisPlugin) {
             }
             
 
-            val, err := rdb.SIsMember(p.redisContext,v0,conv(v1)).Result()
+            val, err := rdb.SIsMember(p.redisContext,v0,utils.Conv(v1)).Result()
             switch err {
             case redis.Nil:
                 return ast.NullTerm(), nil
@@ -4455,7 +4456,7 @@ func registerSMISMEMBER(p *redisPlugin) {
             }
             
 
-            val, err := rdb.SMIsMember(p.redisContext,v0,conva(v1)...).Result()
+            val, err := rdb.SMIsMember(p.redisContext,v0,utils.Conva(v1)...).Result()
             switch err {
             case redis.Nil:
                 return ast.NullTerm(), nil
@@ -4549,7 +4550,7 @@ func registerSMOVE(p *redisPlugin) {
             }
             
 
-            val, err := rdb.SMove(p.redisContext,v0,v1,conv(v2)).Result()
+            val, err := rdb.SMove(p.redisContext,v0,v1,utils.Conv(v2)).Result()
             switch err {
             case redis.Nil:
                 return ast.NullTerm(), nil
@@ -4759,7 +4760,7 @@ func registerSREM(p *redisPlugin) {
             }
             
 
-            val, err := rdb.SRem(p.redisContext,v0,conva(v1)...).Result()
+            val, err := rdb.SRem(p.redisContext,v0,utils.Conva(v1)...).Result()
             switch err {
             case redis.Nil:
                 return ast.NullTerm(), nil
@@ -6091,7 +6092,7 @@ func registerZREM(p *redisPlugin) {
             }
             
 
-            val, err := rdb.ZRem(p.redisContext,v0,conva(v1)...).Result()
+            val, err := rdb.ZRem(p.redisContext,v0,utils.Conva(v1)...).Result()
             switch err {
             case redis.Nil:
                 return ast.NullTerm(), nil
@@ -6546,7 +6547,7 @@ func registerPFADD(p *redisPlugin) {
             }
             
 
-            val, err := rdb.PFAdd(p.redisContext,v0,conva(v1)...).Result()
+            val, err := rdb.PFAdd(p.redisContext,v0,utils.Conva(v1)...).Result()
             switch err {
             case redis.Nil:
                 return ast.NullTerm(), nil
@@ -7638,7 +7639,7 @@ func registerEVAL(p *redisPlugin) {
             }
             
 
-            val, err := rdb.Eval(p.redisContext,v0,v1,conva(v2)...).Result()
+            val, err := rdb.Eval(p.redisContext,v0,v1,utils.Conva(v2)...).Result()
             switch err {
             case redis.Nil:
                 return ast.NullTerm(), nil
@@ -7690,7 +7691,7 @@ func registerEVALSHA(p *redisPlugin) {
             }
             
 
-            val, err := rdb.EvalSha(p.redisContext,v0,v1,conva(v2)...).Result()
+            val, err := rdb.EvalSha(p.redisContext,v0,v1,utils.Conva(v2)...).Result()
             switch err {
             case redis.Nil:
                 return ast.NullTerm(), nil
@@ -7880,7 +7881,7 @@ func registerPUBLISH(p *redisPlugin) {
             }
             
 
-            val, err := rdb.Publish(p.redisContext,v0,conv(v1)).Result()
+            val, err := rdb.Publish(p.redisContext,v0,utils.Conv(v1)).Result()
             switch err {
             case redis.Nil:
                 return ast.NullTerm(), nil
