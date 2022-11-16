@@ -14,12 +14,28 @@ skip_command_names = (
     "TxPipelined",
     "TxPipeline",
     "Command",
-) # TODO: Implement Transactions
+)
 skip_go_types = (
 )
 skip_cmd_classes = (
 )
 
+# TODO: Implement Transactions
+# pipe = redis.new_pipe()
+# redis.pipe_add(pipe, "incr", ["key"])
+# redis.pipe_add(pipe, "expire", ["key", 10])
+# [incr_result, expire_result] = redis.pipe_exec(pipe)
+#
+# [incr_result, expire_result] = redis.piped([
+#   {
+#       "command": "incr",
+#       "args": ["key"]
+#   },
+#   {
+#       "command": "expire",
+#       "args": ["key", 10]
+#   } 
+# ])
 
 
 class RegoTypeFactory:
