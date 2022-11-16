@@ -1,5 +1,10 @@
 # Supported Commands:
 
+All function signatures are based on the corresponding function of the [go-redis](https://github.com/go-redis/redis) library. Check out their documentation for more details.
+
+More General Information about all commands can be found on the official [redis site](https://redis.io/commands)
+
+
  - `CLIENTGETNAME(  ) -> types.String{}`
  - `ECHO( types.Any{} ) -> types.String{}`
  - `PING(  ) -> types.String{}`
@@ -282,5 +287,3 @@
  - `GEOSEARCHSTORE( types.String{}, types.String{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("StoreDist", types.Boolean{})}, nil) ) -> types.Number{}`
  - `GEODIST( types.String{}, types.String{}, types.String{}, types.String{} ) -> types.Number{}`
  - `GEOHASH( types.String{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.NewArray([]types.Type{}, types.String{})`
-
-More Information about all commands can be found [here](https://redis.io/commands)

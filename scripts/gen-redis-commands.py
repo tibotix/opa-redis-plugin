@@ -768,6 +768,8 @@ import (
 """)
     else:
         print("# Supported Commands:\n")
+        print("All function signatures are based on the corresponding function of the [go-redis](https://github.com/go-redis/redis) library. Check out their documentation for more details.")
+        print("\nMore General Information about all commands can be found on the official [redis site](https://redis.io/commands)\n\n")
 
 
     register_functions = list()
@@ -790,8 +792,6 @@ func (p *redisPlugin) registerAutogenCommands() {"""
 }"""
     if gen_impl:
         print(register_main_func)
-    else:
-        print("\nMore Information about all commands can be found [here](https://redis.io/commands)")
 
     return 0
 
