@@ -14,23 +14,11 @@ skip_command_names = (
     "TxPipelined",
     "TxPipeline",
     "Command",
-)
+) # TODO: Implement Transactions
 skip_go_types = (
-    "*XPendingExtArgs",
 )
 skip_cmd_classes = (
-    "*StringStringMapCmd",
-    "*StringIntMapCmd",
-    "*StringStructMapCmd",
-    "*XMessageSliceCmd",
-    "*XStreamSliceCmd",
-    "*XPendingCmd",
-    "*XPendingExtCmd",
-    "*XAutoClaimCmd",
-    "*XInfoStreamCmd",
-    "*XInfoStreamFullCmd", # TODO: add MAP type
 )
-# TODO: implement some of these
 
 
 
@@ -75,6 +63,9 @@ class RegoTypeFactory:
             "XAutoClaimArgs": RegoObjType(XAutoClaimArgsObjSpec),
             "XClaimArgs": RegoObjType(XClaimArgsObjSpec),
             "XAddArgs": RegoObjType(XAddArgsObjSpec),
+            "XReadArgs": RegoObjType(XReadArgsObjSpec),
+            "XReadGroupArgs": RegoObjType(XReadGroupArgsObjSpec),
+            "XPendingExtArgs": RegoObjType(XPendingExtArgsObjSpec),
         }
         if go_type in scalar_mapping:
             return scalar_mapping[go_type].with_go_type(go_type).with_is_pointer(is_pointer)
@@ -212,7 +203,8 @@ class RegoDurationType(RegoScalarType):
         duration_mapping = {
             "PTTL": f"{ret_var_name} := ast.IntNumberTerm(int({var_name}.Milliseconds()))",
             "TTL": f"{ret_var_name} := ast.IntNumberTerm(int({var_name}.Seconds()))",
-            "OBJECTIDLETIME": f"{ret_var_name} := ast.IntNumberTerm(int({var_name}.Seconds()))"
+            "OBJECTIDLETIME": f"{ret_var_name} := ast.IntNumberTerm(int({var_name}.Seconds()))",
+            "XPENDINGEXT": f"{ret_var_name} := ast.IntNumberTerm(int({var_name}.Milliseconds()))"
         }
         return duration_mapping[cmd_name]
 
@@ -276,9 +268,8 @@ class RegoArrayType(RegoType):
 
 
 class RegoObjType(RegoType):
-    def __init__(self, object_spec, is_pointer=False, single_return_member=None) -> None:
+    def __init__(self, object_spec, is_pointer=False) -> None:
         self.object_spec = object_spec
-        self.single_return_member = single_return_member
         super().__init__(is_pointer=is_pointer)
     
     def to_go_rego_types_api_code(self):
@@ -306,18 +297,64 @@ class RegoObjType(RegoType):
         for key, value_type in self.object_spec.items():
             object_args.append(key.lower())
             code += f"""
-            {value_type._to_go_ast_term(key.lower(), f"{var_name}.{key}", cmd_name)}
+            {value_type._to_go_ast_term(ret_var_name+key, f"{var_name}.{key}", cmd_name)}
             """
         object_args = ",".join(object_args)
 
         key_value_pairs = list()
         for key, value_type in self.object_spec.items():
-            key_value_pairs.append(f"[2]*ast.Term{{ast.StringTerm(\"{key!s}\"), {key.lower()}}}")
+            key_value_pairs.append(f"[2]*ast.Term{{ast.StringTerm(\"{key!s}\"), {ret_var_name+key}}}")
         key_value_pairs = ",".join(key_value_pairs)
         code += f"""
         {ret_var_name} := ast.ObjectTerm({key_value_pairs})
         """
         return code
+    
+class RegoMapType(RegoType):
+    def __init__(self, key_type: RegoType, value_type: RegoType, key_var_name="key", value_var_name="value", is_pointer=False):
+        self.key_type = key_type
+        self.value_type = value_type
+        self.key_var_name = key_var_name
+        self.value_var_name = value_var_name
+        super().__init__(is_pointer=is_pointer)
+    
+    def to_go_rego_types_api_code(self):
+        return f"types.NewObject([]*types.StaticProperty{{}}, types.NewDynamicProperty({self.key_type.to_go_rego_types_api_code()}, {self.value_type.to_go_rego_types_api_code()}))"
+    
+    def _to_go_var_declaration(self, var_name):
+        return f"var {var_name} {self.go_type}"
+
+    def to_go_parameter_code(self, var_name, is_last):
+        return var_name
+
+    def to_go_ast_term_return_statement(self, var_name, cmd_name):
+        return f"""
+        {self._to_go_ast_term("term", var_name, cmd_name)}
+        return term,  nil
+        """
+    
+    def _to_go_ast_term(self, ret_var_name, var_name, cmd_name):
+        tmp = f"tmp{''.join(random.choices('1234567890', k=5))}"
+        code = f"""
+        var {tmp} [][2]*ast.Term
+        for {self.key_var_name}, {self.value_var_name} := range {var_name} {{
+            {self.key_type._to_go_ast_term("k", self.key_var_name, cmd_name)}"""
+        if self.value_type.is_pointer:
+            code += f"""
+            if value == nil {{
+                {tmp} = append({tmp}, [2]*ast.Term{{k, ast.NullTerm()}})
+                continue
+            }}
+            """
+        
+        code += f"""
+            {self.value_type._to_go_ast_term("v", self.value_var_name, cmd_name)}
+            {tmp} = append({tmp}, [2]*ast.Term{{k, v}})
+        }}
+        {ret_var_name} := ast.ObjectTerm({tmp}...)
+        """
+        return code
+    
 
 class RegoReturnType: # dont know if this should be RegoType base
     @classmethod
@@ -336,6 +373,9 @@ class RegoReturnType: # dont know if this should be RegoType base
             "FloatSliceCmd": FloatSliceCmdReturnType,
             "TimeCmd": TimeCmdReturnType,
             "Cmd": CmdReturnType,
+            "StringStringMapCmd": StringStringMapCmdReturnType,
+            "StringIntMapCmd": StringIntMapCmdReturnType,
+            "StringStructMapCmd": StringStructMapCmdReturnType,
             "ScanCmd": ScanCmdReturnType,
             "GeoPosCmd": GeoPosCmdReturnType,
             "GeoSearchLocationCmd": GeoSearchLocationCmdReturnType,
@@ -343,9 +383,16 @@ class RegoReturnType: # dont know if this should be RegoType base
             "ClusterSlotsCmd": ClusterSlotsCmdReturnType,
             "ZSliceCmd": ZSliceCmdReturnType,
             "ZWithKeyCmd": ZWithKeyCmdReturnType,
+            "XInfoStreamCmd": XInfoStreamCmdReturnType,
+            "XInfoStreamFullCmd": XInfoStreamFullCmdReturnType,
             "XInfoConsumersCmd": XInfoConsumersCmdReturnType,
             "XInfoGroupsCmd": XInfoGroupsCmdReturnType,
             "XAutoClaimJustIDCmd": XAutoClaimJustIDCmdReturnType,
+            "XAutoClaimCmd": XAutoClaimCmdReturnType, 
+            "XPendingExtCmd": XPendingExtCmdReturnType,
+            "XPendingCmd": XPendingCmdReturnType,
+            "XStreamSliceCmd": XStreamSliceCmdReturnType,
+            "XMessageSliceCmd": XMessageSliceCmdReturnType,
         }
         return mapping[cmd_type.replace("*", "")]
 
@@ -379,6 +426,7 @@ class RegoReturnType: # dont know if this should be RegoType base
         """
         return code
 
+EmptyObjSpec = {}
 BitCountObjSpec = {
     "Start": RegoInt64NumberType(),
     "End": RegoInt64NumberType(),
@@ -496,8 +544,17 @@ XInfoConsumerObjSpec = {
     "Idle": RegoInt64NumberType()
 }
 XMessageObjSpec = {
-    # TODO: map type
-    # "Values": RegoMapType()
+    "ID": RegoStringType(),
+    "Values": RegoMapType(RegoStringType(), RegoAnyType())
+}
+XInfoStreamObjSpec = {
+    "Length": RegoInt64NumberType(),
+    "RadixTreeKeys": RegoInt64NumberType(),
+    "RadixTreeNodes": RegoInt64NumberType(),
+    "Groups": RegoInt64NumberType(),
+    "LastGeneratedID": RegoStringType(),
+    "FirstEntry": RegoObjType(XMessageObjSpec),
+    "LastEntry": RegoObjType(XMessageObjSpec),
 }
 XInfoStreamGroupPendingObjSpec = {
     "ID": RegoStringType(),
@@ -563,6 +620,44 @@ XAddArgsObjSpec = {
      "ID": RegoStringType(),
      "Values": RegoAnyType(),
 }
+XPendingExtObjSpec = {
+    "ID": RegoStringType(),
+    "Consumer": RegoStringType(),
+    "Idle": RegoDurationType(),
+    "RetryCount": RegoInt64NumberType(),
+}
+XPendingExtArgsObjSpec = {
+    "Stream": RegoStringType(),
+    "Group": RegoStringType(),
+    "Idle": RegoDurationType(),
+    "Start": RegoStringType(),
+    "End": RegoStringType(),
+    "Count": RegoInt64NumberType(),
+    "Consumer": RegoStringType(),
+}
+XPendingObjSpec = {
+    "Count": RegoInt64NumberType(),
+    "Lower": RegoStringType(),
+    "Higher": RegoStringType(),
+    "Consumers": RegoMapType(RegoStringType(), RegoInt64NumberType()),
+}
+XStreamObjSpec = {
+    "Stream": RegoStringType(),
+    "Messages": RegoArrayType(RegoObjType(XMessageObjSpec)),
+}
+XReadArgsObjSpec = {
+    "Streams": RegoArrayType(RegoStringType()),
+    "Count": RegoInt64NumberType(),
+    "Block": RegoDurationType(),
+}
+XReadGroupArgsObjSpec = {
+    "Group": RegoStringType(),
+    "Consumer": RegoStringType(),
+    "Streams": RegoArrayType(RegoStringType()),
+    "Count": RegoInt64NumberType(),
+    "Block": RegoDurationType(),
+    "NoAck": RegoBoolType(),
+}
 
 StringCmdReturnType = RegoReturnType(RegoStringType())
 StatusCmdReturnType = RegoReturnType(RegoStringType())
@@ -576,6 +671,9 @@ IntSliceCmdReturnType = RegoReturnType(RegoArrayType(RegoIntNumberType()))
 BoolSliceCmdReturnType = RegoReturnType(RegoArrayType(RegoBoolType()))
 FloatSliceCmdReturnType = RegoReturnType(RegoArrayType(RegoFloatNumberType()))
 TimeCmdReturnType = RegoReturnType(RegoTimeType())
+StringStringMapCmdReturnType = RegoReturnType(RegoMapType(RegoStringType(), RegoStringType()))
+StringIntMapCmdReturnType = RegoReturnType(RegoMapType(RegoStringType(), RegoInt64NumberType()))
+StringStructMapCmdReturnType = RegoReturnType(RegoMapType(RegoStringType(), RegoObjType(EmptyObjSpec), value_var_name="_"))
 CmdReturnType = RegoReturnType(RegoAnyType())
 ScanCmdReturnType = RegoReturnType((RegoArrayType(RegoStringType()), RegoUIntNumberType()))
 GeoPosCmdReturnType = RegoReturnType(RegoArrayType(RegoObjType(GeoPosObjSpec, is_pointer=True)))
@@ -585,16 +683,25 @@ ClusterSlotsCmdReturnType = RegoReturnType(RegoArrayType(RegoObjType(ClusterSlot
 ZSliceCmdReturnType = RegoReturnType(RegoArrayType(RegoObjType(ZObjSpec)))
 ZWithKeyCmdReturnType = RegoReturnType(RegoObjType(ZWithKeyObjSpec, is_pointer=True))
 XInfoConsumersCmdReturnType = RegoReturnType(RegoArrayType(RegoObjType(XInfoConsumerObjSpec)))
+XInfoStreamCmdReturnType = RegoReturnType(RegoObjType(XInfoStreamObjSpec, is_pointer=True))
 XInfoStreamFullCmdReturnType = RegoReturnType(RegoObjType(XInfoStreamFullObjSpec, is_pointer=True))
 XInfoGroupsCmdReturnType = RegoReturnType(RegoArrayType(RegoObjType(XInfoGroupObjSpec)))
 XAutoClaimJustIDCmdReturnType = RegoReturnType((RegoArrayType(RegoStringType()), RegoStringType()))
+XAutoClaimCmdReturnType = RegoReturnType((RegoArrayType(RegoObjType(XMessageObjSpec)), RegoStringType()))
+XPendingExtCmdReturnType = RegoReturnType(RegoArrayType(RegoObjType(XPendingExtObjSpec)))
+XPendingCmdReturnType = RegoReturnType(RegoObjType(XPendingObjSpec ,is_pointer=True))
+XStreamSliceCmdReturnType = RegoReturnType(RegoArrayType(RegoObjType(XStreamObjSpec)))
+XMessageSliceCmdReturnType = RegoReturnType(RegoArrayType(RegoObjType(XMessageObjSpec)))
 
 
 class CmdSignature:
     @classmethod
     def from_string(cls, signature):
         # print(f"Parsing Signature: {signature!s}", file=sys.stderr)
-        cmd_name = re.match(r"(^.*?)\(", signature).group(1)
+        cmd_name = re.match(r"(^.*?)\(", signature)
+        if cmd_name is None or cmd_name.group(1) is None:
+            return cls(None, None, None, True) 
+        cmd_name = cmd_name.group(1)
         signature = signature[len(cmd_name)+1:].strip()
         signature = re.sub(r"ctx context\.Context(, )?", "", signature)
         parameter_types, skip_go_type = CmdSignature.parse_parameter_list(signature[:signature.index(")")].split(","))
@@ -620,7 +727,6 @@ class CmdSignature:
             try:
                 parameter_types.insert(0, RegoTypeFactory.from_go_type(go_type))
             except KeyError as e:
-                # print(f"KEY ERROR: {e!s}, {p}", file=sys.stderr)
                 continue
         return parameter_types, skip
             
