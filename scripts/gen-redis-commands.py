@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
-import enum
+import random
 import sys
 import re
 from pathlib import Path
-from typing import List
+from typing import List, Union
 
 commands_file = Path(__file__).parent.parent / "vendor" / "github.com" / "go-redis" / "redis" / "v8" / "commands.go"
 cmdable_class_regex = r"type Cmdable interface {((.|\s)*?)\s}"
@@ -14,177 +14,97 @@ skip_command_names = (
     "TxPipelined",
     "TxPipeline",
     "Command",
-    "Scan",
-    "ScanType",
-    "SScan",
-    "HScan",
-    "ZScan",
 )
 skip_go_types = (
-    "*Sort",
     "*XPendingExtArgs",
-    "*ZStore",
-    "ZStore",
-    "LPosArgs",
-    "*Z",
-    "ZAddArgs",
-    "ZRangeArgs",
-    "*ZRangeBy",
-    "*XAddArgs",
-    "SetArgs",
-    "*BitCount",
-    "*XClaimArgs",
-    "*GeoRadiusQuery",
-    "*GeoSearchQuery",
-    "*GeoSearchLocationQuery",
-    "*GeoSearchStoreQuery"
 )
 skip_cmd_classes = (
-    "StringStringMapCmd",
-    "StringIntMapCmd",
-    "StringStructMapCmd",
-    "XMessageSliceCmd",
-    "XStreamSliceCmd",
-    "XPendingCmd",
-    "XPendingExtCmd",
-    "XAutoClaimCmd",
-    "XAutoClaimJustIDCmd",
-    "XInfoGroupsCmd",
-    "XInfoStreamCmd",
-    "XInfoStreamFullCmd",
-    "XInfoConsumersCmd",
-    "ZWithKeyCmd",
-    "ZSliceCmd",
-    "ClusterSlotsCmd",
-    "GeoPosCmd",
-    "GeoLocationCmd",
-    "GeoSearchLocationCmd"
+    "*StringStringMapCmd",
+    "*StringIntMapCmd",
+    "*StringStructMapCmd",
+    "*XMessageSliceCmd",
+    "*XStreamSliceCmd",
+    "*XPendingCmd",
+    "*XPendingExtCmd",
+    "*XAutoClaimCmd",
+    "*XInfoStreamCmd",
+    "*XInfoStreamFullCmd", # TODO: add MAP type
 )
 # TODO: implement some of these
 
 
-class RegoScalarType(enum.Enum):
-    ANY = 0
-    STRING = 1
-    INTNUMBER = 2
-    UINTNUMBER = 3
-    FLOATNUMBER = 4
-    BOOL = 5
-    DURATION = 6
-    TIME = 7
 
-class RegoTypeConvertible:
-    def __init__(self, go_type, scalar_type, composite):
-        self.go_type = go_type
-        self.scalar_type = scalar_type
-        self.is_composite = composite
+class RegoTypeFactory:
+    @staticmethod
+    def from_go_type(go_type):
+        is_pointer = go_type.startswith("*")
+        if is_pointer:
+            go_type = go_type[1:]
 
-    def _to_go_rego_types_api_code(self):
-        mapping = {
-            RegoScalarType.ANY: "Any",
-            RegoScalarType.STRING: "String",
-            RegoScalarType.INTNUMBER: "Number",
-            RegoScalarType.UINTNUMBER: "Number",
-            RegoScalarType.FLOATNUMBER: "Number",
-            RegoScalarType.BOOL: "Boolean",
-            RegoScalarType.DURATION: "Number",
-            RegoScalarType.TIME: "Number",
-        }
-        return f"types.{mapping[self.scalar_type]}{{}}"
-
-    def to_go_rego_types_api_code(self):
-        if not self.is_composite:
-            return self._to_go_rego_types_api_code()
-        return f"types.NewArray([]types.Type{{}}, {self._to_go_rego_types_api_code()})"
-
-class CmdClass(RegoTypeConvertible):
-    def __init__(self, go_type, scalar_type, composite):
-        super().__init__(go_type, scalar_type, composite)
-
-    @classmethod
-    def from_redis_cmd_class(cls, cmd_class):
-        mapping = {
-            "Cmd": RegoScalarType.ANY,
-            "StringCmd": RegoScalarType.STRING,
-            "IntCmd": RegoScalarType.INTNUMBER,
-            "BoolCmd": RegoScalarType.BOOL,
-            "DurationCmd": RegoScalarType.DURATION,
-            "StatusCmd": RegoScalarType.STRING,
-            "FloatCmd": RegoScalarType.FLOATNUMBER,
-            "TimeCmd": RegoScalarType.TIME,
-        }
-        cmd_class = cmd_class.replace("*", "").strip()
-        is_composite = "Slice" in cmd_class
-        skip = cmd_class in skip_cmd_classes
-        cmd_class = cmd_class.replace("Slice", "").strip()
-        scalar_type = mapping.get(cmd_class, None)
-        return cls(cmd_class, scalar_type, is_composite), skip
-
-    def to_go_ast_term_return_statement(self, var_name, cmd_name):
-        if not self.is_composite:
-            return f"""
-                {self._to_go_ast_term("term", var_name, cmd_name)} 
-                return term, nil"""
-        return f"""
-        var ret []*ast.Term
-        for _, v := range {var_name} {{
-            {self._to_go_ast_term("term", "v", cmd_name)}
-            ret = append(ret, term)
-        }}
-        return ast.ArrayTerm(ret...), nil
-                """
-
-    def _to_go_ast_term(self, ret_var_name, var_name, cmd_name):
-        def ast_ret(term):
-            return f"{{ret_var_name}} := ast.{term!s}"
-
-        duration_mapping = {
-            "PTTL": ast_ret("IntNumberTerm(int({var_name}.Milliseconds()))"),
-            "TTL": ast_ret("IntNumberTerm(int({var_name}.Seconds()))"),
-            "OBJECTIDLETIME": ast_ret("IntNumberTerm(int({var_name}.Seconds()))")
-        }
-        mapping = {
-            RegoScalarType.ANY: """
-            {ret_var_name} := ast.NullTerm()
-            if s, ok := {var_name}.(string); ok {{
-                {ret_var_name} = ast.StringTerm(s)
-            }}
-            """,
-            RegoScalarType.STRING: ast_ret("StringTerm({var_name})"),
-            RegoScalarType.BOOL: ast_ret("BooleanTerm({var_name})"),
-            RegoScalarType.INTNUMBER: ast_ret("IntNumberTerm(int({var_name}))"),
-            RegoScalarType.UINTNUMBER: ast_ret("UintNumberTerm(uint({var_name}))"),
-            RegoScalarType.FLOATNUMBER: ast_ret("FloatNumberTerm(float64({var_name}))"),
-            RegoScalarType.DURATION: duration_mapping,
-            RegoScalarType.TIME: ast_ret("IntNumberTerm(int({var_name}.UnixMicro()))")
-        }
-        if isinstance(mapping[self.scalar_type], dict):
-            return f"{mapping[self.scalar_type][cmd_name].format(ret_var_name=ret_var_name, var_name=var_name)}"
-        return f"{mapping[self.scalar_type].format(ret_var_name=ret_var_name, var_name=var_name)}"
-
-class ParameterClass(RegoTypeConvertible):
-    def __init__(self, go_type, scalar_type, composite):
-        super().__init__(go_type, scalar_type, composite)
-
-    @classmethod
-    def from_go_type(cls, go_type):
-        mapping = {
-            "bool": RegoScalarType.BOOL,
-            "string": RegoScalarType.STRING,
-            "int": RegoScalarType.INTNUMBER,
-            "int64": RegoScalarType.INTNUMBER,
-            "uint64": RegoScalarType.UINTNUMBER,
-            "float64": RegoScalarType.FLOATNUMBER,
-            "interface{}": RegoScalarType.ANY,
-            "time.Duration": RegoScalarType.DURATION,
-            "time.Time": RegoScalarType.TIME,
-        }
-
-        is_composite = go_type.startswith("...") or go_type.startswith("[]")
+        is_container = go_type.startswith("...") or go_type.startswith("[]")
         go_type = go_type.replace("...", "").replace("[]", "").strip()
-        scalar_type = mapping[go_type]
-        return cls(go_type, scalar_type, is_composite)
+        if is_container:
+            return RegoArrayType(RegoTypeFactory.from_go_type(go_type), is_pointer=is_pointer)
+        scalar_mapping = {
+            "bool": RegoBoolType(),
+            "string": RegoStringType(),
+            "int": RegoIntNumberType(),
+            "int64": RegoInt64NumberType(),
+            "uint64": RegoUIntNumberType(),
+            "float64": RegoFloatNumberType(),
+            "interface{}": RegoAnyType(),
+            "time.Duration": RegoDurationType(),
+            "time.Time": RegoTimeType(),
+        }
+        redis_mapping = {
+            "BitCount": RegoObjType(BitCountObjSpec),
+            "LPosArgs": RegoObjType(LPosArgsObjSpec),
+            "SetArgs": RegoObjType(SetArgsObjSpec),
+            "Sort": RegoObjType(SortObjSpec),
+            "GeoLocation": RegoObjType(GeoLocationObjSpec),
+            "GeoPos": RegoObjType(GeoPosObjSpec),
+            "GeoSearchLocationQuery": RegoObjType(GeoSearchLocationQueryObjSpec),
+            "GeoRadiusQuery": RegoObjType(GeoRadiusQueryObjSpec),
+            "GeoSearchStoreQuery": RegoObjType(GeoSearchStoreQueryObjSpec),
+            "GeoSearchQuery": RegoObjType(GeoSearchQueryObjSpec),
+            "Z": RegoObjType(ZObjSpec),
+            "ZStore": RegoObjType(ZStoreObjSpec),
+            "ZAddArgs": RegoObjType(ZAddArgsObjSpec),
+            "ZRangeBy": RegoObjType(ZRangeByObjSpec),
+            "ZRangeArgs": RegoObjType(ZRangeArgsObjSpec),
+            "XAutoClaimArgs": RegoObjType(XAutoClaimArgsObjSpec),
+            "XClaimArgs": RegoObjType(XClaimArgsObjSpec),
+            "XAddArgs": RegoObjType(XAddArgsObjSpec),
+        }
+        if go_type in scalar_mapping:
+            return scalar_mapping[go_type].with_go_type(go_type).with_is_pointer(is_pointer)
+        return redis_mapping[go_type].with_go_type(f"redis.{go_type}").with_is_pointer(is_pointer)
+
+class RegoType:
+    TYPES_API_TYPE = ""
+    GO_TYPE = ""
+
+    def __init__(self, go_type=None, is_pointer=False) -> None:
+        self._go_type = go_type if go_type is not None else self.GO_TYPE
+        self.is_pointer = is_pointer
     
+    def with_go_type(self, go_type):
+        self._go_type = go_type
+        return self
+    
+    def with_is_pointer(self, is_pointer):
+        self.is_pointer = is_pointer
+        return self
+    
+    @property
+    def go_type(self):
+        if self.is_pointer:
+            return f"*{self._go_type}"
+        return self._go_type
+    
+    def to_go_rego_types_api_code(self):
+        raise NotImplementedError()
+
     def to_go_parse_var_code(self, var_name, idx):
         return  f"""
             {self._to_go_var_declaration(var_name)}
@@ -192,21 +112,482 @@ class ParameterClass(RegoTypeConvertible):
                 return nil, err
             }}
             """
+
     def _to_go_var_declaration(self, var_name):
-        if not self.is_composite:
-            return f"var {var_name} {self.go_type}"
-        return f"var {var_name} []{self.go_type}"
+        raise NotImplementedError()
+    
+    def to_go_parameter_code(self, var_name, is_last):
+        raise NotImplementedError()
+
+    def to_go_ast_term_return_statement(self, var_name, cmd_name):
+        raise NotImplementedError()
+    
+    def _to_go_ast_term(self, ret_var_name, var_name, cmd_name):
+        raise NotImplementedError()
+
+class RegoScalarType(RegoType):
+    def to_go_rego_types_api_code(self):
+        return f"types.{self.TYPES_API_TYPE}{{}}"
+
+    def _to_go_var_declaration(self, var_name):
+        return f"var {var_name} {self.go_type}"
+    
 
     def to_go_parameter_code(self, var_name, is_last):
-        if not self.is_composite or not is_last:
-            return self._to_go_parameter_code(var_name)
-        return f"{self._to_go_parameter_code(var_name)}..."
+        return self._to_go_parameter_code(var_name)
 
     def _to_go_parameter_code(self, var_name):
-        if self.scalar_type == RegoScalarType.ANY:
-            return f"utils.Conva({var_name})" if self.is_composite else f"utils.Conv({var_name})"
         return var_name
 
+    def to_go_ast_term_return_statement(self, var_name, cmd_name):
+        return f"""
+            {self._to_go_ast_term("term", var_name, cmd_name)} 
+            return term, nil"""
+
+    def _to_go_ast_term(self, var_name, cmd_name):
+        raise NotImplementedError()
+    
+class RegoAnyType(RegoScalarType):
+    TYPES_API_TYPE = "Any"
+    GO_TYPE = "interface{}"
+
+    def _to_go_parameter_code(self, var_name):
+        return f"utils.Conv({var_name})"
+    
+    def _to_go_ast_term(self, ret_var_name, var_name, cmd_name):
+            return f"""
+            {ret_var_name} := ast.NullTerm()
+            if s, ok := {var_name}.(string); ok {{
+                {ret_var_name} = ast.StringTerm(s)
+            }}
+            """
+
+class RegoStringType(RegoScalarType):
+    TYPES_API_TYPE = "String"
+    GO_TYPE = "string"
+
+    def _to_go_ast_term(self, ret_var_name, var_name, cmd_name):
+        return f"{ret_var_name} := ast.StringTerm({var_name})"
+
+class RegoIntNumberType(RegoScalarType):
+    TYPES_API_TYPE = "Number"
+    GO_TYPE = "int"
+    
+    def _to_go_ast_term(self, ret_var_name, var_name, cmd_name):
+        return f"{ret_var_name} := ast.IntNumberTerm(int({var_name}))"
+
+class RegoInt64NumberType(RegoScalarType):
+    TYPES_API_TYPE = "Number"
+    GO_TYPE = "int64"
+    
+    def _to_go_ast_term(self, ret_var_name, var_name, cmd_name):
+        return f"{ret_var_name} := ast.IntNumberTerm(int({var_name}))"
+
+class RegoUIntNumberType(RegoScalarType):
+    TYPES_API_TYPE = "Number"
+    GO_TYPE = "uint64"
+    
+    def _to_go_ast_term(self, ret_var_name, var_name, cmd_name):
+        return f"{ret_var_name} := ast.UIntNumberTerm(uint64({var_name}))"
+
+class RegoFloatNumberType(RegoScalarType):
+    TYPES_API_TYPE = "Number"
+    GO_TYPE = "float64"
+    
+    def _to_go_ast_term(self, ret_var_name, var_name, cmd_name):
+        return f"{ret_var_name} := ast.FloatNumberTerm(float64({var_name}))"
+
+class RegoBoolType(RegoScalarType):
+    TYPES_API_TYPE = "Boolean"
+    GO_TYPE = "bool"
+    
+    def _to_go_ast_term(self, ret_var_name, var_name, cmd_name):
+        return f"{ret_var_name} := ast.BooleanTerm({var_name})"
+
+class RegoDurationType(RegoScalarType):
+    TYPES_API_TYPE = "Number"
+    GO_TYPE = "time.Duration"
+
+    def _to_go_ast_term(self, ret_var_name, var_name, cmd_name):
+        duration_mapping = {
+            "PTTL": f"{ret_var_name} := ast.IntNumberTerm(int({var_name}.Milliseconds()))",
+            "TTL": f"{ret_var_name} := ast.IntNumberTerm(int({var_name}.Seconds()))",
+            "OBJECTIDLETIME": f"{ret_var_name} := ast.IntNumberTerm(int({var_name}.Seconds()))"
+        }
+        return duration_mapping[cmd_name]
+
+
+class RegoTimeType(RegoScalarType):
+    TYPES_API_TYPE = "Number"
+    GO_TYPE = "time.Time"
+
+    def _to_go_ast_term(self, ret_var_name, var_name, cmd_name):
+        return f"{ret_var_name} := ast.IntNumberTerm(int({var_name}.UnixMicro()))"
+
+
+class RegoArrayType(RegoType):
+    def __init__(self, containing_type: RegoType, is_pointer=False) -> None:
+        self.containing_type = containing_type
+        super().__init__(is_pointer=is_pointer)
+
+    def _to_go_var_declaration(self, var_name):
+        return f"var {var_name} []{self.containing_type.go_type}"
+
+    def to_go_rego_types_api_code(self):
+        return f"types.NewArray([]types.Type{{}}, {self.containing_type.to_go_rego_types_api_code()})"
+
+    def to_go_parameter_code(self, var_name, is_last):
+        if not is_last:
+            return self._to_go_parameter_code(var_name)
+        return f"{self._to_go_parameter_code(var_name)}..."
+    
+    def _to_go_parameter_code(self, var_name):
+        if self.containing_type.TYPES_API_TYPE == "Any":
+            return f"utils.Conva({var_name})"
+        return var_name
+
+    def to_go_ast_term_return_statement(self, var_name, cmd_name):
+        # TODO: handle containing_type == RegoArrayType
+        return f"""
+        {self._to_go_ast_term("term", var_name, cmd_name)}
+        return term,  nil
+        """
+    
+    def _to_go_ast_term(self, ret_var_name, var_name, cmd_name):
+        tmp = f"tmp{''.join(random.choices('1234567890', k=5))}"
+        code = f"""
+        var {tmp} []*ast.Term
+        for _, v := range {var_name} {{"""
+        if self.containing_type.is_pointer:
+            code += f"""
+            if v == nil {{
+                {tmp} = append({tmp}, ast.NullTerm())
+                continue
+            }}
+            """
+        
+        code += f"""
+            {self.containing_type._to_go_ast_term("term", "v", cmd_name)}
+            {tmp} = append({tmp}, term)
+        }}
+        {ret_var_name} := ast.ArrayTerm({tmp}...)
+        """
+        return code
+
+
+class RegoObjType(RegoType):
+    def __init__(self, object_spec, is_pointer=False, single_return_member=None) -> None:
+        self.object_spec = object_spec
+        self.single_return_member = single_return_member
+        super().__init__(is_pointer=is_pointer)
+    
+    def to_go_rego_types_api_code(self):
+        static_properties_list = list()
+        for key, value_type in self.object_spec.items():
+            static_properties_list.append(f"types.NewStaticProperty(\"{key!s}\", {value_type.to_go_rego_types_api_code()})")
+        static_properties_list = ",".join(static_properties_list) 
+        return f"types.NewObject([]*types.StaticProperty{{{static_properties_list}}}, nil)"
+
+    def _to_go_var_declaration(self, var_name):
+        return f"var {var_name} {self.go_type}"
+
+    def to_go_parameter_code(self, var_name, is_last):
+        return var_name
+
+    def to_go_ast_term_return_statement(self, var_name, cmd_name):
+        return f"""
+        {self._to_go_ast_term("term", var_name, cmd_name)}
+        return term,  nil
+        """
+    
+    def _to_go_ast_term(self, ret_var_name, var_name, cmd_name):
+        code = ""
+        object_args = list()
+        for key, value_type in self.object_spec.items():
+            object_args.append(key.lower())
+            code += f"""
+            {value_type._to_go_ast_term(key.lower(), f"{var_name}.{key}", cmd_name)}
+            """
+        object_args = ",".join(object_args)
+
+        key_value_pairs = list()
+        for key, value_type in self.object_spec.items():
+            key_value_pairs.append(f"[2]*ast.Term{{ast.StringTerm(\"{key!s}\"), {key.lower()}}}")
+        key_value_pairs = ",".join(key_value_pairs)
+        code += f"""
+        {ret_var_name} := ast.ObjectTerm({key_value_pairs})
+        """
+        return code
+
+class RegoReturnType: # dont know if this should be RegoType base
+    @classmethod
+    def from_redis_cmd_type(cls, cmd_type):
+        mapping = {
+            "StringCmd": StringCmdReturnType,
+            "StatusCmd": StatusCmdReturnType,
+            "IntCmd": IntCmdReturnType,
+            "BoolCmd": BoolCmdReturnType,
+            "StringSliceCmd": StringSliceCmdReturnType,
+            "DurationCmd": DurationCmdReturnType,
+            "FloatCmd": FloatCmdReturnType,
+            "SliceCmd": SliceCmdReturnType,
+            "IntSliceCmd": IntSliceCmdReturnType,
+            "BoolSliceCmd": BoolSliceCmdReturnType,
+            "FloatSliceCmd": FloatSliceCmdReturnType,
+            "TimeCmd": TimeCmdReturnType,
+            "Cmd": CmdReturnType,
+            "ScanCmd": ScanCmdReturnType,
+            "GeoPosCmd": GeoPosCmdReturnType,
+            "GeoSearchLocationCmd": GeoSearchLocationCmdReturnType,
+            "GeoLocationCmd": GeoLocationCmdReturnType,
+            "ClusterSlotsCmd": ClusterSlotsCmdReturnType,
+            "ZSliceCmd": ZSliceCmdReturnType,
+            "ZWithKeyCmd": ZWithKeyCmdReturnType,
+            "XInfoConsumersCmd": XInfoConsumersCmdReturnType,
+            "XInfoGroupsCmd": XInfoGroupsCmdReturnType,
+            "XAutoClaimJustIDCmd": XAutoClaimJustIDCmdReturnType,
+        }
+        return mapping[cmd_type.replace("*", "")]
+
+    def __init__(self, return_types: Union[List[RegoType], RegoType]) -> None:
+        if isinstance(return_types, RegoType):
+            return_types = (return_types,)
+        if len(return_types) == 0: raise ValueError("len(return_types) must be > 0.")
+        self.return_types = return_types
+
+    @property
+    def return_types_count(self):
+        return len(self.return_types)
+
+    def to_go_rego_types_api_code(self):
+        if self.return_types_count == 1:
+            return self.return_types[0].to_go_rego_types_api_code()
+        static_types = ",".join([return_type.to_go_rego_types_api_code() for return_type in self.return_types])
+        return f"types.NewArray([]types.Type{{{static_types}}}, types.Null{{}})"
+    
+    def to_go_ast_term_return_statement(self, var_names, cmd_name):
+        if self.return_types_count == 1:
+            return self.return_types[0].to_go_ast_term_return_statement(var_names[0], cmd_name)
+        code = ""
+        array_args = list()
+        for var_name, return_type in zip(var_names, self.return_types):
+            array_args.append(f"t{var_name}")
+            code += return_type._to_go_ast_term(f"t{var_name}", var_name, cmd_name)
+        array_args = ",".join(array_args)
+        code += f"""
+        return ast.ArrayTerm({array_args}), nil
+        """
+        return code
+
+BitCountObjSpec = {
+    "Start": RegoInt64NumberType(),
+    "End": RegoInt64NumberType(),
+}
+LPosArgsObjSpec = {
+    "Rank": RegoInt64NumberType(),
+    "MaxLen": RegoInt64NumberType(),
+}
+SetArgsObjSpec = {
+    "Mode": RegoStringType(),
+    "TTL": RegoDurationType(),
+    "ExpireAt": RegoTimeType(),
+    "Get": RegoBoolType(),
+    "KeepTTL": RegoBoolType(),
+}
+SortObjSpec = {
+    "By": RegoStringType(),
+    "Offset": RegoInt64NumberType(),
+    "Count": RegoInt64NumberType(),
+    "Get": RegoArrayType(RegoStringType()),
+    "Order": RegoStringType(),
+    "Alpha": RegoBoolType()
+}
+GeoLocationObjSpec = {
+    "Name": RegoStringType(),
+    "Longitude": RegoFloatNumberType(),
+    "Latitude": RegoFloatNumberType(),
+    "Dist": RegoFloatNumberType(),
+    "GeoHash": RegoIntNumberType(),
+}
+GeoPosObjSpec = {
+    "Longitude": RegoFloatNumberType(),
+    "Latitude": RegoFloatNumberType(),
+}
+GeoSearchLocationQueryObjSpec = {
+    "WithCoord": RegoBoolType(),
+    "WithDist": RegoBoolType(),
+    "WithHash": RegoBoolType(),
+}
+GeoRadiusQueryObjSpec = {
+    "Radius": RegoFloatNumberType(),
+    "Unit": RegoStringType(),
+    "WithCoord": RegoBoolType(),
+    "WithDist": RegoBoolType(),
+    "WithGeoHash": RegoBoolType(),
+    "Count": RegoIntNumberType(),
+    "Sort": RegoStringType(),
+    "Store": RegoStringType(),
+    "StoreDist": RegoStringType()
+}
+GeoSearchStoreQueryObjSpec = {
+    "StoreDist": RegoBoolType()
+}
+GeoSearchQueryObjSpec = {
+    "Member": RegoStringType(),
+    "Longitude": RegoFloatNumberType(),
+    "Latitude": RegoFloatNumberType(),
+    "Radius": RegoFloatNumberType(),
+    "RadiusUnit": RegoStringType(),
+    "BoxWidth": RegoFloatNumberType(),
+    "BoxHeight": RegoFloatNumberType(),
+    "BoxUnit": RegoStringType(),
+    "Sort": RegoStringType(),
+    "Count": RegoIntNumberType(),
+    "CountAny": RegoBoolType(),
+}
+ClusterNodeObjSpec = {
+    "ID": RegoStringType(),
+    "Addr": RegoStringType()
+}
+ClusterSlotObjSpec = {
+    "Start": RegoIntNumberType(),
+    "End": RegoIntNumberType(),
+    "Nodes": RegoArrayType(RegoObjType(ClusterNodeObjSpec))
+}
+ZObjSpec = {
+    "Score": RegoFloatNumberType(),
+    "Member": RegoAnyType(),
+}
+ZStoreObjSpec = {
+    "Keys": RegoArrayType(RegoStringType()),
+    "Weights": RegoArrayType(RegoFloatNumberType()), 
+    "Aggregate": RegoStringType()
+}
+ZAddArgsObjSpec = {
+    "NX": RegoBoolType(),
+    "XX": RegoBoolType(),
+    "LT": RegoBoolType(),
+    "GT": RegoBoolType(),
+    "Ch": RegoBoolType(),
+    "Members": RegoArrayType(RegoObjType(ZObjSpec)),
+}
+ZWithKeyObjSpec = {
+    "Key": RegoStringType()
+}
+ZRangeByObjSpec = {
+    "Min": RegoStringType(),
+    "Max": RegoStringType(),
+    "Offset": RegoInt64NumberType(),
+    "Count": RegoInt64NumberType(),
+}
+ZRangeArgsObjSpec = {
+    "Key": RegoStringType(),
+    "Start": RegoAnyType(),
+    "Stop": RegoAnyType(),
+    "ByScore": RegoBoolType(),
+    "ByLex": RegoBoolType(),
+    "Rev": RegoBoolType(),
+    "Offset": RegoInt64NumberType(),
+    "Count": RegoInt64NumberType(),
+}
+XInfoConsumerObjSpec = {
+    "Name": RegoStringType(),
+    "Pending": RegoInt64NumberType(),
+    "Idle": RegoInt64NumberType()
+}
+XMessageObjSpec = {
+    # TODO: map type
+    # "Values": RegoMapType()
+}
+XInfoStreamGroupPendingObjSpec = {
+    "ID": RegoStringType(),
+    "Consumer": RegoStringType(),
+    "DeliveryTime": RegoTimeType(),
+    "DeliveryCount": RegoInt64NumberType(),
+}
+XInfoStreamConsumerPendingObjSpec = {
+    "ID": RegoStringType(),
+    "DeliveryTime": RegoTimeType(),
+    "DeliveryCount": RegoInt64NumberType(),
+}
+XInfoStreamConsumerObjSpec = {
+    "Name": RegoStringType(),
+    "SeenTime": RegoTimeType(),
+    "PelCount": RegoInt64NumberType(),
+    "Pending": RegoArrayType(RegoObjType(XInfoStreamConsumerPendingObjSpec)),
+}
+XInfoStreamGroupObjSpec = {
+    "Name": RegoStringType(),
+    "LastDeliveredID": RegoStringType(),
+    "PelCount": RegoInt64NumberType(),
+    "Pending": RegoArrayType(RegoObjType(XInfoStreamGroupPendingObjSpec)),
+    "Consumers": RegoArrayType(RegoObjType(XInfoStreamConsumerObjSpec))
+}
+XInfoStreamFullObjSpec = {
+    "Length": RegoInt64NumberType(),
+    "RadixTreeKeys": RegoInt64NumberType(),
+    "RadixTreeNodes": RegoInt64NumberType(),
+    "LastGeneratedID": RegoStringType(),
+    "Entries": RegoArrayType(RegoObjType(XMessageObjSpec)),
+    "Groups": RegoArrayType(RegoObjType(XInfoStreamGroupObjSpec))
+}
+XInfoGroupObjSpec = {
+    "Name": RegoStringType(),
+    "Consumers": RegoInt64NumberType(),
+    "Pending": RegoInt64NumberType(),
+    "LastDeliveredID": RegoStringType(),
+}
+XAutoClaimArgsObjSpec = {
+    "Stream": RegoStringType(),
+    "Group": RegoStringType(),
+    "MinIdle": RegoDurationType(),
+    "Start": RegoStringType(),
+    "Count": RegoInt64NumberType(),
+    "Consumer": RegoStringType(),
+}
+XClaimArgsObjSpec = {
+    "Stream": RegoStringType(),
+    "Group": RegoStringType(),
+    "Consumer": RegoStringType(),
+    "MinIdle": RegoDurationType(),
+    "Messages": RegoArrayType(RegoStringType())
+}
+XAddArgsObjSpec = {
+     "Stream": RegoStringType(),
+     "NoMkStream": RegoBoolType(),
+     "MaxLen": RegoInt64NumberType(),
+     "MaxLenApprox": RegoInt64NumberType(),
+     "MinID": RegoStringType(),
+     "Approx": RegoBoolType(),
+     "Limit": RegoInt64NumberType(),
+     "ID": RegoStringType(),
+     "Values": RegoAnyType(),
+}
+
+StringCmdReturnType = RegoReturnType(RegoStringType())
+StatusCmdReturnType = RegoReturnType(RegoStringType())
+IntCmdReturnType = RegoReturnType(RegoIntNumberType())
+BoolCmdReturnType = RegoReturnType(RegoBoolType())
+StringSliceCmdReturnType = RegoReturnType(RegoArrayType(RegoStringType()))
+DurationCmdReturnType = RegoReturnType(RegoDurationType())
+FloatCmdReturnType = RegoReturnType(RegoFloatNumberType())
+SliceCmdReturnType = RegoReturnType(RegoArrayType(RegoAnyType()))
+IntSliceCmdReturnType = RegoReturnType(RegoArrayType(RegoIntNumberType()))
+BoolSliceCmdReturnType = RegoReturnType(RegoArrayType(RegoBoolType()))
+FloatSliceCmdReturnType = RegoReturnType(RegoArrayType(RegoFloatNumberType()))
+TimeCmdReturnType = RegoReturnType(RegoTimeType())
+CmdReturnType = RegoReturnType(RegoAnyType())
+ScanCmdReturnType = RegoReturnType((RegoArrayType(RegoStringType()), RegoUIntNumberType()))
+GeoPosCmdReturnType = RegoReturnType(RegoArrayType(RegoObjType(GeoPosObjSpec, is_pointer=True)))
+GeoSearchLocationCmdReturnType = RegoReturnType(RegoArrayType(RegoObjType(GeoLocationObjSpec)))
+GeoLocationCmdReturnType = RegoReturnType(RegoArrayType(RegoObjType(GeoLocationObjSpec)))
+ClusterSlotsCmdReturnType = RegoReturnType(RegoArrayType(RegoObjType(ClusterSlotObjSpec)))
+ZSliceCmdReturnType = RegoReturnType(RegoArrayType(RegoObjType(ZObjSpec)))
+ZWithKeyCmdReturnType = RegoReturnType(RegoObjType(ZWithKeyObjSpec, is_pointer=True))
+XInfoConsumersCmdReturnType = RegoReturnType(RegoArrayType(RegoObjType(XInfoConsumerObjSpec)))
+XInfoStreamFullCmdReturnType = RegoReturnType(RegoObjType(XInfoStreamFullObjSpec, is_pointer=True))
+XInfoGroupsCmdReturnType = RegoReturnType(RegoArrayType(RegoObjType(XInfoGroupObjSpec)))
+XAutoClaimJustIDCmdReturnType = RegoReturnType((RegoArrayType(RegoStringType()), RegoStringType()))
 
 
 class CmdSignature:
@@ -218,8 +599,10 @@ class CmdSignature:
         signature = re.sub(r"ctx context\.Context(, )?", "", signature)
         parameter_types, skip_go_type = CmdSignature.parse_parameter_list(signature[:signature.index(")")].split(","))
         signature = signature[signature.index(")")+1:].strip()
-        return_type, skip_cmd_class = CmdClass.from_redis_cmd_class(signature)
-        return cls(cmd_name, parameter_types, return_type, skip_go_type or skip_cmd_class)
+        if skip_go_type or signature in skip_cmd_classes or cmd_name in skip_command_names:
+            return cls(None, None, None, True)
+        return_type = RegoReturnType.from_redis_cmd_type(signature)
+        return cls(cmd_name, parameter_types, return_type, False)
     
     @staticmethod
     def parse_parameter_list(parameters: List[str]):
@@ -235,14 +618,14 @@ class CmdSignature:
             if go_type in skip_go_types:
                 skip = True
             try:
-                parameter_types.insert(0, ParameterClass.from_go_type(go_type))
+                parameter_types.insert(0, RegoTypeFactory.from_go_type(go_type))
             except KeyError as e:
                 # print(f"KEY ERROR: {e!s}, {p}", file=sys.stderr)
                 continue
         return parameter_types, skip
             
 
-    def __init__(self, cmd_name: str, parameter_types: List[ParameterClass], return_type: CmdClass, skip: bool):
+    def __init__(self, cmd_name: str, parameter_types: List[RegoType], return_type: RegoReturnType, skip: bool):
         self.cmd_name = cmd_name
         self.parameter_types = parameter_types
         self.return_type = return_type
@@ -282,10 +665,9 @@ import (
 
 
     register_functions = list()
-    for signature in filter(lambda s:s.cmd_name not in skip_command_names, parse_command_signatures(command_signatures)):
-        if signature.skip: continue
+    for signature in filter(lambda s:not s.skip, parse_command_signatures(command_signatures)):
         register_functions.append(f"register{signature.cmd_name.upper()}")
-        # print(f" Generating Function Code for: {signature.cmd_name}")
+        print(f" Generating Function Code for: {signature.cmd_name}", file=sys.stderr)
         if gen_impl:
             code = generate_function_code_for_signature(signature)
             print(code)
@@ -340,14 +722,18 @@ func register{signature.cmd_name.upper()}(p *redisPlugin) {{
         code += p.to_go_parse_var_code(var_name, idx)
     parameter_args = ",".join(parameter_args)
 
+    var_names = list(map(lambda c:f"r{c!s}", range(signature.return_type.return_types_count)))
+    res_args = ",".join(var_names)
+
     code += f"""
 
-            val, err := rdb.{signature.cmd_name}({parameter_args}).Result()
-            switch err {{
+            val := rdb.{signature.cmd_name}({parameter_args})
+            {res_args} := val.Val()
+            switch err := val.Err(); err {{
             case redis.Nil:
                 return ast.NullTerm(), nil
             case nil:
-                {signature.return_type.to_go_ast_term_return_statement("val", signature.cmd_name.upper())}
+                {signature.return_type.to_go_ast_term_return_statement(var_names, signature.cmd_name.upper())}
             default:
                 return nil, err
             }}

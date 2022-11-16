@@ -29,6 +29,9 @@
  - `RENAMENX( types.String{}, types.String{} ) -> types.Boolean{}`
  - `RESTORE( types.String{}, types.Number{}, types.String{} ) -> types.String{}`
  - `RESTOREREPLACE( types.String{}, types.Number{}, types.String{} ) -> types.String{}`
+ - `SORT( types.String{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("By", types.String{}),types.NewStaticProperty("Offset", types.Number{}),types.NewStaticProperty("Count", types.Number{}),types.NewStaticProperty("Get", types.NewArray([]types.Type{}, types.String{})),types.NewStaticProperty("Order", types.String{}),types.NewStaticProperty("Alpha", types.Boolean{})}, nil) ) -> types.NewArray([]types.Type{}, types.String{})`
+ - `SORTSTORE( types.String{}, types.String{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("By", types.String{}),types.NewStaticProperty("Offset", types.Number{}),types.NewStaticProperty("Count", types.Number{}),types.NewStaticProperty("Get", types.NewArray([]types.Type{}, types.String{})),types.NewStaticProperty("Order", types.String{}),types.NewStaticProperty("Alpha", types.Boolean{})}, nil) ) -> types.Number{}`
+ - `SORTINTERFACES( types.String{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("By", types.String{}),types.NewStaticProperty("Offset", types.Number{}),types.NewStaticProperty("Count", types.Number{}),types.NewStaticProperty("Get", types.NewArray([]types.Type{}, types.String{})),types.NewStaticProperty("Order", types.String{}),types.NewStaticProperty("Alpha", types.Boolean{})}, nil) ) -> types.NewArray([]types.Type{}, types.Any{})`
  - `TOUCH( types.NewArray([]types.Type{}, types.String{}) ) -> types.Number{}`
  - `TTL( types.String{} ) -> types.Number{}`
  - `TYPE( types.String{} ) -> types.String{}`
@@ -47,6 +50,7 @@
  - `MSET( types.NewArray([]types.Type{}, types.Any{}) ) -> types.String{}`
  - `MSETNX( types.NewArray([]types.Type{}, types.Any{}) ) -> types.Boolean{}`
  - `SET( types.String{}, types.Any{}, types.Number{} ) -> types.String{}`
+ - `SETARGS( types.String{}, types.Any{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Mode", types.String{}),types.NewStaticProperty("TTL", types.Number{}),types.NewStaticProperty("ExpireAt", types.Number{}),types.NewStaticProperty("Get", types.Boolean{}),types.NewStaticProperty("KeepTTL", types.Boolean{})}, nil) ) -> types.String{}`
  - `SETEX( types.String{}, types.Any{}, types.Number{} ) -> types.String{}`
  - `SETNX( types.String{}, types.Any{}, types.Number{} ) -> types.Boolean{}`
  - `SETXX( types.String{}, types.Any{}, types.Number{} ) -> types.Boolean{}`
@@ -55,12 +59,18 @@
  - `COPY( types.String{}, types.String{}, types.Number{}, types.Boolean{} ) -> types.Number{}`
  - `GETBIT( types.String{}, types.Number{} ) -> types.Number{}`
  - `SETBIT( types.String{}, types.Number{}, types.Number{} ) -> types.Number{}`
+ - `BITCOUNT( types.String{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Start", types.Number{}),types.NewStaticProperty("End", types.Number{})}, nil) ) -> types.Number{}`
  - `BITOPAND( types.String{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.Number{}`
  - `BITOPOR( types.String{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.Number{}`
  - `BITOPXOR( types.String{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.Number{}`
  - `BITOPNOT( types.String{}, types.String{} ) -> types.Number{}`
  - `BITPOS( types.String{}, types.Number{}, types.NewArray([]types.Type{}, types.Number{}) ) -> types.Number{}`
  - `BITFIELD( types.String{}, types.NewArray([]types.Type{}, types.Any{}) ) -> types.NewArray([]types.Type{}, types.Number{})`
+ - `SCAN( types.Number{}, types.String{}, types.Number{} ) -> types.NewArray([]types.Type{types.NewArray([]types.Type{}, types.String{}),types.Number{}}, types.Null{})`
+ - `SCANTYPE( types.Number{}, types.String{}, types.Number{}, types.String{} ) -> types.NewArray([]types.Type{types.NewArray([]types.Type{}, types.String{}),types.Number{}}, types.Null{})`
+ - `SSCAN( types.String{}, types.Number{}, types.String{}, types.Number{} ) -> types.NewArray([]types.Type{types.NewArray([]types.Type{}, types.String{}),types.Number{}}, types.Null{})`
+ - `HSCAN( types.String{}, types.Number{}, types.String{}, types.Number{} ) -> types.NewArray([]types.Type{types.NewArray([]types.Type{}, types.String{}),types.Number{}}, types.Null{})`
+ - `ZSCAN( types.String{}, types.Number{}, types.String{}, types.Number{} ) -> types.NewArray([]types.Type{types.NewArray([]types.Type{}, types.String{}),types.Number{}}, types.Null{})`
  - `HDEL( types.String{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.Number{}`
  - `HEXISTS( types.String{}, types.String{} ) -> types.Boolean{}`
  - `HGET( types.String{}, types.String{} ) -> types.String{}`
@@ -84,6 +94,8 @@
  - `LLEN( types.String{} ) -> types.Number{}`
  - `LPOP( types.String{} ) -> types.String{}`
  - `LPOPCOUNT( types.String{}, types.Number{} ) -> types.NewArray([]types.Type{}, types.String{})`
+ - `LPOS( types.String{}, types.String{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Rank", types.Number{}),types.NewStaticProperty("MaxLen", types.Number{})}, nil) ) -> types.Number{}`
+ - `LPOSCOUNT( types.String{}, types.String{}, types.Number{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Rank", types.Number{}),types.NewStaticProperty("MaxLen", types.Number{})}, nil) ) -> types.NewArray([]types.Type{}, types.Number{})`
  - `LPUSH( types.String{}, types.NewArray([]types.Type{}, types.Any{}) ) -> types.Number{}`
  - `LPUSHX( types.String{}, types.NewArray([]types.Type{}, types.Any{}) ) -> types.Number{}`
  - `LRANGE( types.String{}, types.Number{}, types.Number{} ) -> types.NewArray([]types.Type{}, types.String{})`
@@ -114,6 +126,7 @@
  - `SREM( types.String{}, types.NewArray([]types.Type{}, types.Any{}) ) -> types.Number{}`
  - `SUNION( types.NewArray([]types.Type{}, types.String{}) ) -> types.NewArray([]types.Type{}, types.String{})`
  - `SUNIONSTORE( types.String{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.Number{}`
+ - `XADD( types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Stream", types.String{}),types.NewStaticProperty("NoMkStream", types.Boolean{}),types.NewStaticProperty("MaxLen", types.Number{}),types.NewStaticProperty("MaxLenApprox", types.Number{}),types.NewStaticProperty("MinID", types.String{}),types.NewStaticProperty("Approx", types.Boolean{}),types.NewStaticProperty("Limit", types.Number{}),types.NewStaticProperty("ID", types.String{}),types.NewStaticProperty("Values", types.Any{})}, nil) ) -> types.String{}`
  - `XDEL( types.String{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.Number{}`
  - `XLEN( types.String{} ) -> types.Number{}`
  - `XGROUPCREATE( types.String{}, types.String{}, types.String{} ) -> types.String{}`
@@ -123,34 +136,65 @@
  - `XGROUPCREATECONSUMER( types.String{}, types.String{}, types.String{} ) -> types.Number{}`
  - `XGROUPDELCONSUMER( types.String{}, types.String{}, types.String{} ) -> types.Number{}`
  - `XACK( types.String{}, types.String{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.Number{}`
+ - `XCLAIMJUSTID( types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Stream", types.String{}),types.NewStaticProperty("Group", types.String{}),types.NewStaticProperty("Consumer", types.String{}),types.NewStaticProperty("MinIdle", types.Number{}),types.NewStaticProperty("Messages", types.NewArray([]types.Type{}, types.String{}))}, nil) ) -> types.NewArray([]types.Type{}, types.String{})`
+ - `XAUTOCLAIMJUSTID( types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Stream", types.String{}),types.NewStaticProperty("Group", types.String{}),types.NewStaticProperty("MinIdle", types.Number{}),types.NewStaticProperty("Start", types.String{}),types.NewStaticProperty("Count", types.Number{}),types.NewStaticProperty("Consumer", types.String{})}, nil) ) -> types.NewArray([]types.Type{types.NewArray([]types.Type{}, types.String{}),types.String{}}, types.Null{})`
  - `XTRIM( types.String{}, types.Number{} ) -> types.Number{}`
  - `XTRIMAPPROX( types.String{}, types.Number{} ) -> types.Number{}`
  - `XTRIMMAXLEN( types.String{}, types.Number{} ) -> types.Number{}`
  - `XTRIMMAXLENAPPROX( types.String{}, types.Number{}, types.Number{} ) -> types.Number{}`
  - `XTRIMMINID( types.String{}, types.String{} ) -> types.Number{}`
  - `XTRIMMINIDAPPROX( types.String{}, types.String{}, types.Number{} ) -> types.Number{}`
- - `ZADD( types.String{} ) -> types.Number{}`
- - `ZADDNX( types.String{} ) -> types.Number{}`
- - `ZADDXX( types.String{} ) -> types.Number{}`
- - `ZADDCH( types.String{} ) -> types.Number{}`
- - `ZADDNXCH( types.String{} ) -> types.Number{}`
- - `ZADDXXCH( types.String{} ) -> types.Number{}`
+ - `XINFOGROUPS( types.String{} ) -> types.NewArray([]types.Type{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Name", types.String{}),types.NewStaticProperty("Consumers", types.Number{}),types.NewStaticProperty("Pending", types.Number{}),types.NewStaticProperty("LastDeliveredID", types.String{})}, nil))`
+ - `XINFOCONSUMERS( types.String{}, types.String{} ) -> types.NewArray([]types.Type{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Name", types.String{}),types.NewStaticProperty("Pending", types.Number{}),types.NewStaticProperty("Idle", types.Number{})}, nil))`
+ - `BZPOPMAX( types.Number{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Key", types.String{})}, nil)`
+ - `BZPOPMIN( types.Number{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Key", types.String{})}, nil)`
+ - `ZADD( types.String{}, types.NewArray([]types.Type{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Score", types.Number{}),types.NewStaticProperty("Member", types.Any{})}, nil)) ) -> types.Number{}`
+ - `ZADDNX( types.String{}, types.NewArray([]types.Type{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Score", types.Number{}),types.NewStaticProperty("Member", types.Any{})}, nil)) ) -> types.Number{}`
+ - `ZADDXX( types.String{}, types.NewArray([]types.Type{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Score", types.Number{}),types.NewStaticProperty("Member", types.Any{})}, nil)) ) -> types.Number{}`
+ - `ZADDCH( types.String{}, types.NewArray([]types.Type{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Score", types.Number{}),types.NewStaticProperty("Member", types.Any{})}, nil)) ) -> types.Number{}`
+ - `ZADDNXCH( types.String{}, types.NewArray([]types.Type{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Score", types.Number{}),types.NewStaticProperty("Member", types.Any{})}, nil)) ) -> types.Number{}`
+ - `ZADDXXCH( types.String{}, types.NewArray([]types.Type{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Score", types.Number{}),types.NewStaticProperty("Member", types.Any{})}, nil)) ) -> types.Number{}`
+ - `ZADDARGS( types.String{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("NX", types.Boolean{}),types.NewStaticProperty("XX", types.Boolean{}),types.NewStaticProperty("LT", types.Boolean{}),types.NewStaticProperty("GT", types.Boolean{}),types.NewStaticProperty("Ch", types.Boolean{}),types.NewStaticProperty("Members", types.NewArray([]types.Type{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Score", types.Number{}),types.NewStaticProperty("Member", types.Any{})}, nil)))}, nil) ) -> types.Number{}`
+ - `ZADDARGSINCR( types.String{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("NX", types.Boolean{}),types.NewStaticProperty("XX", types.Boolean{}),types.NewStaticProperty("LT", types.Boolean{}),types.NewStaticProperty("GT", types.Boolean{}),types.NewStaticProperty("Ch", types.Boolean{}),types.NewStaticProperty("Members", types.NewArray([]types.Type{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Score", types.Number{}),types.NewStaticProperty("Member", types.Any{})}, nil)))}, nil) ) -> types.Number{}`
+ - `ZINCR( types.String{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Score", types.Number{}),types.NewStaticProperty("Member", types.Any{})}, nil) ) -> types.Number{}`
+ - `ZINCRNX( types.String{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Score", types.Number{}),types.NewStaticProperty("Member", types.Any{})}, nil) ) -> types.Number{}`
+ - `ZINCRXX( types.String{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Score", types.Number{}),types.NewStaticProperty("Member", types.Any{})}, nil) ) -> types.Number{}`
  - `ZCARD( types.String{} ) -> types.Number{}`
  - `ZCOUNT( types.String{}, types.String{}, types.String{} ) -> types.Number{}`
  - `ZLEXCOUNT( types.String{}, types.String{}, types.String{} ) -> types.Number{}`
  - `ZINCRBY( types.String{}, types.Number{}, types.String{} ) -> types.Number{}`
+ - `ZINTER( types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Keys", types.NewArray([]types.Type{}, types.String{})),types.NewStaticProperty("Weights", types.NewArray([]types.Type{}, types.Number{})),types.NewStaticProperty("Aggregate", types.String{})}, nil) ) -> types.NewArray([]types.Type{}, types.String{})`
+ - `ZINTERWITHSCORES( types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Keys", types.NewArray([]types.Type{}, types.String{})),types.NewStaticProperty("Weights", types.NewArray([]types.Type{}, types.Number{})),types.NewStaticProperty("Aggregate", types.String{})}, nil) ) -> types.NewArray([]types.Type{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Score", types.Number{}),types.NewStaticProperty("Member", types.Any{})}, nil))`
+ - `ZINTERSTORE( types.String{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Keys", types.NewArray([]types.Type{}, types.String{})),types.NewStaticProperty("Weights", types.NewArray([]types.Type{}, types.Number{})),types.NewStaticProperty("Aggregate", types.String{})}, nil) ) -> types.Number{}`
  - `ZMSCORE( types.String{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.NewArray([]types.Type{}, types.Number{})`
+ - `ZPOPMAX( types.String{}, types.NewArray([]types.Type{}, types.Number{}) ) -> types.NewArray([]types.Type{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Score", types.Number{}),types.NewStaticProperty("Member", types.Any{})}, nil))`
+ - `ZPOPMIN( types.String{}, types.NewArray([]types.Type{}, types.Number{}) ) -> types.NewArray([]types.Type{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Score", types.Number{}),types.NewStaticProperty("Member", types.Any{})}, nil))`
  - `ZRANGE( types.String{}, types.Number{}, types.Number{} ) -> types.NewArray([]types.Type{}, types.String{})`
+ - `ZRANGEWITHSCORES( types.String{}, types.Number{}, types.Number{} ) -> types.NewArray([]types.Type{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Score", types.Number{}),types.NewStaticProperty("Member", types.Any{})}, nil))`
+ - `ZRANGEBYSCORE( types.String{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Min", types.String{}),types.NewStaticProperty("Max", types.String{}),types.NewStaticProperty("Offset", types.Number{}),types.NewStaticProperty("Count", types.Number{})}, nil) ) -> types.NewArray([]types.Type{}, types.String{})`
+ - `ZRANGEBYLEX( types.String{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Min", types.String{}),types.NewStaticProperty("Max", types.String{}),types.NewStaticProperty("Offset", types.Number{}),types.NewStaticProperty("Count", types.Number{})}, nil) ) -> types.NewArray([]types.Type{}, types.String{})`
+ - `ZRANGEBYSCOREWITHSCORES( types.String{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Min", types.String{}),types.NewStaticProperty("Max", types.String{}),types.NewStaticProperty("Offset", types.Number{}),types.NewStaticProperty("Count", types.Number{})}, nil) ) -> types.NewArray([]types.Type{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Score", types.Number{}),types.NewStaticProperty("Member", types.Any{})}, nil))`
+ - `ZRANGEARGS( types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Key", types.String{}),types.NewStaticProperty("Start", types.Any{}),types.NewStaticProperty("Stop", types.Any{}),types.NewStaticProperty("ByScore", types.Boolean{}),types.NewStaticProperty("ByLex", types.Boolean{}),types.NewStaticProperty("Rev", types.Boolean{}),types.NewStaticProperty("Offset", types.Number{}),types.NewStaticProperty("Count", types.Number{})}, nil) ) -> types.NewArray([]types.Type{}, types.String{})`
+ - `ZRANGEARGSWITHSCORES( types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Key", types.String{}),types.NewStaticProperty("Start", types.Any{}),types.NewStaticProperty("Stop", types.Any{}),types.NewStaticProperty("ByScore", types.Boolean{}),types.NewStaticProperty("ByLex", types.Boolean{}),types.NewStaticProperty("Rev", types.Boolean{}),types.NewStaticProperty("Offset", types.Number{}),types.NewStaticProperty("Count", types.Number{})}, nil) ) -> types.NewArray([]types.Type{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Score", types.Number{}),types.NewStaticProperty("Member", types.Any{})}, nil))`
+ - `ZRANGESTORE( types.String{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Key", types.String{}),types.NewStaticProperty("Start", types.Any{}),types.NewStaticProperty("Stop", types.Any{}),types.NewStaticProperty("ByScore", types.Boolean{}),types.NewStaticProperty("ByLex", types.Boolean{}),types.NewStaticProperty("Rev", types.Boolean{}),types.NewStaticProperty("Offset", types.Number{}),types.NewStaticProperty("Count", types.Number{})}, nil) ) -> types.Number{}`
  - `ZRANK( types.String{}, types.String{} ) -> types.Number{}`
  - `ZREM( types.String{}, types.NewArray([]types.Type{}, types.Any{}) ) -> types.Number{}`
  - `ZREMRANGEBYRANK( types.String{}, types.Number{}, types.Number{} ) -> types.Number{}`
  - `ZREMRANGEBYSCORE( types.String{}, types.String{}, types.String{} ) -> types.Number{}`
  - `ZREMRANGEBYLEX( types.String{}, types.String{}, types.String{} ) -> types.Number{}`
  - `ZREVRANGE( types.String{}, types.Number{}, types.Number{} ) -> types.NewArray([]types.Type{}, types.String{})`
+ - `ZREVRANGEWITHSCORES( types.String{}, types.Number{}, types.Number{} ) -> types.NewArray([]types.Type{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Score", types.Number{}),types.NewStaticProperty("Member", types.Any{})}, nil))`
+ - `ZREVRANGEBYSCORE( types.String{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Min", types.String{}),types.NewStaticProperty("Max", types.String{}),types.NewStaticProperty("Offset", types.Number{}),types.NewStaticProperty("Count", types.Number{})}, nil) ) -> types.NewArray([]types.Type{}, types.String{})`
+ - `ZREVRANGEBYLEX( types.String{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Min", types.String{}),types.NewStaticProperty("Max", types.String{}),types.NewStaticProperty("Offset", types.Number{}),types.NewStaticProperty("Count", types.Number{})}, nil) ) -> types.NewArray([]types.Type{}, types.String{})`
+ - `ZREVRANGEBYSCOREWITHSCORES( types.String{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Min", types.String{}),types.NewStaticProperty("Max", types.String{}),types.NewStaticProperty("Offset", types.Number{}),types.NewStaticProperty("Count", types.Number{})}, nil) ) -> types.NewArray([]types.Type{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Score", types.Number{}),types.NewStaticProperty("Member", types.Any{})}, nil))`
  - `ZREVRANK( types.String{}, types.String{} ) -> types.Number{}`
  - `ZSCORE( types.String{}, types.String{} ) -> types.Number{}`
+ - `ZUNIONSTORE( types.String{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Keys", types.NewArray([]types.Type{}, types.String{})),types.NewStaticProperty("Weights", types.NewArray([]types.Type{}, types.Number{})),types.NewStaticProperty("Aggregate", types.String{})}, nil) ) -> types.Number{}`
+ - `ZUNION( types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Keys", types.NewArray([]types.Type{}, types.String{})),types.NewStaticProperty("Weights", types.NewArray([]types.Type{}, types.Number{})),types.NewStaticProperty("Aggregate", types.String{})}, nil) ) -> types.NewArray([]types.Type{}, types.String{})`
+ - `ZUNIONWITHSCORES( types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Keys", types.NewArray([]types.Type{}, types.String{})),types.NewStaticProperty("Weights", types.NewArray([]types.Type{}, types.Number{})),types.NewStaticProperty("Aggregate", types.String{})}, nil) ) -> types.NewArray([]types.Type{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Score", types.Number{}),types.NewStaticProperty("Member", types.Any{})}, nil))`
  - `ZRANDMEMBER( types.String{}, types.Number{}, types.Boolean{} ) -> types.NewArray([]types.Type{}, types.String{})`
  - `ZDIFF( types.NewArray([]types.Type{}, types.String{}) ) -> types.NewArray([]types.Type{}, types.String{})`
+ - `ZDIFFWITHSCORES( types.NewArray([]types.Type{}, types.String{}) ) -> types.NewArray([]types.Type{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Score", types.Number{}),types.NewStaticProperty("Member", types.Any{})}, nil))`
  - `ZDIFFSTORE( types.String{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.Number{}`
  - `PFADD( types.String{}, types.NewArray([]types.Type{}, types.Any{}) ) -> types.Number{}`
  - `PFCOUNT( types.NewArray([]types.Type{}, types.String{}) ) -> types.Number{}`
@@ -192,6 +236,7 @@
  - `PUBLISH( types.String{}, types.Any{} ) -> types.Number{}`
  - `PUBSUBCHANNELS( types.String{} ) -> types.NewArray([]types.Type{}, types.String{})`
  - `PUBSUBNUMPAT(  ) -> types.Number{}`
+ - `CLUSTERSLOTS(  ) -> types.NewArray([]types.Type{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Start", types.Number{}),types.NewStaticProperty("End", types.Number{}),types.NewStaticProperty("Nodes", types.NewArray([]types.Type{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("ID", types.String{}),types.NewStaticProperty("Addr", types.String{})}, nil)))}, nil))`
  - `CLUSTERNODES(  ) -> types.String{}`
  - `CLUSTERMEET( types.String{}, types.String{} ) -> types.String{}`
  - `CLUSTERFORGET( types.String{} ) -> types.String{}`
@@ -210,7 +255,15 @@
  - `CLUSTERFAILOVER(  ) -> types.String{}`
  - `CLUSTERADDSLOTS( types.NewArray([]types.Type{}, types.Number{}) ) -> types.String{}`
  - `CLUSTERADDSLOTSRANGE( types.Number{}, types.Number{} ) -> types.String{}`
- - `GEOADD( types.String{} ) -> types.Number{}`
+ - `GEOADD( types.String{}, types.NewArray([]types.Type{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Name", types.String{}),types.NewStaticProperty("Longitude", types.Number{}),types.NewStaticProperty("Latitude", types.Number{}),types.NewStaticProperty("Dist", types.Number{}),types.NewStaticProperty("GeoHash", types.Number{})}, nil)) ) -> types.Number{}`
+ - `GEOPOS( types.String{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.NewArray([]types.Type{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Longitude", types.Number{}),types.NewStaticProperty("Latitude", types.Number{})}, nil))`
+ - `GEORADIUS( types.String{}, types.Number{}, types.Number{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Radius", types.Number{}),types.NewStaticProperty("Unit", types.String{}),types.NewStaticProperty("WithCoord", types.Boolean{}),types.NewStaticProperty("WithDist", types.Boolean{}),types.NewStaticProperty("WithGeoHash", types.Boolean{}),types.NewStaticProperty("Count", types.Number{}),types.NewStaticProperty("Sort", types.String{}),types.NewStaticProperty("Store", types.String{}),types.NewStaticProperty("StoreDist", types.String{})}, nil) ) -> types.NewArray([]types.Type{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Name", types.String{}),types.NewStaticProperty("Longitude", types.Number{}),types.NewStaticProperty("Latitude", types.Number{}),types.NewStaticProperty("Dist", types.Number{}),types.NewStaticProperty("GeoHash", types.Number{})}, nil))`
+ - `GEORADIUSSTORE( types.String{}, types.Number{}, types.Number{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Radius", types.Number{}),types.NewStaticProperty("Unit", types.String{}),types.NewStaticProperty("WithCoord", types.Boolean{}),types.NewStaticProperty("WithDist", types.Boolean{}),types.NewStaticProperty("WithGeoHash", types.Boolean{}),types.NewStaticProperty("Count", types.Number{}),types.NewStaticProperty("Sort", types.String{}),types.NewStaticProperty("Store", types.String{}),types.NewStaticProperty("StoreDist", types.String{})}, nil) ) -> types.Number{}`
+ - `GEORADIUSBYMEMBER( types.String{}, types.String{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Radius", types.Number{}),types.NewStaticProperty("Unit", types.String{}),types.NewStaticProperty("WithCoord", types.Boolean{}),types.NewStaticProperty("WithDist", types.Boolean{}),types.NewStaticProperty("WithGeoHash", types.Boolean{}),types.NewStaticProperty("Count", types.Number{}),types.NewStaticProperty("Sort", types.String{}),types.NewStaticProperty("Store", types.String{}),types.NewStaticProperty("StoreDist", types.String{})}, nil) ) -> types.NewArray([]types.Type{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Name", types.String{}),types.NewStaticProperty("Longitude", types.Number{}),types.NewStaticProperty("Latitude", types.Number{}),types.NewStaticProperty("Dist", types.Number{}),types.NewStaticProperty("GeoHash", types.Number{})}, nil))`
+ - `GEORADIUSBYMEMBERSTORE( types.String{}, types.String{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Radius", types.Number{}),types.NewStaticProperty("Unit", types.String{}),types.NewStaticProperty("WithCoord", types.Boolean{}),types.NewStaticProperty("WithDist", types.Boolean{}),types.NewStaticProperty("WithGeoHash", types.Boolean{}),types.NewStaticProperty("Count", types.Number{}),types.NewStaticProperty("Sort", types.String{}),types.NewStaticProperty("Store", types.String{}),types.NewStaticProperty("StoreDist", types.String{})}, nil) ) -> types.Number{}`
+ - `GEOSEARCH( types.String{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Member", types.String{}),types.NewStaticProperty("Longitude", types.Number{}),types.NewStaticProperty("Latitude", types.Number{}),types.NewStaticProperty("Radius", types.Number{}),types.NewStaticProperty("RadiusUnit", types.String{}),types.NewStaticProperty("BoxWidth", types.Number{}),types.NewStaticProperty("BoxHeight", types.Number{}),types.NewStaticProperty("BoxUnit", types.String{}),types.NewStaticProperty("Sort", types.String{}),types.NewStaticProperty("Count", types.Number{}),types.NewStaticProperty("CountAny", types.Boolean{})}, nil) ) -> types.NewArray([]types.Type{}, types.String{})`
+ - `GEOSEARCHLOCATION( types.String{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("WithCoord", types.Boolean{}),types.NewStaticProperty("WithDist", types.Boolean{}),types.NewStaticProperty("WithHash", types.Boolean{})}, nil) ) -> types.NewArray([]types.Type{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("Name", types.String{}),types.NewStaticProperty("Longitude", types.Number{}),types.NewStaticProperty("Latitude", types.Number{}),types.NewStaticProperty("Dist", types.Number{}),types.NewStaticProperty("GeoHash", types.Number{})}, nil))`
+ - `GEOSEARCHSTORE( types.String{}, types.String{}, types.NewObject([]*types.StaticProperty{types.NewStaticProperty("StoreDist", types.Boolean{})}, nil) ) -> types.Number{}`
  - `GEODIST( types.String{}, types.String{}, types.String{}, types.String{} ) -> types.Number{}`
  - `GEOHASH( types.String{}, types.NewArray([]types.Type{}, types.String{}) ) -> types.NewArray([]types.Type{}, types.String{})`
 
