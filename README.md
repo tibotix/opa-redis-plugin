@@ -95,11 +95,11 @@ redis.do(["SET", "mykey", "myvalue"])
 
 # Limitations
 
-Currently, Redis [Transactions](https://redis.io/transactions) and [Pipelines](https://redis.io/pipelines) are not supported yet. Pull Requests are welcome.
+Currently, Redis [Transactions](https://redis.io/docs/manual/transactions/) and [Pipelines](https://redis.io/docs/manual/pipelining/) are not supported yet. Pull Requests are welcome.
 
 # Credits
 
 Special thanks to the whole OPA team for maintaining OPA and making it open-source,
-, the [opa-envoy-plugin](https://github.com/open-policy-agent/ope-envoy-plugin) maintainer
+ the [opa-envoy-plugin](https://github.com/open-policy-agent/ope-envoy-plugin) maintainer
 for a good plugin template and code inspirations that this plugin is based on and the
 [go-redis](https://github.com/go-redis/redis) library, which is used internally.
