@@ -1,4 +1,7 @@
-Table of Contents
+
+![opa-redis-plugin](doc/opa-redis-plugin.png)
+
+
 - [Overview](#overview)
 - [Usage](#usage)
 - [Configuration](#configuration)
@@ -6,6 +9,7 @@ Table of Contents
 - [Dependencies](#dependencies)
 - [Currently Implemented Commands](#currently-implemented-commands)
 - [Executing Arbitrary Commands](#executing-arbitrary-commands)
+- [Limitations](#limitations)
 - [Credits](#credits)
 
 # Overview
@@ -88,6 +92,10 @@ To execute arbitrary commands, use the `redis.do` function:
 ```
 redis.do(["SET", "mykey", "myvalue"])
 ```
+
+# Limitations
+
+Currently, Redis [Transactions](https://redis.io/transactions) and [Pipelines](https://redis.io/pipelines) are not supported yet. Pull Requests are welcome.
 
 # Credits
 
