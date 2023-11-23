@@ -5,7 +5,6 @@
 package runtime
 
 import (
-	"os"
 	"os/user"
 
 	"github.com/open-policy-agent/opa/logging"
@@ -19,9 +18,6 @@ func checkUserPrivileges(logger logging.Logger) {
 		logger.Debug("Failed to determine uid/gid of process owner")
 	} else if usr.Uid == "0" || usr.Gid == "0" {
 		message := "OPA running with uid or gid 0. Running OPA with root privileges is not recommended."
-		if os.Getenv("OPA_DOCKER_IMAGE") == "official" {
-			message += " Use the -rootless image to avoid running with root privileges. This will be made the default in later OPA releases."
-		}
 		logger.Warn(message)
 	}
 }

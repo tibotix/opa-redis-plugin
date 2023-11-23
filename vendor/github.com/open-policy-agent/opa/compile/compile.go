@@ -12,6 +12,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
+	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
@@ -65,6 +67,7 @@ type Compiler struct {
 	filter                       loader.Filter              // filter to apply to file loader
 	paths                        []string                   // file paths to load. TODO(tsandall): add support for supplying readers for embedded users.
 	entrypoints                  orderedStringSet           // policy entrypoints required for optimization and certain targets
+	roots                        []string                   // optionally, bundle roots can be provided
 	useRegoAnnotationEntrypoints bool                       // allow compiler to late-bind entrypoints from annotated rules in policies.
 	optimizationLevel            int                        // how aggressive should optimization be
 	target                       string                     // target type (wasm, rego, etc.)
@@ -78,6 +81,8 @@ type Compiler struct {
 	bsc                          *bundle.SigningConfig      // represents the key configuration used to generate a signed bundle
 	keyID                        string                     // represents the name of the default key used to verify a signed bundle
 	metadata                     *map[string]interface{}    // represents additional data included in .manifest file
+	fsys                         fs.FS                      // file system to use when loading paths
+	ns                           string
 }
 
 // New returns a new compiler instance that can be invoked.
@@ -219,6 +224,24 @@ func (c *Compiler) WithMetadata(metadata *map[string]interface{}) *Compiler {
 	return c
 }
 
+// WithRoots sets the roots to include in the output bundle manifest.
+func (c *Compiler) WithRoots(r ...string) *Compiler {
+	c.roots = append(c.roots, r...)
+	return c
+}
+
+// WithFS sets the file system to use when loading paths
+func (c *Compiler) WithFS(fsys fs.FS) *Compiler {
+	c.fsys = fsys
+	return c
+}
+
+// WithPartialNamespace sets the namespace to use for partial evaluation results
+func (c *Compiler) WithPartialNamespace(ns string) *Compiler {
+	c.ns = ns
+	return c
+}
+
 func addEntrypointsFromAnnotations(c *Compiler, ar []*ast.AnnotationsRef) error {
 	for _, ref := range ar {
 		var entrypoint ast.Ref
@@ -233,7 +256,7 @@ func addEntrypointsFromAnnotations(c *Compiler, ar []*ast.AnnotationsRef) error 
 				}
 			case "rule":
 				if r := ref.GetRule(); r != nil {
-					entrypoint = r.Ref()
+					entrypoint = r.Ref().GroundPrefix()
 				}
 			default:
 				continue // Wrong scope type. Bail out early.
@@ -409,7 +432,7 @@ func (c *Compiler) initBundle() error {
 	// TODO(tsandall): the metrics object should passed through here so we that
 	// we can track read and parse times.
 
-	load, err := initload.LoadPaths(c.paths, c.filter, c.asBundle, c.bvc, false, c.useRegoAnnotationEntrypoints, c.capabilities)
+	load, err := initload.LoadPaths(c.paths, c.filter, c.asBundle, c.bvc, false, c.useRegoAnnotationEntrypoints, c.capabilities, c.fsys)
 	if err != nil {
 		return fmt.Errorf("load error: %w", err)
 	}
@@ -437,11 +460,14 @@ func (c *Compiler) initBundle() error {
 		return nil
 	}
 
-	// TODO(tsandall): add support for controlling roots. Either the caller could
-	// supply them or the compiler could infer them based on the packages and data
-	// contents. The latter would require changes to the loader to preserve the
+	// TODO(tsandall): roots could be automatically inferred based on the packages and data
+	// contents. That would require changes to the loader to preserve the
 	// locations where base documents were mounted under data.
 	result := &bundle.Bundle{}
+	if len(c.roots) > 0 {
+		result.Manifest.Roots = &c.roots
+	}
+
 	result.Manifest.Init()
 	result.Data = load.Files.Documents
 
@@ -453,9 +479,10 @@ func (c *Compiler) initBundle() error {
 	sort.Strings(modules)
 
 	for _, module := range modules {
+		path := filepath.ToSlash(load.Files.Modules[module].Name)
 		result.Modules = append(result.Modules, bundle.ModuleFile{
-			URL:    load.Files.Modules[module].Name,
-			Path:   load.Files.Modules[module].Name,
+			URL:    path,
+			Path:   path,
 			Parsed: load.Files.Modules[module].Parsed,
 			Raw:    load.Files.Modules[module].Raw,
 		})
@@ -479,6 +506,10 @@ func (c *Compiler) optimize(ctx context.Context) error {
 		WithDebug(c.debug.Writer()).
 		WithShallowInlining(c.optimizationLevel <= 1).
 		WithEnablePrintStatements(c.enablePrintStatements)
+
+	if c.ns != "" {
+		o = o.WithPartialNamespace(c.ns)
+	}
 
 	err := o.Do(ctx)
 	if err != nil {
@@ -562,7 +593,7 @@ func (c *Compiler) compilePlan(context.Context) error {
 	}
 
 	// Prepare modules and builtins for the planner.
-	modules := []*ast.Module{}
+	modules := make([]*ast.Module, 0, len(c.compiler.Modules))
 	for _, module := range c.compiler.Modules {
 		modules = append(modules, module)
 	}
@@ -640,18 +671,53 @@ func (c *Compiler) compileWasm(ctx context.Context) error {
 		Raw:  buf.Bytes(),
 	}}
 
+	flattenedAnnotations := c.compiler.GetAnnotationSet().Flatten()
+
 	// Each entrypoint needs an entry in the manifest
-	for i := range c.entrypointrefs {
+	for i, e := range c.entrypointrefs {
 		entrypointPath := c.entrypoints[i]
 
+		var annotations []*ast.Annotations
+		if !c.isPackage(e) {
+			annotations = findAnnotationsForTerm(e, flattenedAnnotations)
+		}
+
 		c.bundle.Manifest.WasmResolvers = append(c.bundle.Manifest.WasmResolvers, bundle.WasmResolver{
-			Module:     "/" + strings.TrimLeft(modulePath, "/"),
-			Entrypoint: entrypointPath,
+			Module:      "/" + strings.TrimLeft(modulePath, "/"),
+			Entrypoint:  entrypointPath,
+			Annotations: annotations,
 		})
 	}
 
 	// Remove the entrypoints from remaining source rego files
 	return pruneBundleEntrypoints(c.bundle, c.entrypointrefs)
+}
+
+func (c *Compiler) isPackage(term *ast.Term) bool {
+	for _, m := range c.compiler.Modules {
+		if m.Package.Path.Equal(term.Value) {
+			return true
+		}
+	}
+	return false
+}
+
+// findAnnotationsForTerm returns a slice of all annotations directly associated with the given term.
+func findAnnotationsForTerm(term *ast.Term, annotationRefs []*ast.AnnotationsRef) []*ast.Annotations {
+	r, ok := term.Value.(ast.Ref)
+	if !ok {
+		return nil
+	}
+
+	var result []*ast.Annotations
+
+	for _, ar := range annotationRefs {
+		if r.Equal(ar.Path) {
+			result = append(result, ar.Annotations)
+		}
+	}
+
+	return result
 }
 
 // pruneBundleEntrypoints will modify modules in the provided bundle to remove
@@ -689,11 +755,43 @@ func pruneBundleEntrypoints(b *bundle.Bundle, entrypointrefs []*ast.Term) error 
 				}
 			}
 
-			// If any rules were dropped update the module accordingly
-			if len(rules) != len(mf.Parsed.Rules) {
+			// Drop any Annotations for rules matching the entrypoint path
+			var annotations []*ast.Annotations
+			var prunedAnnotations []*ast.Annotations
+			for _, annotation := range mf.Parsed.Annotations {
+				p := annotation.GetTargetPath()
+				// We prune annotations of dropped rules, but not packages, as the Rego file is always retained
+				if p.Equal(entrypoint.Value) && !mf.Parsed.Package.Path.Equal(entrypoint.Value) {
+					prunedAnnotations = append(prunedAnnotations, annotation)
+				} else {
+					annotations = append(annotations, annotation)
+				}
+			}
+
+			// Drop comments associated with pruned annotations
+			var comments []*ast.Comment
+			for _, comment := range mf.Parsed.Comments {
+				pruned := false
+				for _, annotation := range prunedAnnotations {
+					if comment.Location.Row >= annotation.Location.Row &&
+						comment.Location.Row <= annotation.EndLoc().Row {
+						pruned = true
+						break
+					}
+				}
+
+				if !pruned {
+					comments = append(comments, comment)
+				}
+			}
+
+			// If any rules or annotations were dropped update the module accordingly
+			if len(rules) != len(mf.Parsed.Rules) || len(comments) != len(mf.Parsed.Comments) {
 				mf.Parsed.Rules = rules
+				mf.Parsed.Annotations = annotations
+				mf.Parsed.Comments = comments
 				// Remove the original raw source, we're editing the AST
-				// directly so it wont be in sync anymore.
+				// directly, so it won't be in sync anymore.
 				mf.Raw = nil
 			}
 		}
@@ -764,6 +862,11 @@ func (o *optimizer) WithEntrypoints(es []*ast.Term) *optimizer {
 
 func (o *optimizer) WithShallowInlining(yes bool) *optimizer {
 	o.shallow = yes
+	return o
+}
+
+func (o *optimizer) WithPartialNamespace(ns string) *optimizer {
+	o.nsprefix = ns
 	return o
 }
 
@@ -981,18 +1084,11 @@ func (o *optimizer) merge(a, b []bundle.ModuleFile) []bundle.ModuleFile {
 		// needed once per rule set and constructing the path for every rule in the
 		// module could expensive for PE output (which can contain hundreds of thousands
 		// of rules.)
-		seen := ast.NewVarSet()
+		seen := ast.NewSet()
 		for _, rule := range b[i].Parsed.Rules {
-			// NOTE(sr): we're relying on the fact that PE never emits ref rules (so far)!
-			// The rule
-			//   p.a = 1 { ... }
-			// will be recorded in prefixes as `data.test.p`, and that'll be checked later on against `data.test.p[k]`
-			if len(rule.Head.Ref()) > 2 {
-				panic("expected a module without ref rules")
-			}
-			name := rule.Head.Name
+			name := ast.NewTerm(rule.Head.Ref())
 			if !seen.Contains(name) {
-				prefixes.Add(ast.NewTerm(b[i].Parsed.Package.Path.Append(ast.StringTerm(string(name)))))
+				prefixes.Add(ast.NewTerm(rule.Ref().ConstantPrefix()))
 				seen.Add(name)
 			}
 		}
@@ -1015,10 +1111,10 @@ func (o *optimizer) merge(a, b []bundle.ModuleFile) []bundle.ModuleFile {
 				continue
 			}
 
-			path := rule.Ref()
+			path := rule.Ref().ConstantPrefix()
 			overlap := prefixes.Until(func(x *ast.Term) bool {
 				r := x.Value.(ast.Ref)
-				return path.HasPrefix(r)
+				return r.HasPrefix(path) || path.HasPrefix(r)
 			})
 			if overlap {
 				discarded.Add(refT)

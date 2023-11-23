@@ -44,6 +44,7 @@ type evalCommandParams struct {
 	disableIndexing     bool
 	disableEarlyExit    bool
 	strictBuiltinErrors bool
+	showBuiltinErrors   bool
 	dataPaths           repeatedStringFlag
 	inputPath           string
 	imports             repeatedStringFlag
@@ -68,6 +69,7 @@ type evalCommandParams struct {
 	timeout             time.Duration
 	optimizationLevel   int
 	entrypoints         repeatedStringFlag
+	strict              bool
 }
 
 func newEvalCommandParams() evalCommandParams {
@@ -80,6 +82,7 @@ func newEvalCommandParams() evalCommandParams {
 			evalPrettyOutput,
 			evalSourceOutput,
 			evalRawOutput,
+			evalDiscardOutput,
 		}),
 		explain:         newExplainFlag([]string{explainModeOff, explainModeFull, explainModeNotes, explainModeFails, explainModeDebug}),
 		target:          util.NewEnumFlag(compile.TargetRego, []string{compile.TargetRego, compile.TargetWasm}),
@@ -140,6 +143,7 @@ const (
 	evalPrettyOutput   = "pretty"
 	evalSourceOutput   = "source"
 	evalRawOutput      = "raw"
+	evalDiscardOutput  = "discard"
 
 	// number of profile results to return by default
 	defaultProfileLimit = 10
@@ -230,6 +234,7 @@ Set the output format with the --format flag.
     --format=pretty    : output query results in a human-readable format
     --format=source    : output partial evaluation results in a source format
     --format=raw       : output the values from query results in a scripting friendly format
+    --format=discard   : output the result field as "discarded" when non-nil
 
 Schema
 ------
@@ -288,10 +293,11 @@ access.
 	evalCommand.Flags().BoolVarP(&params.shallowInlining, "shallow-inlining", "", false, "disable inlining of rules that depend on unknowns")
 	evalCommand.Flags().BoolVar(&params.disableIndexing, "disable-indexing", false, "disable indexing optimizations")
 	evalCommand.Flags().BoolVar(&params.disableEarlyExit, "disable-early-exit", false, "disable 'early exit' optimizations")
-	evalCommand.Flags().BoolVarP(&params.strictBuiltinErrors, "strict-builtin-errors", "", false, "treat built-in function errors as fatal")
+	evalCommand.Flags().BoolVarP(&params.strictBuiltinErrors, "strict-builtin-errors", "", false, "treat the first built-in function error encountered as fatal")
+	evalCommand.Flags().BoolVarP(&params.showBuiltinErrors, "show-builtin-errors", "", false, "collect and return all encountered built-in errors, built in errors are not fatal")
 	evalCommand.Flags().BoolVarP(&params.instrument, "instrument", "", false, "enable query instrumentation metrics (implies --metrics)")
 	evalCommand.Flags().BoolVarP(&params.profile, "profile", "", false, "perform expression profiling")
-	evalCommand.Flags().VarP(&params.profileCriteria, "profile-sort", "", "set sort order of expression profiler results")
+	evalCommand.Flags().VarP(&params.profileCriteria, "profile-sort", "", "set sort order of expression profiler results. Accepts: total_time_ns, num_eval, num_redo, num_gen_expr, file, line. This flag can be repeated.")
 	evalCommand.Flags().VarP(&params.profileLimit, "profile-limit", "", "set number of profiling results to show")
 	evalCommand.Flags().VarP(&params.prettyLimit, "pretty-limit", "", "set limit after which pretty output gets truncated")
 	evalCommand.Flags().BoolVarP(&params.failDefined, "fail-defined", "", false, "exits with non-zero exit code on defined/non-empty result and errors")
@@ -319,6 +325,7 @@ access.
 	addSchemaFlags(evalCommand.Flags(), params.schema)
 	addTargetFlag(evalCommand.Flags(), params.target)
 	addCountFlag(evalCommand.Flags(), &params.count, "benchmark")
+	addStrictFlag(evalCommand.Flags(), &params.strict, false)
 
 	RootCommand.AddCommand(evalCommand)
 }
@@ -374,6 +381,11 @@ func eval(args []string, params evalCommandParams, w io.Writer) (bool, error) {
 		result.AggregatedMetrics = timersAggregated
 	}
 
+	var builtInErrorCount int
+	if ectx.params.showBuiltinErrors {
+		builtInErrorCount = len(*(ectx.builtInErrorList))
+	}
+
 	switch ectx.params.outputFormat.String() {
 	case evalBindingsOutput:
 		err = pr.Bindings(w, result)
@@ -385,13 +397,19 @@ func eval(args []string, params evalCommandParams, w io.Writer) (bool, error) {
 		err = pr.Source(w, result)
 	case evalRawOutput:
 		err = pr.Raw(w, result)
+	case evalDiscardOutput:
+		err = pr.Discard(w, result)
 	default:
 		err = pr.JSON(w, result)
 	}
 
 	if err != nil {
 		return false, err
-	} else if len(result.Errors) > 0 {
+	} else if errorCount := len(result.Errors); errorCount > 0 && errorCount != builtInErrorCount {
+		// if we only have built-in errors, we don't want to return an error. If
+		// strict-builtin-errors is set the first built-in error will be returned
+		// in a result error instead.
+
 		// If the rego package returned an error, return a special error here so
 		// that the command doesn't print the same error twice. The error will
 		// have been printed above by the presentation package.
@@ -434,6 +452,12 @@ func evalOnce(ctx context.Context, ectx *evalContext) pr.Output {
 	}
 
 	result.Errors = pr.NewOutputErrors(resultErr)
+	if ectx.builtInErrorList != nil {
+		for _, err := range *(ectx.builtInErrorList) {
+			err := err
+			result.Errors = append(result.Errors, pr.NewOutputErrors(&err)...)
+		}
+	}
 
 	if ectx.params.explain != nil {
 		switch ectx.params.explain.String() {
@@ -471,13 +495,14 @@ func evalOnce(ctx context.Context, ectx *evalContext) pr.Output {
 }
 
 type evalContext struct {
-	params   evalCommandParams
-	metrics  metrics.Metrics
-	profiler *resettableProfiler
-	cover    *cover.Cover
-	tracer   *topdown.BufferTracer
-	regoArgs []func(*rego.Rego)
-	evalArgs []rego.EvalOption
+	params           evalCommandParams
+	metrics          metrics.Metrics
+	profiler         *resettableProfiler
+	cover            *cover.Cover
+	tracer           *topdown.BufferTracer
+	regoArgs         []func(*rego.Rego)
+	evalArgs         []rego.EvalOption
+	builtInErrorList *[]topdown.Error
 }
 
 func setupEval(args []string, params evalCommandParams) (*evalContext, error) {
@@ -620,20 +645,33 @@ func setupEval(args []string, params evalCommandParams) (*evalContext, error) {
 
 	if params.strictBuiltinErrors {
 		regoArgs = append(regoArgs, rego.StrictBuiltinErrors(true))
+		if params.showBuiltinErrors {
+			return nil, fmt.Errorf("cannot use --show-builtin-errors with --strict-builtin-errors, --strict-builtin-errors will return the first built-in error encountered immediately")
+		}
+	}
+
+	var builtInErrors []topdown.Error
+	if params.showBuiltinErrors {
+		regoArgs = append(regoArgs, rego.BuiltinErrorList(&builtInErrors))
 	}
 
 	if params.capabilities != nil {
 		regoArgs = append(regoArgs, rego.Capabilities(params.capabilities.C))
 	}
 
+	if params.strict {
+		regoArgs = append(regoArgs, rego.Strict(params.strict))
+	}
+
 	evalCtx := &evalContext{
-		params:   params,
-		metrics:  m,
-		profiler: &rp,
-		cover:    c,
-		tracer:   tracer,
-		regoArgs: regoArgs,
-		evalArgs: evalArgs,
+		params:           params,
+		metrics:          m,
+		profiler:         &rp,
+		cover:            c,
+		tracer:           tracer,
+		regoArgs:         regoArgs,
+		evalArgs:         evalArgs,
+		builtInErrorList: &builtInErrors,
 	}
 
 	return evalCtx, nil

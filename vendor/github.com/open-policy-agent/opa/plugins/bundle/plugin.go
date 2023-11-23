@@ -22,6 +22,7 @@ import (
 	"github.com/open-policy-agent/opa/bundle"
 	"github.com/open-policy-agent/opa/download"
 	bundleUtils "github.com/open-policy-agent/opa/internal/bundle"
+	"github.com/open-policy-agent/opa/internal/ref"
 	"github.com/open-policy-agent/opa/logging"
 	"github.com/open-policy-agent/opa/metrics"
 	"github.com/open-policy-agent/opa/plugins"
@@ -539,6 +540,9 @@ func (p *Plugin) process(ctx context.Context, name string, u download.Update) {
 	if etag, ok := p.etags[name]; ok && u.ETag == etag {
 		p.log(name).Debug("Bundle load skipped, server replied with not modified.")
 		p.status[name].SetError(nil)
+
+		// The downloader received a 304 (same etag as saved in local state), update plugin readiness
+		p.checkPluginReadiness()
 		return
 	}
 }
@@ -596,6 +600,20 @@ func (p *Plugin) activate(ctx context.Context, name string, b *bundle.Bundle) er
 			Compiler: compiler,
 			Metrics:  p.status[name].Metrics,
 			Bundles:  map[string]*bundle.Bundle{name: b},
+		}
+
+		if p.manager.Info != nil {
+
+			skipKnownSchemaCheck := p.manager.Info.Get(ast.StringTerm("skip_known_schema_check"))
+			isAuthzEnabled := p.manager.Info.Get(ast.StringTerm("authorization_enabled"))
+
+			if ast.BooleanTerm(true).Equal(isAuthzEnabled) && ast.BooleanTerm(false).Equal(skipKnownSchemaCheck) {
+				authorizationDecisionRef, err := ref.ParseDataPath(*p.manager.Config.DefaultAuthorizationDecision)
+				if err != nil {
+					return err
+				}
+				opts.AuthorizationDecisionRef = authorizationDecisionRef
+			}
 		}
 
 		if p.config.IsMultiBundle() {
@@ -675,53 +693,14 @@ func (p *Plugin) saveBundleToDisk(name string, raw io.Reader) error {
 }
 
 func saveCurrentBundleToDisk(path string, raw io.Reader) (string, error) {
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		err = os.MkdirAll(path, os.ModePerm)
-		if err != nil {
-			return "", err
-		}
-	}
-
-	if raw == nil {
-		return "", fmt.Errorf("no raw bundle bytes to persist to disk")
-	}
-
-	dest, err := os.CreateTemp(path, ".bundle.tar.gz.*.tmp")
-	if err != nil {
-		return "", err
-	}
-	defer dest.Close()
-
-	_, err = io.Copy(dest, raw)
-	return dest.Name(), err
+	return bundleUtils.SaveBundleToDisk(path, raw)
 }
 
 func loadBundleFromDisk(path, name string, src *Source) (*bundle.Bundle, error) {
-	bundlePath := filepath.Join(path, name, "bundle.tar.gz")
-
-	if _, err := os.Stat(bundlePath); err == nil {
-		f, err := os.Open(filepath.Join(bundlePath))
-		if err != nil {
-			return nil, err
-		}
-		defer f.Close()
-
-		r := bundle.NewReader(f)
-
-		if src != nil {
-			r = r.WithBundleVerificationConfig(src.Signing)
-		}
-
-		b, err := r.Read()
-		if err != nil {
-			return nil, err
-		}
-		return &b, nil
-	} else if os.IsNotExist(err) {
-		return nil, nil
-	} else {
-		return nil, err
+	if src != nil {
+		return bundleUtils.LoadBundleFromDisk(path, name, src.Signing)
 	}
+	return bundleUtils.LoadBundleFromDisk(path, name, nil)
 }
 
 func (p *Plugin) log(name string) logging.Logger {

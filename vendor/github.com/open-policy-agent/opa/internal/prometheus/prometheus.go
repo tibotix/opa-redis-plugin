@@ -7,8 +7,11 @@ package prometheus
 import (
 	"bufio"
 	"encoding/json"
+	"fmt"
+	"math"
 	"net"
 	"net/http"
+	"runtime"
 	"strconv"
 
 	// Need to keep deprecated package for compatibility with prometheus/client_golang
@@ -34,25 +37,14 @@ type Provider struct {
 type loggerFunc func(attrs map[string]interface{}, f string, a ...interface{})
 
 // New returns a new Provider object.
-func New(inner metrics.Metrics, logger loggerFunc) *Provider {
+func New(inner metrics.Metrics, logger loggerFunc, httpRequestBuckets []float64) *Provider {
 	registry := prometheus.NewRegistry()
 	registry.MustRegister(collector())
 	durationHistogram := prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Name: "http_request_duration_seconds",
-			Help: "A histogram of duration for requests.",
-			Buckets: []float64{
-				1e-6, // 1 microsecond
-				5e-6,
-				1e-5,
-				5e-5,
-				1e-4,
-				5e-4,
-				1e-3, // 1 millisecond
-				0.01,
-				0.1,
-				1, // 1 second
-			},
+			Name:    "http_request_duration_seconds",
+			Help:    "A histogram of duration for requests.",
+			Buckets: httpRequestBuckets,
 		},
 		[]string{"code", "handler", "method"},
 	)
@@ -78,6 +70,7 @@ func New(inner metrics.Metrics, logger loggerFunc) *Provider {
 
 // RegisterEndpoints registers `/metrics` endpoint
 func (p *Provider) RegisterEndpoints(registrar func(path, method string, handler http.Handler)) {
+	registrar("/metrics/alloc_bytes", http.MethodGet, http.HandlerFunc(allocHandler))
 	registrar("/metrics", http.MethodGet, promhttp.HandlerFor(p.registry, promhttp.HandlerOpts{}))
 }
 
@@ -195,4 +188,32 @@ func (h *hijacker) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 func (c *captureStatusResponseWriter) WriteHeader(statusCode int) {
 	c.ResponseWriter.WriteHeader(statusCode)
 	c.status = statusCode
+}
+
+func prettyByteSize(b uint64) string {
+	bf := float64(b)
+	for _, unit := range []string{"", "K", "M", "G", "T", "P", "E", "Z"} {
+		if math.Abs(bf) < 1000.0 {
+			return fmt.Sprintf("%3.1f%sB", bf, unit)
+		}
+		bf /= 1000.0
+	}
+	return fmt.Sprintf("%.1fYiB", bf)
+}
+
+func allocHandler(rsp http.ResponseWriter, req *http.Request) {
+	var m runtime.MemStats
+	runtime.ReadMemStats(&m)
+
+	total := m.HeapInuse + m.StackInuse + m.MCacheInuse + m.MSpanInuse
+
+	var alloc string
+	if req.URL.Query().Get("pretty") == "true" {
+		alloc = prettyByteSize(total)
+	} else {
+		alloc = fmt.Sprintf("%d", total)
+	}
+
+	rsp.WriteHeader(200)
+	_, _ = fmt.Fprintln(rsp, alloc)
 }

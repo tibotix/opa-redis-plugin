@@ -37,6 +37,7 @@ type ParsedConfig struct {
 }
 
 type redisPlugin struct {
+	manager      *plugins.Manager
 	parsedConfig ParsedConfig
 	redisProxy   proxy.Proxy[*redis.Client]
 	redisContext context.Context
@@ -56,7 +57,7 @@ func Validate(m *plugins.Manager, bs []byte) (*ParsedConfig, error) {
 	}
 
 	if config.Address == defaultAddress {
-		return nil, errors.New("No Redis Address Provided.")
+		return nil, errors.New("no redis address provided")
 	}
 
 	opt, err := redis.ParseURL(config.Address)
@@ -78,6 +79,7 @@ func Validate(m *plugins.Manager, bs []byte) (*ParsedConfig, error) {
 
 func New(m *plugins.Manager, parsedConfig *ParsedConfig) plugins.Plugin {
 	plugin := &redisPlugin{
+		manager:      m,
 		parsedConfig: *parsedConfig,
 		redisContext: context.Background(),
 	}
@@ -98,6 +100,7 @@ func (p *redisPlugin) Start(ctx context.Context) error {
 	p.registerManualCommands()
 	p.registerAutogenCommands()
 
+	p.manager.UpdatePluginStatus(PluginName, &plugins.Status{State: plugins.StateOK})
 	return nil
 }
 
@@ -106,6 +109,7 @@ func (p *redisPlugin) Stop(ctx context.Context) {
 	if err != nil {
 		return
 	}
+	p.manager.UpdatePluginStatus(PluginName, &plugins.Status{State: plugins.StateNotReady})
 	rdb.Close()
 	p.redisProxy.Unset()
 }

@@ -21,32 +21,34 @@ import (
 )
 
 const (
-	defaultAddr        = ":8181"        // default listening address for server
-	defaultHistoryFile = ".opa_history" // default filename for shell history
+	defaultAddr        = ":8181"          // default listening address for server
+	defaultLocalAddr   = "localhost:8181" // default listening address for server bound to localhost
+	defaultHistoryFile = ".opa_history"   // default filename for shell history
 )
 
 type runCmdParams struct {
-	rt                 runtime.Params
-	tlsCertFile        string
-	tlsPrivateKeyFile  string
-	tlsCACertFile      string
-	tlsCertRefresh     time.Duration
-	ignore             []string
-	serverMode         bool
-	skipVersionCheck   bool // skipVersionCheck is deprecated. Use disableTelemetry instead
-	disableTelemetry   bool
-	authentication     *util.EnumFlag
-	authorization      *util.EnumFlag
-	minTLSVersion      *util.EnumFlag
-	logLevel           *util.EnumFlag
-	logFormat          *util.EnumFlag
-	logTimestampFormat string
-	algorithm          string
-	scope              string
-	pubKey             string
-	pubKeyID           string
-	skipBundleVerify   bool
-	excludeVerifyFiles []string
+	rt                   runtime.Params
+	tlsCertFile          string
+	tlsPrivateKeyFile    string
+	tlsCACertFile        string
+	tlsCertRefresh       time.Duration
+	ignore               []string
+	serverMode           bool
+	skipVersionCheck     bool // skipVersionCheck is deprecated. Use disableTelemetry instead
+	disableTelemetry     bool
+	authentication       *util.EnumFlag
+	authorization        *util.EnumFlag
+	minTLSVersion        *util.EnumFlag
+	logLevel             *util.EnumFlag
+	logFormat            *util.EnumFlag
+	logTimestampFormat   string
+	algorithm            string
+	scope                string
+	pubKey               string
+	pubKeyID             string
+	skipBundleVerify     bool
+	skipKnownSchemaCheck bool
+	excludeVerifyFiles   []string
 }
 
 func newRunParams() runCmdParams {
@@ -121,6 +123,18 @@ File paths can be specified as URLs to resolve ambiguity in paths containing col
 
     $ opa run file:///c:/path/to/data.json
 
+URL paths to remote public bundles (http or https) will be parsed as shorthand
+configuration equivalent of using repeated --set flags to accomplish the same:
+
+	$ opa run -s https://example.com/bundles/bundle.tar.gz
+
+The above shorthand command is identical to:
+
+    $ opa run -s --set "services.cli1.url=https://example.com" \
+                 --set "bundles.cli1.service=cli1" \
+                 --set "bundles.cli1.resource=/bundles/bundle.tar.gz" \
+                 --set "bundles.cli1.persist=true"
+
 The 'run' command can also verify the signature of a signed bundle.
 A signed bundle is a normal OPA bundle that includes a file
 named ".signatures.json". For more information on signed bundles
@@ -155,10 +169,24 @@ The 'run' command can ONLY be used with the --bundle flag to verify signatures
 for existing bundle files or directories following the bundle structure.
 
 To skip bundle verification, use the --skip-verify flag.
+
+The --watch flag can be used to monitor policy and data file-system changes. When a change is detected, the updated policy
+and data is reloaded into OPA. Watching individual files (rather than directories) is generally not recommended as some
+updates might cause them to be dropped by OPA.
+
+OPA will automatically perform type checking based on a schema inferred from known input documents and report any errors
+resulting from the schema check. Currently this check is performed on OPA's Authorization Policy Input document and will
+be expanded in the future. To disable this, use the --skip-known-schema-check flag.
+
+The --v1-compatible flag can be used to opt-in to OPA features and behaviors that will be enabled by default in a future OPA v1.0 release.
+Current behaviors enabled by this flag include:
+- setting OPA's listening address to "localhost:8181" by default.
 `,
+
 		Run: func(cmd *cobra.Command, args []string) {
 			ctx := context.Background()
-			rt, err := initRuntime(ctx, cmdParams, args)
+			addrSetByUser := cmd.Flags().Changed("addr")
+			rt, err := initRuntime(ctx, cmdParams, args, addrSetByUser)
 			if err != nil {
 				fmt.Println("error:", err)
 				os.Exit(1)
@@ -173,9 +201,11 @@ To skip bundle verification, use the --skip-verify flag.
 	runCommand.Flags().StringVarP(&cmdParams.rt.HistoryPath, "history", "H", historyPath(), "set path of history file")
 	cmdParams.rt.Addrs = runCommand.Flags().StringSliceP("addr", "a", []string{defaultAddr}, "set listening address of the server (e.g., [ip]:<port> for TCP, unix://<path> for UNIX domain socket)")
 	cmdParams.rt.DiagnosticAddrs = runCommand.Flags().StringSlice("diagnostic-addr", []string{}, "set read-only diagnostic listening address of the server for /health and /metric APIs (e.g., [ip]:<port> for TCP, unix://<path> for UNIX domain socket)")
+	cmdParams.rt.UnixSocketPerm = runCommand.Flags().String("unix-socket-perm", "755", "specify the permissions for the Unix domain socket if used to listen for incoming connections")
 	runCommand.Flags().BoolVar(&cmdParams.rt.H2CEnabled, "h2c", false, "enable H2C for HTTP listeners")
 	runCommand.Flags().StringVarP(&cmdParams.rt.OutputFormat, "format", "f", "pretty", "set shell output format, i.e, pretty, json")
 	runCommand.Flags().BoolVarP(&cmdParams.rt.Watch, "watch", "w", false, "watch command line files for changes")
+	runCommand.Flags().BoolVar(&cmdParams.rt.V1Compatible, "v1-compatible", false, "opt-in to OPA features and behaviors that will be enabled by default in a future OPA v1.0 release")
 	addMaxErrorsFlag(runCommand.Flags(), &cmdParams.rt.ErrorLimit)
 	runCommand.Flags().BoolVar(&cmdParams.rt.PprofEnabled, "pprof", false, "enables pprof endpoints")
 	runCommand.Flags().StringVar(&cmdParams.tlsCertFile, "tls-cert-file", "", "set path of TLS certificate file")
@@ -190,6 +220,7 @@ To skip bundle verification, use the --skip-verify flag.
 	runCommand.Flags().StringVar(&cmdParams.logTimestampFormat, "log-timestamp-format", "", "set log timestamp format (OPA_LOG_TIMESTAMP_FORMAT environment variable)")
 	runCommand.Flags().IntVar(&cmdParams.rt.GracefulShutdownPeriod, "shutdown-grace-period", 10, "set the time (in seconds) that the server will wait to gracefully shut down")
 	runCommand.Flags().IntVar(&cmdParams.rt.ShutdownWaitPeriod, "shutdown-wait-period", 0, "set the time (in seconds) that the server will wait before initiating shutdown")
+	runCommand.Flags().BoolVar(&cmdParams.skipKnownSchemaCheck, "skip-known-schema-check", false, "disables type checking on known input schemas")
 	addConfigOverrides(runCommand.Flags(), &cmdParams.rt.ConfigOverrides)
 	addConfigOverrideFiles(runCommand.Flags(), &cmdParams.rt.ConfigOverrideFiles)
 	addBundleModeFlag(runCommand.Flags(), &cmdParams.rt.BundleMode, false)
@@ -224,7 +255,7 @@ Flags:
 	RootCommand.AddCommand(runCommand)
 }
 
-func initRuntime(ctx context.Context, params runCmdParams, args []string) (*runtime.Runtime, error) {
+func initRuntime(ctx context.Context, params runCmdParams, args []string, addrSetByUser bool) (*runtime.Runtime, error) {
 	authenticationSchemes := map[string]server.AuthenticationScheme{
 		"token": server.AuthenticationToken,
 		"tls":   server.AuthenticationTLS,
@@ -298,12 +329,19 @@ func initRuntime(ctx context.Context, params runCmdParams, args []string) (*runt
 		return nil, fmt.Errorf("enable bundle mode (ie. --bundle) to verify bundle files or directories")
 	}
 
+	params.rt.SkipKnownSchemaCheck = params.skipKnownSchemaCheck
+
 	rt, err := runtime.NewRuntime(ctx, params.rt)
 	if err != nil {
 		return nil, err
 	}
 
 	rt.SetDistributedTracingLogging()
+	rt.Params.AddrSetByUser = addrSetByUser
+
+	if !addrSetByUser && rt.Params.V1Compatible {
+		rt.Params.Addrs = &[]string{defaultLocalAddr}
+	}
 
 	return rt, nil
 }

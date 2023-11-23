@@ -42,6 +42,7 @@ type buildParams struct {
 	claimsFile         string
 	excludeVerifyFiles []string
 	plugin             string
+	ns                 string
 }
 
 func newBuildParams() buildParams {
@@ -102,7 +103,8 @@ The -O flag controls the optimization level. By default, optimization is disable
 When optimization is enabled the 'build' command generates a bundle that is semantically
 equivalent to the input files however the structure of the files in the bundle may have
 been changed by rewriting, inlining, pruning, etc. Higher optimization levels may result
-in longer build times.
+in longer build times. The --partial-namespace flag can used in conjunction with the -O flag
+to specify the namespace for the partially evaluated files in the optimized bundle.
 
 The 'build' command supports targets (specified by -t):
 
@@ -117,13 +119,15 @@ The 'build' command supports targets (specified by -t):
             original policy or data files.
 
     plan    The plan target emits a bundle containing a plan, i.e., an intermediate
-			representation compiled from the input files for each specified entrypoint.
-			This is for further processing, OPA cannot evaluate a "plan bundle" like it
-			can evaluate a wasm or rego bundle.
+            representation compiled from the input files for each specified entrypoint.
+            This is for further processing, OPA cannot evaluate a "plan bundle" like it
+            can evaluate a wasm or rego bundle.
 
-The -e flag tells the 'build' command which documents will be queried by the software
-asking for policy decisions, so that it can focus optimization efforts and ensure
-that document is not eliminated by the optimizer.
+The -e flag tells the 'build' command which documents (entrypoints) will be queried by 
+the software asking for policy decisions, so that it can focus optimization efforts and 
+ensure that document is not eliminated by the optimizer.
+Note: Unless the --prune-unused flag is used, any rule transitively referring to a 
+package or rule declared as an entrypoint will also be enumerated as an entrypoint.
 
 Signing
 -------
@@ -231,6 +235,7 @@ against OPA v0.22.0:
 	buildCommand.Flags().VarP(&buildParams.entrypoints, "entrypoint", "e", "set slash separated entrypoint path")
 	buildCommand.Flags().VarP(&buildParams.revision, "revision", "r", "set output bundle revision")
 	buildCommand.Flags().StringVarP(&buildParams.outputFile, "output", "o", "bundle.tar.gz", "set the output filename")
+	buildCommand.Flags().StringVar(&buildParams.ns, "partial-namespace", "partial", "set the namespace to use for partially evaluated files in an optimized bundle")
 
 	addBundleModeFlag(buildCommand.Flags(), &buildParams.bundleMode, false)
 	addIgnoreFlag(buildCommand.Flags(), &buildParams.ignore)
@@ -292,7 +297,8 @@ func dobuild(params buildParams, args []string) error {
 		WithPaths(args...).
 		WithFilter(buildCommandLoaderFilter(params.bundleMode, params.ignore)).
 		WithBundleVerificationConfig(bvc).
-		WithBundleSigningConfig(bsc)
+		WithBundleSigningConfig(bsc).
+		WithPartialNamespace(params.ns)
 
 	if params.revision.isSet {
 		compiler = compiler.WithRevision(*params.revision.v)
@@ -304,6 +310,10 @@ func dobuild(params buildParams, args []string) error {
 
 	if params.claimsFile == "" {
 		compiler = compiler.WithBundleVerificationKeyID(params.pubKeyID)
+	}
+
+	if params.target.String() == compile.TargetPlan {
+		compiler = compiler.WithEnablePrintStatements(true)
 	}
 
 	err = compiler.Build(context.Background())

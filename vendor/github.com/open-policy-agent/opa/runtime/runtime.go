@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"io"
 	mr "math/rand"
+	"net/url"
 	"os"
 	"os/signal"
 	"strings"
@@ -22,13 +23,16 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/gorilla/mux"
+	"github.com/open-policy-agent/opa/internal/compiler"
+	"github.com/open-policy-agent/opa/internal/pathwatcher"
+	"github.com/open-policy-agent/opa/internal/ref"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
 	"go.opentelemetry.io/otel/propagation"
 	"go.uber.org/automaxprocs/maxprocs"
 
-	"github.com/open-policy-agent/opa/ast"
 	"github.com/open-policy-agent/opa/bundle"
+	opa_config "github.com/open-policy-agent/opa/config"
 	"github.com/open-policy-agent/opa/internal/config"
 	internal_tracing "github.com/open-policy-agent/opa/internal/distributedtracing"
 	internal_logging "github.com/open-policy-agent/opa/internal/logging"
@@ -43,6 +47,7 @@ import (
 	"github.com/open-policy-agent/opa/plugins"
 	"github.com/open-policy-agent/opa/plugins/discovery"
 	"github.com/open-policy-agent/opa/plugins/logs"
+	metrics_config "github.com/open-policy-agent/opa/plugins/server/metrics"
 	"github.com/open-policy-agent/opa/repl"
 	"github.com/open-policy-agent/opa/server"
 	"github.com/open-policy-agent/opa/storage"
@@ -75,7 +80,6 @@ func RegisterPlugin(name string, factory plugins.Factory) {
 
 // Params stores the configuration for an OPA instance.
 type Params struct {
-
 	// Globally unique identifier for this OPA instance. If an ID is not specified,
 	// the runtime will generate one.
 	ID string
@@ -195,6 +199,9 @@ type Params struct {
 	// SkipBundleVerification flag controls whether OPA will verify a signed bundle
 	SkipBundleVerification bool
 
+	// SkipKnownSchemaCheck flag controls whether OPA will perform type checking on known input schemas
+	SkipKnownSchemaCheck bool
+
 	// ReadyTimeout flag controls if and for how long OPA server will wait (in seconds) for
 	// configured bundles and plugins to be activated/ready before listening for traffic.
 	// A value of 0 or less means no wait is exercised.
@@ -211,6 +218,17 @@ type Params struct {
 	DiskStorage *disk.Options
 
 	DistributedTracingOpts tracing.Options
+
+	// Check if default Addr is set or the user has changed it.
+	AddrSetByUser bool
+
+	// UnixSocketPerm specifies the permission for the Unix domain socket if used to listen for connections
+	UnixSocketPerm *string
+
+	// V1Compatible will enable OPA features and behaviors that will be enabled by default in a future OPA v1.0 release.
+	// This flag allows users to opt-in to the new behavior and helps transition to the future release upon which
+	// the new behavior will be enabled by default.
+	V1Compatible bool
 }
 
 // LoggingConfig stores the configuration for OPA's logging behaviour.
@@ -249,7 +267,6 @@ type Runtime struct {
 // NewRuntime returns a new Runtime object initialized with params. Clients must
 // call StartServer() or StartREPL() to start the runtime in either mode.
 func NewRuntime(ctx context.Context, params Params) (*Runtime, error) {
-
 	if params.ID == "" {
 		var err error
 		params.ID, err = generateInstanceID()
@@ -284,6 +301,22 @@ func NewRuntime(ctx context.Context, params Params) (*Runtime, error) {
 		logger = stdLogger
 	}
 
+	var filePaths []string
+	urlPathCount := 0
+	for _, path := range params.Paths {
+		if strings.HasPrefix(path, "http://") || strings.HasPrefix(path, "https://") {
+			urlPathCount++
+			override, err := urlPathToConfigOverride(urlPathCount, path)
+			if err != nil {
+				return nil, err
+			}
+			params.ConfigOverrides = append(params.ConfigOverrides, override...)
+		} else {
+			filePaths = append(filePaths, path)
+		}
+	}
+	params.Paths = filePaths
+
 	config, err := config.Load(params.ConfigFile, params.ConfigOverrides, params.ConfigOverrideFiles)
 	if err != nil {
 		return nil, fmt.Errorf("config error: %w", err)
@@ -298,12 +331,14 @@ func NewRuntime(ctx context.Context, params Params) (*Runtime, error) {
 		}
 	}
 
-	loaded, err := initload.LoadPaths(params.Paths, params.Filter, params.BundleMode, params.BundleVerificationConfig, params.SkipBundleVerification, false, nil)
+	loaded, err := initload.LoadPaths(params.Paths, params.Filter, params.BundleMode, params.BundleVerificationConfig, params.SkipBundleVerification, false, nil, nil)
 	if err != nil {
 		return nil, fmt.Errorf("load error: %w", err)
 	}
 
-	info, err := runtime.Term(runtime.Params{Config: config})
+	isAuthorizationEnabled := params.Authorization != server.AuthorizationOff
+
+	info, err := runtime.Term(runtime.Params{Config: config, IsAuthorizationEnabled: isAuthorizationEnabled, SkipKnownSchemaCheck: params.SkipKnownSchemaCheck})
 	if err != nil {
 		return nil, err
 	}
@@ -319,7 +354,11 @@ func NewRuntime(ctx context.Context, params Params) (*Runtime, error) {
 		params.Router = mux.NewRouter()
 	}
 
-	metrics := prometheus.New(metrics.New(), errorLogger(logger))
+	metricsConfig, parseConfigErr := extractMetricsConfig(config, params)
+	if parseConfigErr != nil {
+		return nil, parseConfigErr
+	}
+	metrics := prometheus.New(metrics.New(), errorLogger(logger), metricsConfig.Prom.HTTPRequestDurationSeconds.Buckets)
 
 	var store storage.Store
 	if params.DiskStorage == nil {
@@ -372,6 +411,12 @@ func NewRuntime(ctx context.Context, params Params) (*Runtime, error) {
 		return nil, fmt.Errorf("initialization error: %w", err)
 	}
 
+	if isAuthorizationEnabled && !params.SkipKnownSchemaCheck {
+		if err := verifyAuthorizationPolicySchema(manager); err != nil {
+			return nil, fmt.Errorf("initialization error: %w", err)
+		}
+	}
+
 	disco, err := discovery.New(manager, discovery.Factories(registeredPlugins), discovery.Metrics(metrics))
 	if err != nil {
 		return nil, fmt.Errorf("config error: %w", err)
@@ -393,6 +438,27 @@ func NewRuntime(ctx context.Context, params Params) (*Runtime, error) {
 	return rt, nil
 }
 
+// extractMetricsConfig returns the configuration for server metrics and parsing errors if any
+func extractMetricsConfig(config []byte, params Params) (*metrics_config.Config, error) {
+	var opaParsedConfig, opaParsedConfigErr = opa_config.ParseConfig(config, params.ID)
+	if opaParsedConfigErr != nil {
+		return nil, opaParsedConfigErr
+	}
+
+	var serverMetricsData []byte
+	if opaParsedConfig.Server != nil {
+		serverMetricsData = opaParsedConfig.Server.Metrics
+	}
+
+	var configBuilder = metrics_config.NewConfigBuilder()
+	var metricsParsedConfig, metricsParsedConfigErr = configBuilder.WithBytes(serverMetricsData).Parse()
+	if metricsParsedConfigErr != nil {
+		return nil, fmt.Errorf("server metrics configuration parse error: %w", metricsParsedConfigErr)
+	}
+
+	return metricsParsedConfig, nil
+}
+
 // StartServer starts the runtime in server mode. This function will block the
 // calling goroutine and will exit the program on error.
 func (rt *Runtime) StartServer(ctx context.Context) {
@@ -406,9 +472,13 @@ func (rt *Runtime) StartServer(ctx context.Context) {
 // will block until either: an error occurs, the context is canceled, or
 // a SIGTERM or SIGKILL signal is sent.
 func (rt *Runtime) Serve(ctx context.Context) error {
-
 	if rt.Params.Addrs == nil {
 		return fmt.Errorf("at least one address must be configured in runtime parameters")
+	}
+
+	serverInitializingMessage := "Initializing server."
+	if !rt.Params.AddrSetByUser && !rt.Params.V1Compatible {
+		serverInitializingMessage += " OPA is running on a public (0.0.0.0) network interface. Unless you intend to expose OPA outside of the host, binding to the localhost interface (--addr localhost:8181) is recommended. See https://www.openpolicyagent.org/docs/latest/security/#interface-binding"
 	}
 
 	if rt.Params.DiagnosticAddrs == nil {
@@ -418,7 +488,7 @@ func (rt *Runtime) Serve(ctx context.Context) error {
 	rt.logger.WithFields(map[string]interface{}{
 		"addrs":            *rt.Params.Addrs,
 		"diagnostic-addrs": *rt.Params.DiagnosticAddrs,
-	}).Info("Initializing server.")
+	}).Info(serverInitializingMessage)
 
 	if rt.Params.Authorization == server.AuthorizationOff && rt.Params.Authentication == server.AuthenticationToken {
 		rt.logger.Error("Token authentication enabled without authorization. Authentication will be ineffective. See https://www.openpolicyagent.org/docs/latest/security/#authentication-and-authorization for more information.")
@@ -432,7 +502,6 @@ func (rt *Runtime) Serve(ctx context.Context) error {
 	undo, err := maxprocs.Set(maxprocs.Logger(func(f string, a ...interface{}) {
 		rt.logger.Debug(f, a...)
 	}))
-
 	if err != nil {
 		rt.logger.WithFields(map[string]interface{}{"err": err}).Debug("Failed to set GOMAXPROCS from CPU quota.")
 	}
@@ -487,6 +556,10 @@ func (rt *Runtime) Serve(ctx context.Context) error {
 
 	if rt.Params.DiagnosticAddrs != nil {
 		rt.server = rt.server.WithDiagnosticAddresses(*rt.Params.DiagnosticAddrs)
+	}
+
+	if rt.Params.UnixSocketPerm != nil {
+		rt.server = rt.server.WithUnixSocketPermission(rt.Params.UnixSocketPerm)
 	}
 
 	rt.server, err = rt.server.Init(ctx)
@@ -593,7 +666,6 @@ func (rt *Runtime) DiagnosticAddrs() []string {
 
 // StartREPL starts the runtime in REPL mode. This function will block the calling goroutine.
 func (rt *Runtime) StartREPL(ctx context.Context) {
-
 	if err := rt.Manager.Start(ctx); err != nil {
 		fmt.Fprintln(rt.Params.Output, "error starting plugins:", err)
 		os.Exit(1)
@@ -616,7 +688,6 @@ func (rt *Runtime) StartREPL(ctx context.Context) {
 		go func() {
 			repl.SetOPAVersionReport(rt.checkOPAUpdate(ctx).Slice())
 		}()
-
 	}
 	repl.Loop(ctx)
 }
@@ -634,7 +705,7 @@ func (rt *Runtime) checkOPAUpdate(ctx context.Context) *report.DataResponse {
 
 func (rt *Runtime) checkOPAUpdateLoop(ctx context.Context, uploadDuration time.Duration, done chan struct{}) {
 	ticker := time.NewTicker(uploadDuration)
-	mr.Seed(time.Now().UnixNano())
+	mr.New(mr.NewSource(time.Now().UnixNano())) // Seed the PRNG.
 
 	for {
 		resp, err := rt.reporter.SendReport(ctx)
@@ -677,7 +748,6 @@ func (rt *Runtime) decisionIDFactory() string {
 }
 
 func (rt *Runtime) decisionLogger(ctx context.Context, event *server.Info) error {
-
 	plugin := logs.Lookup(rt.Manager)
 	if plugin == nil {
 		return nil
@@ -716,48 +786,7 @@ func (rt *Runtime) readWatcher(ctx context.Context, watcher *fsnotify.Watcher, p
 
 func (rt *Runtime) processWatcherUpdate(ctx context.Context, paths []string, removed string) error {
 
-	loaded, err := initload.LoadPaths(paths, rt.Params.Filter, rt.Params.BundleMode, nil, true, false, nil)
-	if err != nil {
-		return err
-	}
-
-	removed = loader.CleanPath(removed)
-
-	return storage.Txn(ctx, rt.Store, storage.WriteParams, func(txn storage.Transaction) error {
-
-		if !rt.Params.BundleMode {
-			ids, err := rt.Store.ListPolicies(ctx, txn)
-			if err != nil {
-				return err
-			}
-			for _, id := range ids {
-				if id == removed {
-					if err := rt.Store.DeletePolicy(ctx, txn, id); err != nil {
-						return err
-					}
-				} else if _, exists := loaded.Files.Modules[id]; !exists {
-					// This branch get hit in two cases.
-					// 1. Another piece of code has access to the store and inserts
-					//    a policy out-of-band.
-					// 2. In between FS notification and loader.Filtered() call above, a
-					//    policy is removed from disk.
-					bs, err := rt.Store.GetPolicy(ctx, txn, id)
-					if err != nil {
-						return err
-					}
-					module, err := ast.ParseModule(id, string(bs))
-					if err != nil {
-						return err
-					}
-					loaded.Files.Modules[id] = &loader.RegoFile{
-						Name:   id,
-						Raw:    bs,
-						Parsed: module,
-					}
-				}
-			}
-		}
-
+	return pathwatcher.ProcessWatcherUpdate(ctx, paths, removed, rt.Store, rt.Params.Filter, rt.Params.BundleMode, func(ctx context.Context, txn storage.Transaction, loaded *initload.LoadPathsResult) error {
 		_, err := initload.InsertAndCompile(ctx, initload.InsertAndCompileOptions{
 			Store:     rt.Store,
 			Txn:       txn,
@@ -765,11 +794,8 @@ func (rt *Runtime) processWatcherUpdate(ctx context.Context, paths []string, rem
 			Bundles:   loaded.Bundles,
 			MaxErrors: -1,
 		})
-		if err != nil {
-			return err
-		}
 
-		return nil
+		return err
 	})
 }
 
@@ -827,48 +853,41 @@ func (rt *Runtime) onReloadLogger(d time.Duration, err error) {
 }
 
 func (rt *Runtime) getWatcher(rootPaths []string) (*fsnotify.Watcher, error) {
-
-	watchPaths, err := getWatchPaths(rootPaths)
+	watcher, err := pathwatcher.CreatePathWatcher(rootPaths)
 	if err != nil {
 		return nil, err
 	}
 
-	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		return nil, err
-	}
-
-	for _, path := range watchPaths {
+	for _, path := range watcher.WatchList() {
 		rt.logger.WithFields(map[string]interface{}{"path": path}).Debug("watching path")
-		if err := watcher.Add(path); err != nil {
-			return nil, err
-		}
 	}
 
 	return watcher, nil
+}
+
+func urlPathToConfigOverride(pathCount int, path string) ([]string, error) {
+	uri, err := url.Parse(path)
+	if err != nil {
+		return nil, err
+	}
+	baseURL := uri.Scheme + "://" + uri.Host
+	urlPath := uri.Path
+	if uri.RawQuery != "" {
+		urlPath += "?" + uri.RawQuery
+	}
+
+	return []string{
+		fmt.Sprintf("services.cli%d.url=%s", pathCount, baseURL),
+		fmt.Sprintf("bundles.cli%d.service=cli%d", pathCount, pathCount),
+		fmt.Sprintf("bundles.cli%d.resource=%s", pathCount, urlPath),
+		fmt.Sprintf("bundles.cli%d.persist=true", pathCount),
+	}, nil
 }
 
 func errorLogger(logger logging.Logger) func(attrs map[string]interface{}, f string, a ...interface{}) {
 	return func(attrs map[string]interface{}, f string, a ...interface{}) {
 		logger.WithFields(attrs).Error(f, a...)
 	}
-}
-
-func getWatchPaths(rootPaths []string) ([]string, error) {
-	paths := []string{}
-
-	for _, path := range rootPaths {
-
-		_, path = loader.SplitPrefix(path)
-		result, err := loader.Paths(path, true)
-		if err != nil {
-			return nil, err
-		}
-
-		paths = append(paths, loader.Dirs(result)...)
-	}
-
-	return paths, nil
 }
 
 func onReloadPrinter(output io.Writer) func(time.Duration, error) {
@@ -891,6 +910,15 @@ func generateDecisionID() string {
 		return ""
 	}
 	return id
+}
+
+func verifyAuthorizationPolicySchema(m *plugins.Manager) error {
+	authorizationDecisionRef, err := ref.ParseDataPath(*m.Config.DefaultAuthorizationDecision)
+	if err != nil {
+		return err
+	}
+
+	return compiler.VerifyAuthorizationPolicySchema(m.GetCompiler(), authorizationDecisionRef)
 }
 
 func init() {

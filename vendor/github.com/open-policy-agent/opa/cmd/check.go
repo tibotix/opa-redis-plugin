@@ -65,7 +65,7 @@ func checkModules(params checkParams, args []string) error {
 		for _, path := range args {
 			b, err := loader.NewFileLoader().
 				WithSkipBundleVerification(true).
-				WithProcessAnnotation(ss != nil).
+				WithProcessAnnotation(true).
 				WithCapabilities(capabilities).
 				AsBundle(path)
 			if err != nil {
@@ -81,7 +81,7 @@ func checkModules(params checkParams, args []string) error {
 		}
 
 		result, err := loader.NewFileLoader().
-			WithProcessAnnotation(ss != nil).
+			WithProcessAnnotation(true).
 			WithCapabilities(capabilities).
 			Filtered(args, f.Apply)
 		if err != nil {
@@ -98,7 +98,8 @@ func checkModules(params checkParams, args []string) error {
 		WithCapabilities(capabilities).
 		WithSchemas(ss).
 		WithEnablePrintStatements(true).
-		WithStrict(params.strict)
+		WithStrict(params.strict).
+		WithUseTypeCheckAnnotations(true)
 
 	compiler.Compile(modules)
 	if compiler.Failed() {

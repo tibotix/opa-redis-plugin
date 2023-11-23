@@ -13,17 +13,20 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/http/httputil"
 	"reflect"
 	"strings"
 
 	"github.com/open-policy-agent/opa/internal/version"
 	"github.com/open-policy-agent/opa/keys"
 	"github.com/open-policy-agent/opa/logging"
+	"github.com/open-policy-agent/opa/tracing"
 	"github.com/open-policy-agent/opa/util"
 )
 
 const (
 	defaultResponseHeaderTimeoutSeconds = int64(10)
+	defaultResponseSizeLimitBytes       = 1024
 
 	grantTypeClientCredentials = "client_credentials"
 	grantTypeJwtBearer         = "jwt_bearer"
@@ -65,15 +68,19 @@ func (c *Config) Equal(other *Config) bool {
 	return reflect.DeepEqual(c, &otherWithoutLogger)
 }
 
-func (c *Config) authPlugin(authPluginLookup func(string) HTTPAuthPlugin) (HTTPAuthPlugin, error) {
+// An AuthPluginLookupFunc can lookup auth plugins by their name.
+type AuthPluginLookupFunc func(name string) HTTPAuthPlugin
+
+// AuthPlugin should be used to get an authentication method from the config.
+func (c *Config) AuthPlugin(lookup AuthPluginLookupFunc) (HTTPAuthPlugin, error) {
 	var candidate HTTPAuthPlugin
 	if c.Credentials.Plugin != nil {
-		if authPluginLookup == nil {
+		if lookup == nil {
 			// if no authPluginLookup function is passed we can't resolve the plugin
 			return nil, errors.New("missing auth plugin lookup function")
 		}
 
-		candidate := authPluginLookup(*c.Credentials.Plugin)
+		candidate := lookup(*c.Credentials.Plugin)
 		if candidate == nil {
 			return nil, fmt.Errorf("auth plugin %q not found", *c.Credentials.Plugin)
 		}
@@ -100,16 +107,16 @@ func (c *Config) authPlugin(authPluginLookup func(string) HTTPAuthPlugin) (HTTPA
 	return candidate, nil
 }
 
-func (c *Config) authHTTPClient(authPluginLookup func(string) HTTPAuthPlugin) (*http.Client, error) {
-	plugin, err := c.authPlugin(authPluginLookup)
+func (c *Config) authHTTPClient(lookup AuthPluginLookupFunc) (*http.Client, error) {
+	plugin, err := c.AuthPlugin(lookup)
 	if err != nil {
 		return nil, err
 	}
 	return plugin.NewClient(*c)
 }
 
-func (c *Config) authPrepare(req *http.Request, authPluginLookup func(string) HTTPAuthPlugin) error {
-	plugin, err := c.authPlugin(authPluginLookup)
+func (c *Config) authPrepare(req *http.Request, lookup AuthPluginLookupFunc) error {
+	plugin, err := c.AuthPlugin(lookup)
 	if err != nil {
 		return err
 	}
@@ -119,13 +126,14 @@ func (c *Config) authPrepare(req *http.Request, authPluginLookup func(string) HT
 // Client implements an HTTP/REST client for communicating with remote
 // services.
 type Client struct {
-	bytes            *[]byte
-	json             *interface{}
-	config           Config
-	headers          map[string]string
-	authPluginLookup func(string) HTTPAuthPlugin
-	logger           logging.Logger
-	loggerFields     map[string]interface{}
+	bytes                 *[]byte
+	json                  *interface{}
+	config                Config
+	headers               map[string]string
+	authPluginLookup      AuthPluginLookupFunc
+	logger                logging.Logger
+	loggerFields          map[string]interface{}
+	distributedTacingOpts tracing.Options
 }
 
 // Name returns an option that overrides the service name on the client.
@@ -139,7 +147,7 @@ func Name(s string) func(*Client) {
 // It's intended to be used when creating a Client using New(). Usually this is passed
 // the plugins.AuthPlugin func, which retrieves a registered HTTPAuthPlugin from the
 // plugin manager.
-func AuthPluginLookup(l func(string) HTTPAuthPlugin) func(*Client) {
+func AuthPluginLookup(l AuthPluginLookupFunc) func(*Client) {
 	return func(c *Client) {
 		c.authPluginLookup = l
 	}
@@ -152,10 +160,16 @@ func Logger(l logging.Logger) func(*Client) {
 	}
 }
 
+// DistributedTracingOpts sets the options to be used by distributed tracing.
+func DistributedTracingOpts(tr tracing.Options) func(*Client) {
+	return func(c *Client) {
+		c.distributedTacingOpts = tr
+	}
+}
+
 // New returns a new Client for config.
 func New(config []byte, keys map[string]*keys.Config, opts ...func(*Client)) (Client, error) {
 	var parsedConfig Config
-
 	if err := util.Unmarshal(config, &parsedConfig); err != nil {
 		return Client{}, err
 	}
@@ -163,9 +177,8 @@ func New(config []byte, keys map[string]*keys.Config, opts ...func(*Client)) (Cl
 	parsedConfig.URL = strings.TrimRight(parsedConfig.URL, "/")
 
 	if parsedConfig.ResponseHeaderTimeoutSeconds == nil {
-		timeout := new(int64)
-		*timeout = defaultResponseHeaderTimeoutSeconds
-		parsedConfig.ResponseHeaderTimeoutSeconds = timeout
+		timeout := defaultResponseHeaderTimeoutSeconds
+		parsedConfig.ResponseHeaderTimeoutSeconds = &timeout
 	}
 
 	parsedConfig.keys = keys
@@ -181,9 +194,16 @@ func New(config []byte, keys map[string]*keys.Config, opts ...func(*Client)) (Cl
 	if client.logger == nil {
 		client.logger = logging.Get()
 	}
+
 	client.config.logger = client.logger
 
 	return client, nil
+}
+
+// AuthPluginLookup returns the lookup function to find a custom registered
+// auth plugin by its name.
+func (c Client) AuthPluginLookup() AuthPluginLookupFunc {
+	return c.authPluginLookup
 }
 
 // Service returns the name of the service this Client is configured for.
@@ -249,6 +269,10 @@ func (c Client) Do(ctx context.Context, method, path string) (*http.Response, er
 		return nil, err
 	}
 
+	if len(c.distributedTacingOpts) > 0 {
+		httpClient.Transport = tracing.NewTransport(httpClient.Transport, c.distributedTacingOpts)
+	}
+
 	path = strings.Trim(path, "/")
 
 	var body io.Reader
@@ -311,6 +335,19 @@ func (c Client) Do(ctx context.Context, method, path string) (*http.Response, er
 		// that. In the non-error case, the caller may not do anything.
 		c.loggerFields["status"] = resp.Status
 		c.loggerFields["headers"] = resp.Header
+
+		if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+			dump, err := httputil.DumpResponse(resp, true)
+			if err != nil {
+				return nil, err
+			}
+
+			if len(string(dump)) < defaultResponseSizeLimitBytes {
+				c.loggerFields["response"] = string(dump)
+			} else {
+				c.loggerFields["response"] = fmt.Sprintf("%v...", string(dump[:defaultResponseSizeLimitBytes]))
+			}
+		}
 		c.logger.WithFields(c.loggerFields).Debug("Received response.")
 	}
 

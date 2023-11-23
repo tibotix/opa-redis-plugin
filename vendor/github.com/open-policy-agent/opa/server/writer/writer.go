@@ -51,37 +51,34 @@ func ErrorString(w http.ResponseWriter, status int, code string, err error) {
 func Error(w http.ResponseWriter, status int, err *types.ErrorV1) {
 	headers := w.Header()
 	headers.Add("Content-Type", "application/json")
-	Bytes(w, status, err.Bytes())
-	_, _ = w.Write([]byte("\n"))
+	w.WriteHeader(status)
+	_, _ = w.Write(append(err.Bytes(), byte('\n')))
 }
 
 // JSON writes a response with the specified status code and object. The object
 // will be JSON serialized.
 func JSON(w http.ResponseWriter, code int, v interface{}, pretty bool) {
-
-	var bs []byte
-	var err error
-
+	enc := json.NewEncoder(w)
 	if pretty {
-		bs, err = json.MarshalIndent(v, "", "  ")
-	} else {
-		bs, err = json.Marshal(v)
+		enc.SetIndent("", "  ")
 	}
 
-	if err != nil {
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(code)
+
+	if err := enc.Encode(v); err != nil {
 		ErrorAuto(w, err)
 		return
 	}
-	headers := w.Header()
-	headers.Add("Content-Type", "application/json")
-	Bytes(w, code, bs)
+}
 
-	if pretty {
-		_, _ = w.Write([]byte("\n"))
-	}
+// JSONOK is a helper for status "200 OK" responses
+func JSONOK(w http.ResponseWriter, v interface{}, pretty bool) {
+	JSON(w, http.StatusOK, v, pretty)
 }
 
 // Bytes writes a response with the specified status code and bytes.
+// Deprecated: Unused in OPA, will be removed in the future.
 func Bytes(w http.ResponseWriter, code int, bs []byte) {
 	w.WriteHeader(code)
 	if code == 204 {

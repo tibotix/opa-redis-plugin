@@ -163,7 +163,8 @@ func makeInput(r *http.Request) (*http.Request, interface{}, error) {
 	var rawBody []byte
 
 	if expectBody(r.Method, path) {
-		rawBody, err = readBody(r)
+		var err error
+		rawBody, err = io.ReadAll(r.Body)
 		if err != nil {
 			return r, nil, err
 		}
@@ -198,6 +199,11 @@ func makeInput(r *http.Request) (*http.Request, interface{}, error) {
 		input["identity"] = identity
 	}
 
+	clientCertificates, ok := identifier.ClientCertificates(r)
+	if ok {
+		input["client_certificates"] = clientCertificates
+	}
+
 	return r, input, nil
 }
 
@@ -225,17 +231,6 @@ func expectYAML(r *http.Request) bool {
 	// are a bit more strict, but the authorizer should be consistent w/ the original
 	// server handler implementation.
 	return strings.Contains(r.Header.Get("Content-Type"), "yaml")
-}
-
-func readBody(r *http.Request) ([]byte, error) {
-
-	bs, err := io.ReadAll(r.Body)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return bs, nil
 }
 
 func parsePath(path string) ([]interface{}, error) {

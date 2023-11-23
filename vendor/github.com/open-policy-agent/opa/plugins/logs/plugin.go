@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
-	"net/http"
 	"net/url"
 	"reflect"
 	"strings"
@@ -25,11 +24,12 @@ import (
 	"github.com/open-policy-agent/opa/logging"
 	"github.com/open-policy-agent/opa/metrics"
 	"github.com/open-policy-agent/opa/plugins"
+	lstat "github.com/open-policy-agent/opa/plugins/logs/status"
 	"github.com/open-policy-agent/opa/plugins/rest"
+	"github.com/open-policy-agent/opa/plugins/status"
 	"github.com/open-policy-agent/opa/rego"
 	"github.com/open-policy-agent/opa/server"
 	"github.com/open-policy-agent/opa/storage"
-	"github.com/open-policy-agent/opa/topdown/cache"
 	"github.com/open-policy-agent/opa/util"
 )
 
@@ -47,6 +47,8 @@ type Logger interface {
 type EventV1 struct {
 	Labels         map[string]string       `json:"labels"`
 	DecisionID     string                  `json:"decision_id"`
+	TraceID        string                  `json:"trace_id,omitempty"`
+	SpanID         string                  `json:"span_id,omitempty"`
 	Revision       string                  `json:"revision,omitempty"` // Deprecated: Use Bundles instead
 	Bundles        map[string]BundleInfoV1 `json:"bundles,omitempty"`
 	Path           string                  `json:"path,omitempty"`
@@ -236,16 +238,18 @@ func roundtripJSONToAST(x interface{}) (ast.Value, error) {
 
 const (
 	// min amount of time to wait following a failure
-	minRetryDelay               = time.Millisecond * 100
-	defaultMinDelaySeconds      = int64(300)
-	defaultMaxDelaySeconds      = int64(600)
-	defaultUploadSizeLimitBytes = int64(32768) // 32KB limit
-	defaultBufferSizeLimitBytes = int64(0)     // unlimited
-	defaultMaskDecisionPath     = "/system/log/mask"
-	defaultDropDecisionPath     = "/system/log/drop"
-	logDropCounterName          = "decision_logs_dropped"
-	logNDBDropCounterName       = "decision_logs_nd_builtin_cache_dropped"
-	defaultResourcePath         = "/logs"
+	minRetryDelay                       = time.Millisecond * 100
+	defaultMinDelaySeconds              = int64(300)
+	defaultMaxDelaySeconds              = int64(600)
+	defaultUploadSizeLimitBytes         = int64(32768) // 32KB limit
+	defaultBufferSizeLimitBytes         = int64(0)     // unlimited
+	defaultMaskDecisionPath             = "/system/log/mask"
+	defaultDropDecisionPath             = "/system/log/drop"
+	logRateLimitExDropCounterName       = "decision_logs_dropped_rate_limit_exceeded"
+	logNDBDropCounterName               = "decision_logs_nd_builtin_cache_dropped"
+	logBufferSizeLimitExDropCounterName = "decision_logs_dropped_buffer_size_limit_bytes_exceeded"
+	logEncodingFailureCounterName       = "decision_logs_encoding_failure"
+	defaultResourcePath                 = "/logs"
 )
 
 // ReportingConfig represents configuration for the plugin's reporting behaviour.
@@ -407,6 +411,7 @@ type Plugin struct {
 	limiter   *rate.Limiter
 	metrics   metrics.Metrics
 	logger    logging.Logger
+	status    *lstat.Status
 }
 
 type reconfigure struct {
@@ -497,6 +502,7 @@ func New(parsedConfig *Config, manager *plugins.Manager) *Plugin {
 		enc:      newChunkEncoder(*parsedConfig.Reporting.UploadSizeLimitBytes),
 		reconfig: make(chan reconfigure),
 		logger:   manager.Logger().WithFields(map[string]interface{}{"plugin": Name}),
+		status:   &lstat.Status{},
 	}
 
 	if parsedConfig.Reporting.MaxDecisionsPerSecond != nil {
@@ -593,6 +599,8 @@ func (p *Plugin) Log(ctx context.Context, decision *server.Info) error {
 	event := EventV1{
 		Labels:         p.manager.Labels(),
 		DecisionID:     decision.DecisionID,
+		TraceID:        decision.TraceID,
+		SpanID:         decision.SpanID,
 		Revision:       decision.Revision,
 		Bundles:        bundles,
 		Path:           decision.Path,
@@ -607,7 +615,12 @@ func (p *Plugin) Log(ctx context.Context, decision *server.Info) error {
 		inputAST:       decision.InputAST,
 	}
 
-	drop, err := p.dropEvent(ctx, decision.Txn, &event)
+	input, err := event.AST()
+	if err != nil {
+		return err
+	}
+
+	drop, err := p.dropEvent(ctx, decision.Txn, input)
 	if err != nil {
 		p.logger.Error("Log drop decision failed: %v.", err)
 		return nil
@@ -626,16 +639,14 @@ func (p *Plugin) Log(ctx context.Context, decision *server.Info) error {
 		event.Error = decision.Error
 	}
 
-	err = p.maskEvent(ctx, decision.Txn, &event)
-	if err != nil {
+	if err := p.maskEvent(ctx, decision.Txn, input, &event); err != nil {
 		// TODO(tsandall): see note below about error handling.
 		p.logger.Error("Log event masking failed: %v.", err)
 		return nil
 	}
 
 	if p.config.ConsoleLogs {
-		err := p.logEvent(event)
-		if err != nil {
+		if err := p.logEvent(event); err != nil {
 			p.logger.Error("Failed to log to console: %v.", err)
 		}
 	}
@@ -768,6 +779,18 @@ func (p *Plugin) loop() {
 func (p *Plugin) doOneShot(ctx context.Context) error {
 	uploaded, err := p.oneShot(ctx)
 
+	// Make a local copy of the plugins's status. This is needed as locking the status for
+	// the status upload duration will block policy evaluation and result in
+	// increased latency for OPA clients
+	p.mtx.Lock()
+	p.status.SetError(err)
+	oldStatus := p.status
+	p.mtx.Unlock()
+
+	if s := status.Lookup(p.manager); s != nil {
+		s.UpdateDecisionLogsStatus(*oldStatus)
+	}
+
 	if err != nil {
 		p.logger.Error("%v.", err)
 	} else if uploaded {
@@ -855,7 +878,7 @@ func (p *Plugin) encodeAndBufferEvent(event EventV1) {
 	if p.limiter != nil {
 		if !p.limiter.Allow() {
 			if p.metrics != nil {
-				p.metrics.Counter(logDropCounterName).Incr()
+				p.metrics.Counter(logRateLimitExDropCounterName).Incr()
 			}
 
 			p.logger.Error("Decision log dropped as rate limit exceeded. Reduce reporting interval or increase rate limit.")
@@ -871,6 +894,10 @@ func (p *Plugin) encodeAndBufferEvent(event EventV1) {
 			// TODO(tsandall): revisit this now that we have an API that
 			// can return an error. Should the default behaviour be to
 			// fail-closed as we do for plugins?
+
+			if p.metrics != nil {
+				p.metrics.Counter(logEncodingFailureCounterName).Incr()
+			}
 			p.logger.Error("Log encoding failed: %v.", err)
 			return
 		}
@@ -881,6 +908,9 @@ func (p *Plugin) encodeAndBufferEvent(event EventV1) {
 
 		result, err = p.enc.Write(newEvent)
 		if err != nil {
+			if p.metrics != nil {
+				p.metrics.Counter(logEncodingFailureCounterName).Incr()
+			}
 			p.logger.Error("Log encoding failed: %v.", err)
 			return
 		}
@@ -898,11 +928,14 @@ func (p *Plugin) encodeAndBufferEvent(event EventV1) {
 func (p *Plugin) bufferChunk(buffer *logBuffer, bs []byte) {
 	dropped := buffer.Push(bs)
 	if dropped > 0 {
+		if p.metrics != nil {
+			p.metrics.Counter(logBufferSizeLimitExDropCounterName).Incr()
+		}
 		p.logger.Error("Dropped %v chunks from buffer. Reduce reporting interval or increase buffer size.", dropped)
 	}
 }
 
-func (p *Plugin) maskEvent(ctx context.Context, txn storage.Transaction, event *EventV1) error {
+func (p *Plugin) maskEvent(ctx context.Context, txn storage.Transaction, input ast.Value, event *EventV1) error {
 
 	mask, err := func() (rego.PreparedEvalQuery, error) {
 
@@ -938,11 +971,6 @@ func (p *Plugin) maskEvent(ctx context.Context, txn storage.Transaction, event *
 		return err
 	}
 
-	input, err := event.AST()
-	if err != nil {
-		return err
-	}
-
 	rs, err := mask.Eval(
 		ctx,
 		rego.EvalParsedInput(input),
@@ -970,7 +998,7 @@ func (p *Plugin) maskEvent(ctx context.Context, txn storage.Transaction, event *
 	return nil
 }
 
-func (p *Plugin) dropEvent(ctx context.Context, txn storage.Transaction, event *EventV1) (bool, error) {
+func (p *Plugin) dropEvent(ctx context.Context, txn storage.Transaction, input ast.Value) (bool, error) {
 
 	drop, err := func() (rego.PreparedEvalQuery, error) {
 
@@ -979,7 +1007,6 @@ func (p *Plugin) dropEvent(ctx context.Context, txn storage.Transaction, event *
 
 		if p.drop == nil {
 			query := ast.NewBody(ast.NewExpr(ast.NewTerm(p.config.dropDecisionRef)))
-			interQueryCache := cache.NewInterQueryCache(p.manager.InterQueryBuiltinCacheConfig())
 			r := rego.New(
 				rego.ParsedQuery(query),
 				rego.Compiler(p.manager.GetCompiler()),
@@ -988,7 +1015,6 @@ func (p *Plugin) dropEvent(ctx context.Context, txn storage.Transaction, event *
 				rego.Runtime(p.manager.Info),
 				rego.EnablePrintStatements(p.manager.EnablePrintStatements()),
 				rego.PrintHook(p.manager.PrintHook()),
-				rego.InterQueryBuiltinCache(interQueryCache),
 			)
 
 			pq, err := r.PrepareForEval(context.Background())
@@ -1002,11 +1028,6 @@ func (p *Plugin) dropEvent(ctx context.Context, txn storage.Transaction, event *
 		return *p.drop, nil
 	}()
 
-	if err != nil {
-		return false, err
-	}
-
-	input, err := event.AST()
 	if err != nil {
 		return false, err
 	}
@@ -1039,7 +1060,7 @@ func uploadChunk(ctx context.Context, client rest.Client, uploadPath string, dat
 	defer util.Close(resp)
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return fmt.Errorf("log upload failed, server replied with HTTP %v %v", resp.StatusCode, http.StatusText(resp.StatusCode))
+		return lstat.HTTPError{StatusCode: resp.StatusCode}
 	}
 
 	return nil

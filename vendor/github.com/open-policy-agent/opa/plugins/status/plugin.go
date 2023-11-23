@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"reflect"
 
+	lstat "github.com/open-policy-agent/opa/plugins/logs/status"
 	prom "github.com/prometheus/client_golang/prometheus"
 
 	"github.com/open-policy-agent/opa/logging"
@@ -31,32 +32,35 @@ type Logger interface {
 // UpdateRequestV1 represents the status update message that OPA sends to
 // remote HTTP endpoints.
 type UpdateRequestV1 struct {
-	Labels    map[string]string          `json:"labels"`
-	Bundle    *bundle.Status             `json:"bundle,omitempty"` // Deprecated: Use bulk `bundles` status updates instead
-	Bundles   map[string]*bundle.Status  `json:"bundles,omitempty"`
-	Discovery *bundle.Status             `json:"discovery,omitempty"`
-	Metrics   map[string]interface{}     `json:"metrics,omitempty"`
-	Plugins   map[string]*plugins.Status `json:"plugins,omitempty"`
+	Labels       map[string]string          `json:"labels"`
+	Bundle       *bundle.Status             `json:"bundle,omitempty"` // Deprecated: Use bulk `bundles` status updates instead
+	Bundles      map[string]*bundle.Status  `json:"bundles,omitempty"`
+	Discovery    *bundle.Status             `json:"discovery,omitempty"`
+	DecisionLogs *lstat.Status              `json:"decision_logs,omitempty"`
+	Metrics      map[string]interface{}     `json:"metrics,omitempty"`
+	Plugins      map[string]*plugins.Status `json:"plugins,omitempty"`
 }
 
 // Plugin implements status reporting. Updates can be triggered by the caller.
 type Plugin struct {
-	manager            *plugins.Manager
-	config             Config
-	bundleCh           chan bundle.Status // Deprecated: Use bulk bundle status updates instead
-	lastBundleStatus   *bundle.Status     // Deprecated: Use bulk bundle status updates instead
-	bulkBundleCh       chan map[string]*bundle.Status
-	lastBundleStatuses map[string]*bundle.Status
-	discoCh            chan bundle.Status
-	lastDiscoStatus    *bundle.Status
-	pluginStatusCh     chan map[string]*plugins.Status
-	lastPluginStatuses map[string]*plugins.Status
-	queryCh            chan chan *UpdateRequestV1
-	stop               chan chan struct{}
-	reconfig           chan interface{}
-	metrics            metrics.Metrics
-	logger             logging.Logger
-	trigger            chan trigger
+	manager                *plugins.Manager
+	config                 Config
+	bundleCh               chan bundle.Status // Deprecated: Use bulk bundle status updates instead
+	lastBundleStatus       *bundle.Status     // Deprecated: Use bulk bundle status updates instead
+	bulkBundleCh           chan map[string]*bundle.Status
+	lastBundleStatuses     map[string]*bundle.Status
+	discoCh                chan bundle.Status
+	lastDiscoStatus        *bundle.Status
+	pluginStatusCh         chan map[string]*plugins.Status
+	decisionLogsCh         chan lstat.Status
+	lastDecisionLogsStatus *lstat.Status
+	lastPluginStatuses     map[string]*plugins.Status
+	queryCh                chan chan *UpdateRequestV1
+	stop                   chan chan struct{}
+	reconfig               chan reconfigure
+	metrics                metrics.Metrics
+	logger                 logging.Logger
+	trigger                chan trigger
 }
 
 // Config contains configuration for the plugin.
@@ -67,6 +71,11 @@ type Config struct {
 	ConsoleLogs   bool                 `json:"console"`
 	Prometheus    bool                 `json:"prometheus"`
 	Trigger       *plugins.TriggerMode `json:"trigger,omitempty"` // trigger mode
+}
+
+type reconfigure struct {
+	config interface{}
+	done   chan struct{}
 }
 
 type trigger struct {
@@ -192,8 +201,9 @@ func New(parsedConfig *Config, manager *plugins.Manager) *Plugin {
 		bundleCh:       make(chan bundle.Status),
 		bulkBundleCh:   make(chan map[string]*bundle.Status),
 		discoCh:        make(chan bundle.Status),
+		decisionLogsCh: make(chan lstat.Status),
 		stop:           make(chan chan struct{}),
-		reconfig:       make(chan interface{}),
+		reconfig:       make(chan reconfigure),
 		pluginStatusCh: make(chan map[string]*plugins.Status),
 		queryCh:        make(chan chan *UpdateRequestV1),
 		logger:         manager.Logger().WithFields(map[string]interface{}{"plugin": Name}),
@@ -232,10 +242,8 @@ func (p *Plugin) Start(ctx context.Context) error {
 	// to prevent blocking threads pushing the plugin updates.
 	p.manager.RegisterPluginStatusListener(Name, p.UpdatePluginStatus)
 
-	if p.config.Prometheus && p.manager.PrometheusRegister() != nil {
-		p.register(p.manager.PrometheusRegister(), pluginStatus, loaded, failLoad,
-			lastRequest, lastSuccessfulActivation, lastSuccessfulDownload,
-			lastSuccessfulRequest, bundleLoadDuration)
+	if p.config.Prometheus {
+		p.registerAll()
 	}
 
 	// Set the status plugin's status to OK now that everything is registered and
@@ -250,6 +258,24 @@ func (p *Plugin) register(r prom.Registerer, cs ...prom.Collector) {
 		if err := r.Register(c); err != nil {
 			p.logger.Error("Status metric failed to register on prometheus :%v.", err)
 		}
+	}
+}
+
+func (p *Plugin) registerAll() {
+	if p.manager.PrometheusRegister() != nil {
+		p.register(p.manager.PrometheusRegister(), allCollectors...)
+	}
+}
+
+func (p *Plugin) unregister(r prom.Registerer, cs ...prom.Collector) {
+	for _, c := range cs {
+		r.Unregister(c)
+	}
+}
+
+func (p *Plugin) unregisterAll() {
+	if p.manager.PrometheusRegister() != nil {
+		p.unregister(p.manager.PrometheusRegister(), allCollectors...)
 	}
 }
 
@@ -279,6 +305,11 @@ func (p *Plugin) UpdateDiscoveryStatus(status bundle.Status) {
 	p.discoCh <- status
 }
 
+// UpdateDecisionLogsStatus notifies the plugin that status of a decision log upload event.
+func (p *Plugin) UpdateDecisionLogsStatus(status lstat.Status) {
+	p.decisionLogsCh <- status
+}
+
 // UpdatePluginStatus notifies the plugin that a plugin status was updated.
 func (p *Plugin) UpdatePluginStatus(status map[string]*plugins.Status) {
 	p.pluginStatusCh <- status
@@ -286,7 +317,9 @@ func (p *Plugin) UpdatePluginStatus(status map[string]*plugins.Status) {
 
 // Reconfigure notifies the plugin with a new configuration.
 func (p *Plugin) Reconfigure(_ context.Context, config interface{}) {
-	p.reconfig <- config
+	done := make(chan struct{})
+	p.reconfig <- reconfigure{config: config, done: done}
+	<-done
 }
 
 // Snapshot returns the current status.
@@ -358,8 +391,19 @@ func (p *Plugin) loop() {
 					p.logger.Info("Status update sent successfully in response to discovery update.")
 				}
 			}
-		case newConfig := <-p.reconfig:
-			p.reconfigure(newConfig)
+		case status := <-p.decisionLogsCh:
+			p.lastDecisionLogsStatus = &status
+			if *p.config.Trigger == plugins.TriggerPeriodic {
+				err := p.oneShot(ctx)
+				if err != nil {
+					p.logger.Error("%v.", err)
+				} else {
+					p.logger.Info("Status update sent successfully in response to decision log update.")
+				}
+			}
+		case update := <-p.reconfig:
+			p.reconfigure(update.config)
+			update.done <- struct{}{}
 		case respCh := <-p.queryCh:
 			respCh <- p.snapshot()
 		case update := <-p.trigger:
@@ -431,17 +475,25 @@ func (p *Plugin) reconfigure(config interface{}) {
 	}
 
 	p.logger.Info("Status reporter configuration changed.")
+
+	if newConfig.Prometheus && !p.config.Prometheus {
+		p.registerAll()
+	} else if !newConfig.Prometheus && p.config.Prometheus {
+		p.unregisterAll()
+	}
+
 	p.config = *newConfig
 }
 
 func (p *Plugin) snapshot() *UpdateRequestV1 {
 
 	s := &UpdateRequestV1{
-		Labels:    p.manager.Labels(),
-		Discovery: p.lastDiscoStatus,
-		Bundle:    p.lastBundleStatus,
-		Bundles:   p.lastBundleStatuses,
-		Plugins:   p.lastPluginStatuses,
+		Labels:       p.manager.Labels(),
+		Discovery:    p.lastDiscoStatus,
+		DecisionLogs: p.lastDecisionLogsStatus,
+		Bundle:       p.lastBundleStatus,
+		Bundles:      p.lastBundleStatuses,
+		Plugins:      p.lastPluginStatuses,
 	}
 
 	if p.metrics != nil {
