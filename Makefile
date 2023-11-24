@@ -29,8 +29,8 @@ LDFLAGS := "-X github.com/open-policy-agent/opa/version.Version=$(VERSION) \
 
 
 generate:
-	./scripts/gen-redis-commands.py impl > ./internal/redis_commands_autogen.go
-	go fmt ./internal/redis_commands_autogen.go
+	./scripts/gen-redis-commands.py impl > ./redisManager/redis_commands_autogen.go
+	go fmt ./redisManager/redis_commands_autogen.go
 
 generate-doc:
 	./scripts/gen-redis-commands.py doc > ./doc/supported_commands.md

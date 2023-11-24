@@ -8,7 +8,7 @@ import (
 	"github.com/open-policy-agent/opa/plugins"
 	"github.com/open-policy-agent/opa/util"
 
-	"github.com/tibotix/opa-redis-plugin/proxy"
+	"github.com/tibotix/opa-redis-plugin/redisManager"
 
 	"github.com/go-redis/redis/v8"
 )
@@ -39,8 +39,7 @@ type ParsedConfig struct {
 type redisPlugin struct {
 	manager      *plugins.Manager
 	parsedConfig ParsedConfig
-	redisProxy   proxy.Proxy[*redis.Client]
-	redisContext context.Context
+	redisManager *redisManager.RedisManager
 }
 
 func Validate(m *plugins.Manager, bs []byte) (*ParsedConfig, error) {
@@ -77,41 +76,38 @@ func Validate(m *plugins.Manager, bs []byte) (*ParsedConfig, error) {
 
 }
 
-func New(m *plugins.Manager, parsedConfig *ParsedConfig) plugins.Plugin {
+func New(m *plugins.Manager, rm *redisManager.RedisManager, parsedConfig *ParsedConfig) plugins.Plugin {
 	plugin := &redisPlugin{
 		manager:      m,
 		parsedConfig: *parsedConfig,
-		redisContext: context.Background(),
+		redisManager: rm,
 	}
 
 	return plugin
 }
 
 func (p *redisPlugin) startRedisClient() {
-	p.redisProxy.Set(redis.NewClient(p.parsedConfig.Options))
+	p.redisManager.RedisProxy.Set(redis.NewClient(p.parsedConfig.Options))
 }
 
 func (p *redisPlugin) Start(ctx context.Context) error {
 	if !p.parsedConfig.Enabled {
 		return nil
 	}
-	go p.startRedisClient()
-
-	p.registerManualCommands()
-	p.registerAutogenCommands()
+	p.startRedisClient()
 
 	p.manager.UpdatePluginStatus(PluginName, &plugins.Status{State: plugins.StateOK})
 	return nil
 }
 
 func (p *redisPlugin) Stop(ctx context.Context) {
-	rdb, err := p.redisProxy.Get()
+	rdb, err := p.redisManager.RedisProxy.Get()
 	if err != nil {
 		return
 	}
 	p.manager.UpdatePluginStatus(PluginName, &plugins.Status{State: plugins.StateNotReady})
 	rdb.Close()
-	p.redisProxy.Unset()
+	p.redisManager.RedisProxy.Unset()
 }
 
 func (p *redisPlugin) Reconfigure(ctx context.Context, parsedConfig interface{}) {

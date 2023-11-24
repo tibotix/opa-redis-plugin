@@ -1,5 +1,5 @@
 // Code generated! DO NOT EDIT
-package internal
+package redisManager
 
 import (
 	"github.com/tibotix/opa-redis-plugin/utils"
@@ -11,7 +11,7 @@ import (
 	"github.com/open-policy-agent/opa/types"
 )
 
-func registerCLIENTGETNAME(p *redisPlugin) {
+func registerCLIENTGETNAME(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.clientgetname",
@@ -20,12 +20,12 @@ func registerCLIENTGETNAME(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
 
-			val := rdb.ClientGetName(p.redisContext)
+			val := rdb.ClientGetName(m.RedisContext)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -41,7 +41,7 @@ func registerCLIENTGETNAME(p *redisPlugin) {
 	)
 }
 
-func registerECHO(p *redisPlugin) {
+func registerECHO(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.echo",
@@ -50,7 +50,7 @@ func registerECHO(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -60,7 +60,7 @@ func registerECHO(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.Echo(p.redisContext, utils.Conv(v0))
+			val := rdb.Echo(m.RedisContext, utils.Conv(v0))
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -76,7 +76,7 @@ func registerECHO(p *redisPlugin) {
 	)
 }
 
-func registerPING(p *redisPlugin) {
+func registerPING(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.ping",
@@ -85,12 +85,12 @@ func registerPING(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
 
-			val := rdb.Ping(p.redisContext)
+			val := rdb.Ping(m.RedisContext)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -106,7 +106,7 @@ func registerPING(p *redisPlugin) {
 	)
 }
 
-func registerQUIT(p *redisPlugin) {
+func registerQUIT(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.quit",
@@ -115,12 +115,12 @@ func registerQUIT(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
 
-			val := rdb.Quit(p.redisContext)
+			val := rdb.Quit(m.RedisContext)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -136,7 +136,7 @@ func registerQUIT(p *redisPlugin) {
 	)
 }
 
-func registerDEL(p *redisPlugin) {
+func registerDEL(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.del",
@@ -145,7 +145,7 @@ func registerDEL(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -155,7 +155,7 @@ func registerDEL(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.Del(p.redisContext, v0...)
+			val := rdb.Del(m.RedisContext, v0...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -171,7 +171,7 @@ func registerDEL(p *redisPlugin) {
 	)
 }
 
-func registerUNLINK(p *redisPlugin) {
+func registerUNLINK(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.unlink",
@@ -180,7 +180,7 @@ func registerUNLINK(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -190,7 +190,7 @@ func registerUNLINK(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.Unlink(p.redisContext, v0...)
+			val := rdb.Unlink(m.RedisContext, v0...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -206,7 +206,7 @@ func registerUNLINK(p *redisPlugin) {
 	)
 }
 
-func registerDUMP(p *redisPlugin) {
+func registerDUMP(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.dump",
@@ -215,7 +215,7 @@ func registerDUMP(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -225,7 +225,7 @@ func registerDUMP(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.Dump(p.redisContext, v0)
+			val := rdb.Dump(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -241,7 +241,7 @@ func registerDUMP(p *redisPlugin) {
 	)
 }
 
-func registerEXISTS(p *redisPlugin) {
+func registerEXISTS(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.exists",
@@ -250,7 +250,7 @@ func registerEXISTS(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -260,7 +260,7 @@ func registerEXISTS(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.Exists(p.redisContext, v0...)
+			val := rdb.Exists(m.RedisContext, v0...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -276,7 +276,7 @@ func registerEXISTS(p *redisPlugin) {
 	)
 }
 
-func registerEXPIRE(p *redisPlugin) {
+func registerEXPIRE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.expire",
@@ -285,7 +285,7 @@ func registerEXPIRE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -300,7 +300,7 @@ func registerEXPIRE(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.Expire(p.redisContext, v0, v1)
+			val := rdb.Expire(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -316,7 +316,7 @@ func registerEXPIRE(p *redisPlugin) {
 	)
 }
 
-func registerEXPIREAT(p *redisPlugin) {
+func registerEXPIREAT(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.expireat",
@@ -325,7 +325,7 @@ func registerEXPIREAT(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -340,7 +340,7 @@ func registerEXPIREAT(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ExpireAt(p.redisContext, v0, v1)
+			val := rdb.ExpireAt(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -356,7 +356,7 @@ func registerEXPIREAT(p *redisPlugin) {
 	)
 }
 
-func registerEXPIRENX(p *redisPlugin) {
+func registerEXPIRENX(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.expirenx",
@@ -365,7 +365,7 @@ func registerEXPIRENX(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -380,7 +380,7 @@ func registerEXPIRENX(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ExpireNX(p.redisContext, v0, v1)
+			val := rdb.ExpireNX(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -396,7 +396,7 @@ func registerEXPIRENX(p *redisPlugin) {
 	)
 }
 
-func registerEXPIREXX(p *redisPlugin) {
+func registerEXPIREXX(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.expirexx",
@@ -405,7 +405,7 @@ func registerEXPIREXX(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -420,7 +420,7 @@ func registerEXPIREXX(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ExpireXX(p.redisContext, v0, v1)
+			val := rdb.ExpireXX(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -436,7 +436,7 @@ func registerEXPIREXX(p *redisPlugin) {
 	)
 }
 
-func registerEXPIREGT(p *redisPlugin) {
+func registerEXPIREGT(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.expiregt",
@@ -445,7 +445,7 @@ func registerEXPIREGT(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -460,7 +460,7 @@ func registerEXPIREGT(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ExpireGT(p.redisContext, v0, v1)
+			val := rdb.ExpireGT(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -476,7 +476,7 @@ func registerEXPIREGT(p *redisPlugin) {
 	)
 }
 
-func registerEXPIRELT(p *redisPlugin) {
+func registerEXPIRELT(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.expirelt",
@@ -485,7 +485,7 @@ func registerEXPIRELT(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -500,7 +500,7 @@ func registerEXPIRELT(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ExpireLT(p.redisContext, v0, v1)
+			val := rdb.ExpireLT(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -516,7 +516,7 @@ func registerEXPIRELT(p *redisPlugin) {
 	)
 }
 
-func registerKEYS(p *redisPlugin) {
+func registerKEYS(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.keys",
@@ -525,7 +525,7 @@ func registerKEYS(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -535,19 +535,19 @@ func registerKEYS(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.Keys(p.redisContext, v0)
+			val := rdb.Keys(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp07421 []*ast.Term
+				var tmp60409 []*ast.Term
 				for _, v := range r0 {
 					term := ast.StringTerm(v)
-					tmp07421 = append(tmp07421, term)
+					tmp60409 = append(tmp60409, term)
 				}
-				term := ast.ArrayTerm(tmp07421...)
+				term := ast.ArrayTerm(tmp60409...)
 
 				return term, nil
 
@@ -558,7 +558,7 @@ func registerKEYS(p *redisPlugin) {
 	)
 }
 
-func registerMIGRATE(p *redisPlugin) {
+func registerMIGRATE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.migrate",
@@ -567,7 +567,7 @@ func registerMIGRATE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -597,7 +597,7 @@ func registerMIGRATE(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.Migrate(p.redisContext, v0, v1, v2, v3, v4)
+			val := rdb.Migrate(m.RedisContext, v0, v1, v2, v3, v4)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -613,7 +613,7 @@ func registerMIGRATE(p *redisPlugin) {
 	)
 }
 
-func registerMOVE(p *redisPlugin) {
+func registerMOVE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.move",
@@ -622,7 +622,7 @@ func registerMOVE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -637,7 +637,7 @@ func registerMOVE(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.Move(p.redisContext, v0, v1)
+			val := rdb.Move(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -653,7 +653,7 @@ func registerMOVE(p *redisPlugin) {
 	)
 }
 
-func registerOBJECTREFCOUNT(p *redisPlugin) {
+func registerOBJECTREFCOUNT(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.objectrefcount",
@@ -662,7 +662,7 @@ func registerOBJECTREFCOUNT(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -672,7 +672,7 @@ func registerOBJECTREFCOUNT(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ObjectRefCount(p.redisContext, v0)
+			val := rdb.ObjectRefCount(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -688,7 +688,7 @@ func registerOBJECTREFCOUNT(p *redisPlugin) {
 	)
 }
 
-func registerOBJECTENCODING(p *redisPlugin) {
+func registerOBJECTENCODING(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.objectencoding",
@@ -697,7 +697,7 @@ func registerOBJECTENCODING(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -707,7 +707,7 @@ func registerOBJECTENCODING(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ObjectEncoding(p.redisContext, v0)
+			val := rdb.ObjectEncoding(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -723,7 +723,7 @@ func registerOBJECTENCODING(p *redisPlugin) {
 	)
 }
 
-func registerOBJECTIDLETIME(p *redisPlugin) {
+func registerOBJECTIDLETIME(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.objectidletime",
@@ -732,7 +732,7 @@ func registerOBJECTIDLETIME(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -742,7 +742,7 @@ func registerOBJECTIDLETIME(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ObjectIdleTime(p.redisContext, v0)
+			val := rdb.ObjectIdleTime(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -758,7 +758,7 @@ func registerOBJECTIDLETIME(p *redisPlugin) {
 	)
 }
 
-func registerPERSIST(p *redisPlugin) {
+func registerPERSIST(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.persist",
@@ -767,7 +767,7 @@ func registerPERSIST(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -777,7 +777,7 @@ func registerPERSIST(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.Persist(p.redisContext, v0)
+			val := rdb.Persist(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -793,7 +793,7 @@ func registerPERSIST(p *redisPlugin) {
 	)
 }
 
-func registerPEXPIRE(p *redisPlugin) {
+func registerPEXPIRE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.pexpire",
@@ -802,7 +802,7 @@ func registerPEXPIRE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -817,7 +817,7 @@ func registerPEXPIRE(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.PExpire(p.redisContext, v0, v1)
+			val := rdb.PExpire(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -833,7 +833,7 @@ func registerPEXPIRE(p *redisPlugin) {
 	)
 }
 
-func registerPEXPIREAT(p *redisPlugin) {
+func registerPEXPIREAT(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.pexpireat",
@@ -842,7 +842,7 @@ func registerPEXPIREAT(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -857,7 +857,7 @@ func registerPEXPIREAT(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.PExpireAt(p.redisContext, v0, v1)
+			val := rdb.PExpireAt(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -873,7 +873,7 @@ func registerPEXPIREAT(p *redisPlugin) {
 	)
 }
 
-func registerPTTL(p *redisPlugin) {
+func registerPTTL(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.pttl",
@@ -882,7 +882,7 @@ func registerPTTL(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -892,7 +892,7 @@ func registerPTTL(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.PTTL(p.redisContext, v0)
+			val := rdb.PTTL(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -908,7 +908,7 @@ func registerPTTL(p *redisPlugin) {
 	)
 }
 
-func registerRANDOMKEY(p *redisPlugin) {
+func registerRANDOMKEY(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.randomkey",
@@ -917,12 +917,12 @@ func registerRANDOMKEY(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
 
-			val := rdb.RandomKey(p.redisContext)
+			val := rdb.RandomKey(m.RedisContext)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -938,7 +938,7 @@ func registerRANDOMKEY(p *redisPlugin) {
 	)
 }
 
-func registerRENAME(p *redisPlugin) {
+func registerRENAME(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.rename",
@@ -947,7 +947,7 @@ func registerRENAME(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -962,7 +962,7 @@ func registerRENAME(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.Rename(p.redisContext, v0, v1)
+			val := rdb.Rename(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -978,7 +978,7 @@ func registerRENAME(p *redisPlugin) {
 	)
 }
 
-func registerRENAMENX(p *redisPlugin) {
+func registerRENAMENX(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.renamenx",
@@ -987,7 +987,7 @@ func registerRENAMENX(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -1002,7 +1002,7 @@ func registerRENAMENX(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.RenameNX(p.redisContext, v0, v1)
+			val := rdb.RenameNX(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -1018,7 +1018,7 @@ func registerRENAMENX(p *redisPlugin) {
 	)
 }
 
-func registerRESTORE(p *redisPlugin) {
+func registerRESTORE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.restore",
@@ -1027,7 +1027,7 @@ func registerRESTORE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -1047,7 +1047,7 @@ func registerRESTORE(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.Restore(p.redisContext, v0, v1, v2)
+			val := rdb.Restore(m.RedisContext, v0, v1, v2)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -1063,7 +1063,7 @@ func registerRESTORE(p *redisPlugin) {
 	)
 }
 
-func registerRESTOREREPLACE(p *redisPlugin) {
+func registerRESTOREREPLACE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.restorereplace",
@@ -1072,7 +1072,7 @@ func registerRESTOREREPLACE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -1092,7 +1092,7 @@ func registerRESTOREREPLACE(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.RestoreReplace(p.redisContext, v0, v1, v2)
+			val := rdb.RestoreReplace(m.RedisContext, v0, v1, v2)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -1108,7 +1108,7 @@ func registerRESTOREREPLACE(p *redisPlugin) {
 	)
 }
 
-func registerSORT(p *redisPlugin) {
+func registerSORT(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.sort",
@@ -1117,7 +1117,7 @@ func registerSORT(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -1132,19 +1132,19 @@ func registerSORT(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.Sort(p.redisContext, v0, v1)
+			val := rdb.Sort(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp99986 []*ast.Term
+				var tmp66159 []*ast.Term
 				for _, v := range r0 {
 					term := ast.StringTerm(v)
-					tmp99986 = append(tmp99986, term)
+					tmp66159 = append(tmp66159, term)
 				}
-				term := ast.ArrayTerm(tmp99986...)
+				term := ast.ArrayTerm(tmp66159...)
 
 				return term, nil
 
@@ -1155,7 +1155,7 @@ func registerSORT(p *redisPlugin) {
 	)
 }
 
-func registerSORTSTORE(p *redisPlugin) {
+func registerSORTSTORE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.sortstore",
@@ -1164,7 +1164,7 @@ func registerSORTSTORE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -1184,7 +1184,7 @@ func registerSORTSTORE(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.SortStore(p.redisContext, v0, v1, v2)
+			val := rdb.SortStore(m.RedisContext, v0, v1, v2)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -1200,7 +1200,7 @@ func registerSORTSTORE(p *redisPlugin) {
 	)
 }
 
-func registerSORTINTERFACES(p *redisPlugin) {
+func registerSORTINTERFACES(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.sortinterfaces",
@@ -1209,7 +1209,7 @@ func registerSORTINTERFACES(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -1224,14 +1224,14 @@ func registerSORTINTERFACES(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.SortInterfaces(p.redisContext, v0, v1)
+			val := rdb.SortInterfaces(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp50135 []*ast.Term
+				var tmp10412 []*ast.Term
 				for _, v := range r0 {
 
 					term := ast.NullTerm()
@@ -1239,9 +1239,9 @@ func registerSORTINTERFACES(p *redisPlugin) {
 						term = ast.StringTerm(s)
 					}
 
-					tmp50135 = append(tmp50135, term)
+					tmp10412 = append(tmp10412, term)
 				}
-				term := ast.ArrayTerm(tmp50135...)
+				term := ast.ArrayTerm(tmp10412...)
 
 				return term, nil
 
@@ -1252,7 +1252,7 @@ func registerSORTINTERFACES(p *redisPlugin) {
 	)
 }
 
-func registerTOUCH(p *redisPlugin) {
+func registerTOUCH(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.touch",
@@ -1261,7 +1261,7 @@ func registerTOUCH(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -1271,7 +1271,7 @@ func registerTOUCH(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.Touch(p.redisContext, v0...)
+			val := rdb.Touch(m.RedisContext, v0...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -1287,7 +1287,7 @@ func registerTOUCH(p *redisPlugin) {
 	)
 }
 
-func registerTTL(p *redisPlugin) {
+func registerTTL(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.ttl",
@@ -1296,7 +1296,7 @@ func registerTTL(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -1306,7 +1306,7 @@ func registerTTL(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.TTL(p.redisContext, v0)
+			val := rdb.TTL(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -1322,7 +1322,7 @@ func registerTTL(p *redisPlugin) {
 	)
 }
 
-func registerTYPE(p *redisPlugin) {
+func registerTYPE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.type",
@@ -1331,7 +1331,7 @@ func registerTYPE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -1341,7 +1341,7 @@ func registerTYPE(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.Type(p.redisContext, v0)
+			val := rdb.Type(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -1357,7 +1357,7 @@ func registerTYPE(p *redisPlugin) {
 	)
 }
 
-func registerAPPEND(p *redisPlugin) {
+func registerAPPEND(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.append",
@@ -1366,7 +1366,7 @@ func registerAPPEND(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -1381,7 +1381,7 @@ func registerAPPEND(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.Append(p.redisContext, v0, v1)
+			val := rdb.Append(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -1397,7 +1397,7 @@ func registerAPPEND(p *redisPlugin) {
 	)
 }
 
-func registerDECR(p *redisPlugin) {
+func registerDECR(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.decr",
@@ -1406,7 +1406,7 @@ func registerDECR(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -1416,7 +1416,7 @@ func registerDECR(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.Decr(p.redisContext, v0)
+			val := rdb.Decr(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -1432,7 +1432,7 @@ func registerDECR(p *redisPlugin) {
 	)
 }
 
-func registerDECRBY(p *redisPlugin) {
+func registerDECRBY(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.decrby",
@@ -1441,7 +1441,7 @@ func registerDECRBY(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -1456,7 +1456,7 @@ func registerDECRBY(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.DecrBy(p.redisContext, v0, v1)
+			val := rdb.DecrBy(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -1472,7 +1472,7 @@ func registerDECRBY(p *redisPlugin) {
 	)
 }
 
-func registerGET(p *redisPlugin) {
+func registerGET(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.get",
@@ -1481,7 +1481,7 @@ func registerGET(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -1491,7 +1491,7 @@ func registerGET(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.Get(p.redisContext, v0)
+			val := rdb.Get(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -1507,7 +1507,7 @@ func registerGET(p *redisPlugin) {
 	)
 }
 
-func registerGETRANGE(p *redisPlugin) {
+func registerGETRANGE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.getrange",
@@ -1516,7 +1516,7 @@ func registerGETRANGE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -1536,7 +1536,7 @@ func registerGETRANGE(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.GetRange(p.redisContext, v0, v1, v2)
+			val := rdb.GetRange(m.RedisContext, v0, v1, v2)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -1552,7 +1552,7 @@ func registerGETRANGE(p *redisPlugin) {
 	)
 }
 
-func registerGETSET(p *redisPlugin) {
+func registerGETSET(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.getset",
@@ -1561,7 +1561,7 @@ func registerGETSET(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -1576,7 +1576,7 @@ func registerGETSET(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.GetSet(p.redisContext, v0, utils.Conv(v1))
+			val := rdb.GetSet(m.RedisContext, v0, utils.Conv(v1))
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -1592,7 +1592,7 @@ func registerGETSET(p *redisPlugin) {
 	)
 }
 
-func registerGETEX(p *redisPlugin) {
+func registerGETEX(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.getex",
@@ -1601,7 +1601,7 @@ func registerGETEX(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -1616,7 +1616,7 @@ func registerGETEX(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.GetEx(p.redisContext, v0, v1)
+			val := rdb.GetEx(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -1632,7 +1632,7 @@ func registerGETEX(p *redisPlugin) {
 	)
 }
 
-func registerGETDEL(p *redisPlugin) {
+func registerGETDEL(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.getdel",
@@ -1641,7 +1641,7 @@ func registerGETDEL(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -1651,7 +1651,7 @@ func registerGETDEL(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.GetDel(p.redisContext, v0)
+			val := rdb.GetDel(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -1667,7 +1667,7 @@ func registerGETDEL(p *redisPlugin) {
 	)
 }
 
-func registerINCR(p *redisPlugin) {
+func registerINCR(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.incr",
@@ -1676,7 +1676,7 @@ func registerINCR(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -1686,7 +1686,7 @@ func registerINCR(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.Incr(p.redisContext, v0)
+			val := rdb.Incr(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -1702,7 +1702,7 @@ func registerINCR(p *redisPlugin) {
 	)
 }
 
-func registerINCRBY(p *redisPlugin) {
+func registerINCRBY(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.incrby",
@@ -1711,7 +1711,7 @@ func registerINCRBY(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -1726,7 +1726,7 @@ func registerINCRBY(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.IncrBy(p.redisContext, v0, v1)
+			val := rdb.IncrBy(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -1742,7 +1742,7 @@ func registerINCRBY(p *redisPlugin) {
 	)
 }
 
-func registerINCRBYFLOAT(p *redisPlugin) {
+func registerINCRBYFLOAT(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.incrbyfloat",
@@ -1751,7 +1751,7 @@ func registerINCRBYFLOAT(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -1766,7 +1766,7 @@ func registerINCRBYFLOAT(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.IncrByFloat(p.redisContext, v0, v1)
+			val := rdb.IncrByFloat(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -1782,7 +1782,7 @@ func registerINCRBYFLOAT(p *redisPlugin) {
 	)
 }
 
-func registerMGET(p *redisPlugin) {
+func registerMGET(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.mget",
@@ -1791,7 +1791,7 @@ func registerMGET(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -1801,14 +1801,14 @@ func registerMGET(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.MGet(p.redisContext, v0...)
+			val := rdb.MGet(m.RedisContext, v0...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp11677 []*ast.Term
+				var tmp62111 []*ast.Term
 				for _, v := range r0 {
 
 					term := ast.NullTerm()
@@ -1816,9 +1816,9 @@ func registerMGET(p *redisPlugin) {
 						term = ast.StringTerm(s)
 					}
 
-					tmp11677 = append(tmp11677, term)
+					tmp62111 = append(tmp62111, term)
 				}
-				term := ast.ArrayTerm(tmp11677...)
+				term := ast.ArrayTerm(tmp62111...)
 
 				return term, nil
 
@@ -1829,7 +1829,7 @@ func registerMGET(p *redisPlugin) {
 	)
 }
 
-func registerMSET(p *redisPlugin) {
+func registerMSET(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.mset",
@@ -1838,7 +1838,7 @@ func registerMSET(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -1848,7 +1848,7 @@ func registerMSET(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.MSet(p.redisContext, utils.Conva(v0)...)
+			val := rdb.MSet(m.RedisContext, utils.Conva(v0)...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -1864,7 +1864,7 @@ func registerMSET(p *redisPlugin) {
 	)
 }
 
-func registerMSETNX(p *redisPlugin) {
+func registerMSETNX(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.msetnx",
@@ -1873,7 +1873,7 @@ func registerMSETNX(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -1883,7 +1883,7 @@ func registerMSETNX(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.MSetNX(p.redisContext, utils.Conva(v0)...)
+			val := rdb.MSetNX(m.RedisContext, utils.Conva(v0)...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -1899,7 +1899,7 @@ func registerMSETNX(p *redisPlugin) {
 	)
 }
 
-func registerSET(p *redisPlugin) {
+func registerSET(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.set",
@@ -1908,7 +1908,7 @@ func registerSET(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -1928,7 +1928,7 @@ func registerSET(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.Set(p.redisContext, v0, utils.Conv(v1), v2)
+			val := rdb.Set(m.RedisContext, v0, utils.Conv(v1), v2)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -1944,7 +1944,7 @@ func registerSET(p *redisPlugin) {
 	)
 }
 
-func registerSETARGS(p *redisPlugin) {
+func registerSETARGS(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.setargs",
@@ -1953,7 +1953,7 @@ func registerSETARGS(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -1973,7 +1973,7 @@ func registerSETARGS(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.SetArgs(p.redisContext, v0, utils.Conv(v1), v2)
+			val := rdb.SetArgs(m.RedisContext, v0, utils.Conv(v1), v2)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -1989,7 +1989,7 @@ func registerSETARGS(p *redisPlugin) {
 	)
 }
 
-func registerSETEX(p *redisPlugin) {
+func registerSETEX(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.setex",
@@ -1998,7 +1998,7 @@ func registerSETEX(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -2018,7 +2018,7 @@ func registerSETEX(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.SetEX(p.redisContext, v0, utils.Conv(v1), v2)
+			val := rdb.SetEX(m.RedisContext, v0, utils.Conv(v1), v2)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -2034,7 +2034,7 @@ func registerSETEX(p *redisPlugin) {
 	)
 }
 
-func registerSETNX(p *redisPlugin) {
+func registerSETNX(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.setnx",
@@ -2043,7 +2043,7 @@ func registerSETNX(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -2063,7 +2063,7 @@ func registerSETNX(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.SetNX(p.redisContext, v0, utils.Conv(v1), v2)
+			val := rdb.SetNX(m.RedisContext, v0, utils.Conv(v1), v2)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -2079,7 +2079,7 @@ func registerSETNX(p *redisPlugin) {
 	)
 }
 
-func registerSETXX(p *redisPlugin) {
+func registerSETXX(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.setxx",
@@ -2088,7 +2088,7 @@ func registerSETXX(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -2108,7 +2108,7 @@ func registerSETXX(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.SetXX(p.redisContext, v0, utils.Conv(v1), v2)
+			val := rdb.SetXX(m.RedisContext, v0, utils.Conv(v1), v2)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -2124,7 +2124,7 @@ func registerSETXX(p *redisPlugin) {
 	)
 }
 
-func registerSETRANGE(p *redisPlugin) {
+func registerSETRANGE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.setrange",
@@ -2133,7 +2133,7 @@ func registerSETRANGE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -2153,7 +2153,7 @@ func registerSETRANGE(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.SetRange(p.redisContext, v0, v1, v2)
+			val := rdb.SetRange(m.RedisContext, v0, v1, v2)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -2169,7 +2169,7 @@ func registerSETRANGE(p *redisPlugin) {
 	)
 }
 
-func registerSTRLEN(p *redisPlugin) {
+func registerSTRLEN(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.strlen",
@@ -2178,7 +2178,7 @@ func registerSTRLEN(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -2188,7 +2188,7 @@ func registerSTRLEN(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.StrLen(p.redisContext, v0)
+			val := rdb.StrLen(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -2204,7 +2204,7 @@ func registerSTRLEN(p *redisPlugin) {
 	)
 }
 
-func registerCOPY(p *redisPlugin) {
+func registerCOPY(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.copy",
@@ -2213,7 +2213,7 @@ func registerCOPY(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -2238,7 +2238,7 @@ func registerCOPY(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.Copy(p.redisContext, v0, v1, v2, v3)
+			val := rdb.Copy(m.RedisContext, v0, v1, v2, v3)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -2254,7 +2254,7 @@ func registerCOPY(p *redisPlugin) {
 	)
 }
 
-func registerGETBIT(p *redisPlugin) {
+func registerGETBIT(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.getbit",
@@ -2263,7 +2263,7 @@ func registerGETBIT(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -2278,7 +2278,7 @@ func registerGETBIT(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.GetBit(p.redisContext, v0, v1)
+			val := rdb.GetBit(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -2294,7 +2294,7 @@ func registerGETBIT(p *redisPlugin) {
 	)
 }
 
-func registerSETBIT(p *redisPlugin) {
+func registerSETBIT(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.setbit",
@@ -2303,7 +2303,7 @@ func registerSETBIT(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -2323,7 +2323,7 @@ func registerSETBIT(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.SetBit(p.redisContext, v0, v1, v2)
+			val := rdb.SetBit(m.RedisContext, v0, v1, v2)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -2339,7 +2339,7 @@ func registerSETBIT(p *redisPlugin) {
 	)
 }
 
-func registerBITCOUNT(p *redisPlugin) {
+func registerBITCOUNT(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.bitcount",
@@ -2348,7 +2348,7 @@ func registerBITCOUNT(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -2363,7 +2363,7 @@ func registerBITCOUNT(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.BitCount(p.redisContext, v0, v1)
+			val := rdb.BitCount(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -2379,7 +2379,7 @@ func registerBITCOUNT(p *redisPlugin) {
 	)
 }
 
-func registerBITOPAND(p *redisPlugin) {
+func registerBITOPAND(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.bitopand",
@@ -2388,7 +2388,7 @@ func registerBITOPAND(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -2403,7 +2403,7 @@ func registerBITOPAND(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.BitOpAnd(p.redisContext, v0, v1...)
+			val := rdb.BitOpAnd(m.RedisContext, v0, v1...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -2419,7 +2419,7 @@ func registerBITOPAND(p *redisPlugin) {
 	)
 }
 
-func registerBITOPOR(p *redisPlugin) {
+func registerBITOPOR(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.bitopor",
@@ -2428,7 +2428,7 @@ func registerBITOPOR(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -2443,7 +2443,7 @@ func registerBITOPOR(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.BitOpOr(p.redisContext, v0, v1...)
+			val := rdb.BitOpOr(m.RedisContext, v0, v1...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -2459,7 +2459,7 @@ func registerBITOPOR(p *redisPlugin) {
 	)
 }
 
-func registerBITOPXOR(p *redisPlugin) {
+func registerBITOPXOR(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.bitopxor",
@@ -2468,7 +2468,7 @@ func registerBITOPXOR(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -2483,7 +2483,7 @@ func registerBITOPXOR(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.BitOpXor(p.redisContext, v0, v1...)
+			val := rdb.BitOpXor(m.RedisContext, v0, v1...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -2499,7 +2499,7 @@ func registerBITOPXOR(p *redisPlugin) {
 	)
 }
 
-func registerBITOPNOT(p *redisPlugin) {
+func registerBITOPNOT(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.bitopnot",
@@ -2508,7 +2508,7 @@ func registerBITOPNOT(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -2523,7 +2523,7 @@ func registerBITOPNOT(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.BitOpNot(p.redisContext, v0, v1)
+			val := rdb.BitOpNot(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -2539,7 +2539,7 @@ func registerBITOPNOT(p *redisPlugin) {
 	)
 }
 
-func registerBITPOS(p *redisPlugin) {
+func registerBITPOS(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.bitpos",
@@ -2548,7 +2548,7 @@ func registerBITPOS(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -2568,7 +2568,7 @@ func registerBITPOS(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.BitPos(p.redisContext, v0, v1, v2...)
+			val := rdb.BitPos(m.RedisContext, v0, v1, v2...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -2584,7 +2584,7 @@ func registerBITPOS(p *redisPlugin) {
 	)
 }
 
-func registerBITFIELD(p *redisPlugin) {
+func registerBITFIELD(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.bitfield",
@@ -2593,7 +2593,7 @@ func registerBITFIELD(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -2608,19 +2608,19 @@ func registerBITFIELD(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.BitField(p.redisContext, v0, utils.Conva(v1)...)
+			val := rdb.BitField(m.RedisContext, v0, utils.Conva(v1)...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp71571 []*ast.Term
+				var tmp37219 []*ast.Term
 				for _, v := range r0 {
 					term := ast.IntNumberTerm(int(v))
-					tmp71571 = append(tmp71571, term)
+					tmp37219 = append(tmp37219, term)
 				}
-				term := ast.ArrayTerm(tmp71571...)
+				term := ast.ArrayTerm(tmp37219...)
 
 				return term, nil
 
@@ -2631,7 +2631,7 @@ func registerBITFIELD(p *redisPlugin) {
 	)
 }
 
-func registerSCAN(p *redisPlugin) {
+func registerSCAN(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.scan",
@@ -2640,7 +2640,7 @@ func registerSCAN(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -2660,19 +2660,19 @@ func registerSCAN(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.Scan(p.redisContext, v0, v1, v2)
+			val := rdb.Scan(m.RedisContext, v0, v1, v2)
 			r0, r1 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp15560 []*ast.Term
+				var tmp09212 []*ast.Term
 				for _, v := range r0 {
 					term := ast.StringTerm(v)
-					tmp15560 = append(tmp15560, term)
+					tmp09212 = append(tmp09212, term)
 				}
-				tr0 := ast.ArrayTerm(tmp15560...)
+				tr0 := ast.ArrayTerm(tmp09212...)
 				tr1 := ast.UIntNumberTerm(uint64(r1))
 				return ast.ArrayTerm(tr0, tr1), nil
 
@@ -2683,7 +2683,7 @@ func registerSCAN(p *redisPlugin) {
 	)
 }
 
-func registerSCANTYPE(p *redisPlugin) {
+func registerSCANTYPE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.scantype",
@@ -2692,7 +2692,7 @@ func registerSCANTYPE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -2717,19 +2717,19 @@ func registerSCANTYPE(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ScanType(p.redisContext, v0, v1, v2, v3)
+			val := rdb.ScanType(m.RedisContext, v0, v1, v2, v3)
 			r0, r1 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp72799 []*ast.Term
+				var tmp92120 []*ast.Term
 				for _, v := range r0 {
 					term := ast.StringTerm(v)
-					tmp72799 = append(tmp72799, term)
+					tmp92120 = append(tmp92120, term)
 				}
-				tr0 := ast.ArrayTerm(tmp72799...)
+				tr0 := ast.ArrayTerm(tmp92120...)
 				tr1 := ast.UIntNumberTerm(uint64(r1))
 				return ast.ArrayTerm(tr0, tr1), nil
 
@@ -2740,7 +2740,7 @@ func registerSCANTYPE(p *redisPlugin) {
 	)
 }
 
-func registerSSCAN(p *redisPlugin) {
+func registerSSCAN(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.sscan",
@@ -2749,7 +2749,7 @@ func registerSSCAN(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -2774,19 +2774,19 @@ func registerSSCAN(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.SScan(p.redisContext, v0, v1, v2, v3)
+			val := rdb.SScan(m.RedisContext, v0, v1, v2, v3)
 			r0, r1 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp58212 []*ast.Term
+				var tmp30753 []*ast.Term
 				for _, v := range r0 {
 					term := ast.StringTerm(v)
-					tmp58212 = append(tmp58212, term)
+					tmp30753 = append(tmp30753, term)
 				}
-				tr0 := ast.ArrayTerm(tmp58212...)
+				tr0 := ast.ArrayTerm(tmp30753...)
 				tr1 := ast.UIntNumberTerm(uint64(r1))
 				return ast.ArrayTerm(tr0, tr1), nil
 
@@ -2797,7 +2797,7 @@ func registerSSCAN(p *redisPlugin) {
 	)
 }
 
-func registerHSCAN(p *redisPlugin) {
+func registerHSCAN(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.hscan",
@@ -2806,7 +2806,7 @@ func registerHSCAN(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -2831,19 +2831,19 @@ func registerHSCAN(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.HScan(p.redisContext, v0, v1, v2, v3)
+			val := rdb.HScan(m.RedisContext, v0, v1, v2, v3)
 			r0, r1 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp13495 []*ast.Term
+				var tmp17336 []*ast.Term
 				for _, v := range r0 {
 					term := ast.StringTerm(v)
-					tmp13495 = append(tmp13495, term)
+					tmp17336 = append(tmp17336, term)
 				}
-				tr0 := ast.ArrayTerm(tmp13495...)
+				tr0 := ast.ArrayTerm(tmp17336...)
 				tr1 := ast.UIntNumberTerm(uint64(r1))
 				return ast.ArrayTerm(tr0, tr1), nil
 
@@ -2854,7 +2854,7 @@ func registerHSCAN(p *redisPlugin) {
 	)
 }
 
-func registerZSCAN(p *redisPlugin) {
+func registerZSCAN(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zscan",
@@ -2863,7 +2863,7 @@ func registerZSCAN(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -2888,19 +2888,19 @@ func registerZSCAN(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZScan(p.redisContext, v0, v1, v2, v3)
+			val := rdb.ZScan(m.RedisContext, v0, v1, v2, v3)
 			r0, r1 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp27284 []*ast.Term
+				var tmp57370 []*ast.Term
 				for _, v := range r0 {
 					term := ast.StringTerm(v)
-					tmp27284 = append(tmp27284, term)
+					tmp57370 = append(tmp57370, term)
 				}
-				tr0 := ast.ArrayTerm(tmp27284...)
+				tr0 := ast.ArrayTerm(tmp57370...)
 				tr1 := ast.UIntNumberTerm(uint64(r1))
 				return ast.ArrayTerm(tr0, tr1), nil
 
@@ -2911,7 +2911,7 @@ func registerZSCAN(p *redisPlugin) {
 	)
 }
 
-func registerHDEL(p *redisPlugin) {
+func registerHDEL(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.hdel",
@@ -2920,7 +2920,7 @@ func registerHDEL(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -2935,7 +2935,7 @@ func registerHDEL(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.HDel(p.redisContext, v0, v1...)
+			val := rdb.HDel(m.RedisContext, v0, v1...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -2951,7 +2951,7 @@ func registerHDEL(p *redisPlugin) {
 	)
 }
 
-func registerHEXISTS(p *redisPlugin) {
+func registerHEXISTS(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.hexists",
@@ -2960,7 +2960,7 @@ func registerHEXISTS(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -2975,7 +2975,7 @@ func registerHEXISTS(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.HExists(p.redisContext, v0, v1)
+			val := rdb.HExists(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -2991,7 +2991,7 @@ func registerHEXISTS(p *redisPlugin) {
 	)
 }
 
-func registerHGET(p *redisPlugin) {
+func registerHGET(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.hget",
@@ -3000,7 +3000,7 @@ func registerHGET(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -3015,7 +3015,7 @@ func registerHGET(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.HGet(p.redisContext, v0, v1)
+			val := rdb.HGet(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -3031,7 +3031,7 @@ func registerHGET(p *redisPlugin) {
 	)
 }
 
-func registerHGETALL(p *redisPlugin) {
+func registerHGETALL(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.hgetall",
@@ -3040,7 +3040,7 @@ func registerHGETALL(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -3050,20 +3050,20 @@ func registerHGETALL(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.HGetAll(p.redisContext, v0)
+			val := rdb.HGetAll(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp46110 [][2]*ast.Term
+				var tmp70977 [][2]*ast.Term
 				for key, value := range r0 {
 					k := ast.StringTerm(key)
 					v := ast.StringTerm(value)
-					tmp46110 = append(tmp46110, [2]*ast.Term{k, v})
+					tmp70977 = append(tmp70977, [2]*ast.Term{k, v})
 				}
-				term := ast.ObjectTerm(tmp46110...)
+				term := ast.ObjectTerm(tmp70977...)
 
 				return term, nil
 
@@ -3074,7 +3074,7 @@ func registerHGETALL(p *redisPlugin) {
 	)
 }
 
-func registerHINCRBY(p *redisPlugin) {
+func registerHINCRBY(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.hincrby",
@@ -3083,7 +3083,7 @@ func registerHINCRBY(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -3103,7 +3103,7 @@ func registerHINCRBY(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.HIncrBy(p.redisContext, v0, v1, v2)
+			val := rdb.HIncrBy(m.RedisContext, v0, v1, v2)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -3119,7 +3119,7 @@ func registerHINCRBY(p *redisPlugin) {
 	)
 }
 
-func registerHINCRBYFLOAT(p *redisPlugin) {
+func registerHINCRBYFLOAT(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.hincrbyfloat",
@@ -3128,7 +3128,7 @@ func registerHINCRBYFLOAT(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -3148,7 +3148,7 @@ func registerHINCRBYFLOAT(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.HIncrByFloat(p.redisContext, v0, v1, v2)
+			val := rdb.HIncrByFloat(m.RedisContext, v0, v1, v2)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -3164,7 +3164,7 @@ func registerHINCRBYFLOAT(p *redisPlugin) {
 	)
 }
 
-func registerHKEYS(p *redisPlugin) {
+func registerHKEYS(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.hkeys",
@@ -3173,7 +3173,7 @@ func registerHKEYS(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -3183,19 +3183,19 @@ func registerHKEYS(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.HKeys(p.redisContext, v0)
+			val := rdb.HKeys(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp68926 []*ast.Term
+				var tmp82935 []*ast.Term
 				for _, v := range r0 {
 					term := ast.StringTerm(v)
-					tmp68926 = append(tmp68926, term)
+					tmp82935 = append(tmp82935, term)
 				}
-				term := ast.ArrayTerm(tmp68926...)
+				term := ast.ArrayTerm(tmp82935...)
 
 				return term, nil
 
@@ -3206,7 +3206,7 @@ func registerHKEYS(p *redisPlugin) {
 	)
 }
 
-func registerHLEN(p *redisPlugin) {
+func registerHLEN(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.hlen",
@@ -3215,7 +3215,7 @@ func registerHLEN(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -3225,7 +3225,7 @@ func registerHLEN(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.HLen(p.redisContext, v0)
+			val := rdb.HLen(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -3241,7 +3241,7 @@ func registerHLEN(p *redisPlugin) {
 	)
 }
 
-func registerHMGET(p *redisPlugin) {
+func registerHMGET(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.hmget",
@@ -3250,7 +3250,7 @@ func registerHMGET(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -3265,14 +3265,14 @@ func registerHMGET(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.HMGet(p.redisContext, v0, v1...)
+			val := rdb.HMGet(m.RedisContext, v0, v1...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp43354 []*ast.Term
+				var tmp64574 []*ast.Term
 				for _, v := range r0 {
 
 					term := ast.NullTerm()
@@ -3280,9 +3280,9 @@ func registerHMGET(p *redisPlugin) {
 						term = ast.StringTerm(s)
 					}
 
-					tmp43354 = append(tmp43354, term)
+					tmp64574 = append(tmp64574, term)
 				}
-				term := ast.ArrayTerm(tmp43354...)
+				term := ast.ArrayTerm(tmp64574...)
 
 				return term, nil
 
@@ -3293,7 +3293,7 @@ func registerHMGET(p *redisPlugin) {
 	)
 }
 
-func registerHSET(p *redisPlugin) {
+func registerHSET(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.hset",
@@ -3302,7 +3302,7 @@ func registerHSET(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -3317,7 +3317,7 @@ func registerHSET(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.HSet(p.redisContext, v0, utils.Conva(v1)...)
+			val := rdb.HSet(m.RedisContext, v0, utils.Conva(v1)...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -3333,7 +3333,7 @@ func registerHSET(p *redisPlugin) {
 	)
 }
 
-func registerHMSET(p *redisPlugin) {
+func registerHMSET(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.hmset",
@@ -3342,7 +3342,7 @@ func registerHMSET(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -3357,7 +3357,7 @@ func registerHMSET(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.HMSet(p.redisContext, v0, utils.Conva(v1)...)
+			val := rdb.HMSet(m.RedisContext, v0, utils.Conva(v1)...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -3373,7 +3373,7 @@ func registerHMSET(p *redisPlugin) {
 	)
 }
 
-func registerHSETNX(p *redisPlugin) {
+func registerHSETNX(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.hsetnx",
@@ -3382,7 +3382,7 @@ func registerHSETNX(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -3402,7 +3402,7 @@ func registerHSETNX(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.HSetNX(p.redisContext, v0, v1, utils.Conv(v2))
+			val := rdb.HSetNX(m.RedisContext, v0, v1, utils.Conv(v2))
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -3418,7 +3418,7 @@ func registerHSETNX(p *redisPlugin) {
 	)
 }
 
-func registerHVALS(p *redisPlugin) {
+func registerHVALS(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.hvals",
@@ -3427,7 +3427,7 @@ func registerHVALS(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -3437,19 +3437,19 @@ func registerHVALS(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.HVals(p.redisContext, v0)
+			val := rdb.HVals(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp92667 []*ast.Term
+				var tmp07552 []*ast.Term
 				for _, v := range r0 {
 					term := ast.StringTerm(v)
-					tmp92667 = append(tmp92667, term)
+					tmp07552 = append(tmp07552, term)
 				}
-				term := ast.ArrayTerm(tmp92667...)
+				term := ast.ArrayTerm(tmp07552...)
 
 				return term, nil
 
@@ -3460,7 +3460,7 @@ func registerHVALS(p *redisPlugin) {
 	)
 }
 
-func registerHRANDFIELD(p *redisPlugin) {
+func registerHRANDFIELD(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.hrandfield",
@@ -3469,7 +3469,7 @@ func registerHRANDFIELD(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -3489,19 +3489,19 @@ func registerHRANDFIELD(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.HRandField(p.redisContext, v0, v1, v2)
+			val := rdb.HRandField(m.RedisContext, v0, v1, v2)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp16482 []*ast.Term
+				var tmp15007 []*ast.Term
 				for _, v := range r0 {
 					term := ast.StringTerm(v)
-					tmp16482 = append(tmp16482, term)
+					tmp15007 = append(tmp15007, term)
 				}
-				term := ast.ArrayTerm(tmp16482...)
+				term := ast.ArrayTerm(tmp15007...)
 
 				return term, nil
 
@@ -3512,7 +3512,7 @@ func registerHRANDFIELD(p *redisPlugin) {
 	)
 }
 
-func registerBLPOP(p *redisPlugin) {
+func registerBLPOP(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.blpop",
@@ -3521,7 +3521,7 @@ func registerBLPOP(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -3536,19 +3536,19 @@ func registerBLPOP(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.BLPop(p.redisContext, v0, v1...)
+			val := rdb.BLPop(m.RedisContext, v0, v1...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp33807 []*ast.Term
+				var tmp30116 []*ast.Term
 				for _, v := range r0 {
 					term := ast.StringTerm(v)
-					tmp33807 = append(tmp33807, term)
+					tmp30116 = append(tmp30116, term)
 				}
-				term := ast.ArrayTerm(tmp33807...)
+				term := ast.ArrayTerm(tmp30116...)
 
 				return term, nil
 
@@ -3559,7 +3559,7 @@ func registerBLPOP(p *redisPlugin) {
 	)
 }
 
-func registerBRPOP(p *redisPlugin) {
+func registerBRPOP(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.brpop",
@@ -3568,7 +3568,7 @@ func registerBRPOP(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -3583,19 +3583,19 @@ func registerBRPOP(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.BRPop(p.redisContext, v0, v1...)
+			val := rdb.BRPop(m.RedisContext, v0, v1...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp96814 []*ast.Term
+				var tmp64773 []*ast.Term
 				for _, v := range r0 {
 					term := ast.StringTerm(v)
-					tmp96814 = append(tmp96814, term)
+					tmp64773 = append(tmp64773, term)
 				}
-				term := ast.ArrayTerm(tmp96814...)
+				term := ast.ArrayTerm(tmp64773...)
 
 				return term, nil
 
@@ -3606,7 +3606,7 @@ func registerBRPOP(p *redisPlugin) {
 	)
 }
 
-func registerBRPOPLPUSH(p *redisPlugin) {
+func registerBRPOPLPUSH(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.brpoplpush",
@@ -3615,7 +3615,7 @@ func registerBRPOPLPUSH(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -3635,7 +3635,7 @@ func registerBRPOPLPUSH(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.BRPopLPush(p.redisContext, v0, v1, v2)
+			val := rdb.BRPopLPush(m.RedisContext, v0, v1, v2)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -3651,7 +3651,7 @@ func registerBRPOPLPUSH(p *redisPlugin) {
 	)
 }
 
-func registerLINDEX(p *redisPlugin) {
+func registerLINDEX(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.lindex",
@@ -3660,7 +3660,7 @@ func registerLINDEX(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -3675,7 +3675,7 @@ func registerLINDEX(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.LIndex(p.redisContext, v0, v1)
+			val := rdb.LIndex(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -3691,7 +3691,7 @@ func registerLINDEX(p *redisPlugin) {
 	)
 }
 
-func registerLINSERT(p *redisPlugin) {
+func registerLINSERT(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.linsert",
@@ -3700,7 +3700,7 @@ func registerLINSERT(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -3725,7 +3725,7 @@ func registerLINSERT(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.LInsert(p.redisContext, v0, v1, utils.Conv(v2), utils.Conv(v3))
+			val := rdb.LInsert(m.RedisContext, v0, v1, utils.Conv(v2), utils.Conv(v3))
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -3741,7 +3741,7 @@ func registerLINSERT(p *redisPlugin) {
 	)
 }
 
-func registerLINSERTBEFORE(p *redisPlugin) {
+func registerLINSERTBEFORE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.linsertbefore",
@@ -3750,7 +3750,7 @@ func registerLINSERTBEFORE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -3770,7 +3770,7 @@ func registerLINSERTBEFORE(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.LInsertBefore(p.redisContext, v0, utils.Conv(v1), utils.Conv(v2))
+			val := rdb.LInsertBefore(m.RedisContext, v0, utils.Conv(v1), utils.Conv(v2))
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -3786,7 +3786,7 @@ func registerLINSERTBEFORE(p *redisPlugin) {
 	)
 }
 
-func registerLINSERTAFTER(p *redisPlugin) {
+func registerLINSERTAFTER(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.linsertafter",
@@ -3795,7 +3795,7 @@ func registerLINSERTAFTER(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -3815,7 +3815,7 @@ func registerLINSERTAFTER(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.LInsertAfter(p.redisContext, v0, utils.Conv(v1), utils.Conv(v2))
+			val := rdb.LInsertAfter(m.RedisContext, v0, utils.Conv(v1), utils.Conv(v2))
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -3831,7 +3831,7 @@ func registerLINSERTAFTER(p *redisPlugin) {
 	)
 }
 
-func registerLLEN(p *redisPlugin) {
+func registerLLEN(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.llen",
@@ -3840,7 +3840,7 @@ func registerLLEN(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -3850,7 +3850,7 @@ func registerLLEN(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.LLen(p.redisContext, v0)
+			val := rdb.LLen(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -3866,7 +3866,7 @@ func registerLLEN(p *redisPlugin) {
 	)
 }
 
-func registerLPOP(p *redisPlugin) {
+func registerLPOP(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.lpop",
@@ -3875,7 +3875,7 @@ func registerLPOP(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -3885,7 +3885,7 @@ func registerLPOP(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.LPop(p.redisContext, v0)
+			val := rdb.LPop(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -3901,7 +3901,7 @@ func registerLPOP(p *redisPlugin) {
 	)
 }
 
-func registerLPOPCOUNT(p *redisPlugin) {
+func registerLPOPCOUNT(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.lpopcount",
@@ -3910,7 +3910,7 @@ func registerLPOPCOUNT(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -3925,19 +3925,19 @@ func registerLPOPCOUNT(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.LPopCount(p.redisContext, v0, v1)
+			val := rdb.LPopCount(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp47838 []*ast.Term
+				var tmp35995 []*ast.Term
 				for _, v := range r0 {
 					term := ast.StringTerm(v)
-					tmp47838 = append(tmp47838, term)
+					tmp35995 = append(tmp35995, term)
 				}
-				term := ast.ArrayTerm(tmp47838...)
+				term := ast.ArrayTerm(tmp35995...)
 
 				return term, nil
 
@@ -3948,7 +3948,7 @@ func registerLPOPCOUNT(p *redisPlugin) {
 	)
 }
 
-func registerLPOS(p *redisPlugin) {
+func registerLPOS(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.lpos",
@@ -3957,7 +3957,7 @@ func registerLPOS(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -3977,7 +3977,7 @@ func registerLPOS(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.LPos(p.redisContext, v0, v1, v2)
+			val := rdb.LPos(m.RedisContext, v0, v1, v2)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -3993,7 +3993,7 @@ func registerLPOS(p *redisPlugin) {
 	)
 }
 
-func registerLPOSCOUNT(p *redisPlugin) {
+func registerLPOSCOUNT(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.lposcount",
@@ -4002,7 +4002,7 @@ func registerLPOSCOUNT(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -4027,19 +4027,19 @@ func registerLPOSCOUNT(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.LPosCount(p.redisContext, v0, v1, v2, v3)
+			val := rdb.LPosCount(m.RedisContext, v0, v1, v2, v3)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp90547 []*ast.Term
+				var tmp23475 []*ast.Term
 				for _, v := range r0 {
 					term := ast.IntNumberTerm(int(v))
-					tmp90547 = append(tmp90547, term)
+					tmp23475 = append(tmp23475, term)
 				}
-				term := ast.ArrayTerm(tmp90547...)
+				term := ast.ArrayTerm(tmp23475...)
 
 				return term, nil
 
@@ -4050,7 +4050,7 @@ func registerLPOSCOUNT(p *redisPlugin) {
 	)
 }
 
-func registerLPUSH(p *redisPlugin) {
+func registerLPUSH(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.lpush",
@@ -4059,7 +4059,7 @@ func registerLPUSH(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -4074,7 +4074,7 @@ func registerLPUSH(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.LPush(p.redisContext, v0, utils.Conva(v1)...)
+			val := rdb.LPush(m.RedisContext, v0, utils.Conva(v1)...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -4090,7 +4090,7 @@ func registerLPUSH(p *redisPlugin) {
 	)
 }
 
-func registerLPUSHX(p *redisPlugin) {
+func registerLPUSHX(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.lpushx",
@@ -4099,7 +4099,7 @@ func registerLPUSHX(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -4114,7 +4114,7 @@ func registerLPUSHX(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.LPushX(p.redisContext, v0, utils.Conva(v1)...)
+			val := rdb.LPushX(m.RedisContext, v0, utils.Conva(v1)...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -4130,7 +4130,7 @@ func registerLPUSHX(p *redisPlugin) {
 	)
 }
 
-func registerLRANGE(p *redisPlugin) {
+func registerLRANGE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.lrange",
@@ -4139,7 +4139,7 @@ func registerLRANGE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -4159,19 +4159,19 @@ func registerLRANGE(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.LRange(p.redisContext, v0, v1, v2)
+			val := rdb.LRange(m.RedisContext, v0, v1, v2)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp65802 []*ast.Term
+				var tmp49691 []*ast.Term
 				for _, v := range r0 {
 					term := ast.StringTerm(v)
-					tmp65802 = append(tmp65802, term)
+					tmp49691 = append(tmp49691, term)
 				}
-				term := ast.ArrayTerm(tmp65802...)
+				term := ast.ArrayTerm(tmp49691...)
 
 				return term, nil
 
@@ -4182,7 +4182,7 @@ func registerLRANGE(p *redisPlugin) {
 	)
 }
 
-func registerLREM(p *redisPlugin) {
+func registerLREM(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.lrem",
@@ -4191,7 +4191,7 @@ func registerLREM(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -4211,7 +4211,7 @@ func registerLREM(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.LRem(p.redisContext, v0, v1, utils.Conv(v2))
+			val := rdb.LRem(m.RedisContext, v0, v1, utils.Conv(v2))
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -4227,7 +4227,7 @@ func registerLREM(p *redisPlugin) {
 	)
 }
 
-func registerLSET(p *redisPlugin) {
+func registerLSET(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.lset",
@@ -4236,7 +4236,7 @@ func registerLSET(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -4256,7 +4256,7 @@ func registerLSET(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.LSet(p.redisContext, v0, v1, utils.Conv(v2))
+			val := rdb.LSet(m.RedisContext, v0, v1, utils.Conv(v2))
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -4272,7 +4272,7 @@ func registerLSET(p *redisPlugin) {
 	)
 }
 
-func registerLTRIM(p *redisPlugin) {
+func registerLTRIM(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.ltrim",
@@ -4281,7 +4281,7 @@ func registerLTRIM(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -4301,7 +4301,7 @@ func registerLTRIM(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.LTrim(p.redisContext, v0, v1, v2)
+			val := rdb.LTrim(m.RedisContext, v0, v1, v2)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -4317,7 +4317,7 @@ func registerLTRIM(p *redisPlugin) {
 	)
 }
 
-func registerRPOP(p *redisPlugin) {
+func registerRPOP(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.rpop",
@@ -4326,7 +4326,7 @@ func registerRPOP(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -4336,7 +4336,7 @@ func registerRPOP(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.RPop(p.redisContext, v0)
+			val := rdb.RPop(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -4352,7 +4352,7 @@ func registerRPOP(p *redisPlugin) {
 	)
 }
 
-func registerRPOPCOUNT(p *redisPlugin) {
+func registerRPOPCOUNT(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.rpopcount",
@@ -4361,7 +4361,7 @@ func registerRPOPCOUNT(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -4376,19 +4376,19 @@ func registerRPOPCOUNT(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.RPopCount(p.redisContext, v0, v1)
+			val := rdb.RPopCount(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp08693 []*ast.Term
+				var tmp19660 []*ast.Term
 				for _, v := range r0 {
 					term := ast.StringTerm(v)
-					tmp08693 = append(tmp08693, term)
+					tmp19660 = append(tmp19660, term)
 				}
-				term := ast.ArrayTerm(tmp08693...)
+				term := ast.ArrayTerm(tmp19660...)
 
 				return term, nil
 
@@ -4399,7 +4399,7 @@ func registerRPOPCOUNT(p *redisPlugin) {
 	)
 }
 
-func registerRPOPLPUSH(p *redisPlugin) {
+func registerRPOPLPUSH(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.rpoplpush",
@@ -4408,7 +4408,7 @@ func registerRPOPLPUSH(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -4423,7 +4423,7 @@ func registerRPOPLPUSH(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.RPopLPush(p.redisContext, v0, v1)
+			val := rdb.RPopLPush(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -4439,7 +4439,7 @@ func registerRPOPLPUSH(p *redisPlugin) {
 	)
 }
 
-func registerRPUSH(p *redisPlugin) {
+func registerRPUSH(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.rpush",
@@ -4448,7 +4448,7 @@ func registerRPUSH(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -4463,7 +4463,7 @@ func registerRPUSH(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.RPush(p.redisContext, v0, utils.Conva(v1)...)
+			val := rdb.RPush(m.RedisContext, v0, utils.Conva(v1)...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -4479,7 +4479,7 @@ func registerRPUSH(p *redisPlugin) {
 	)
 }
 
-func registerRPUSHX(p *redisPlugin) {
+func registerRPUSHX(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.rpushx",
@@ -4488,7 +4488,7 @@ func registerRPUSHX(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -4503,7 +4503,7 @@ func registerRPUSHX(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.RPushX(p.redisContext, v0, utils.Conva(v1)...)
+			val := rdb.RPushX(m.RedisContext, v0, utils.Conva(v1)...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -4519,7 +4519,7 @@ func registerRPUSHX(p *redisPlugin) {
 	)
 }
 
-func registerLMOVE(p *redisPlugin) {
+func registerLMOVE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.lmove",
@@ -4528,7 +4528,7 @@ func registerLMOVE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -4553,7 +4553,7 @@ func registerLMOVE(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.LMove(p.redisContext, v0, v1, v2, v3)
+			val := rdb.LMove(m.RedisContext, v0, v1, v2, v3)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -4569,7 +4569,7 @@ func registerLMOVE(p *redisPlugin) {
 	)
 }
 
-func registerBLMOVE(p *redisPlugin) {
+func registerBLMOVE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.blmove",
@@ -4578,7 +4578,7 @@ func registerBLMOVE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -4608,7 +4608,7 @@ func registerBLMOVE(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.BLMove(p.redisContext, v0, v1, v2, v3, v4)
+			val := rdb.BLMove(m.RedisContext, v0, v1, v2, v3, v4)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -4624,7 +4624,7 @@ func registerBLMOVE(p *redisPlugin) {
 	)
 }
 
-func registerSADD(p *redisPlugin) {
+func registerSADD(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.sadd",
@@ -4633,7 +4633,7 @@ func registerSADD(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -4648,7 +4648,7 @@ func registerSADD(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.SAdd(p.redisContext, v0, utils.Conva(v1)...)
+			val := rdb.SAdd(m.RedisContext, v0, utils.Conva(v1)...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -4664,7 +4664,7 @@ func registerSADD(p *redisPlugin) {
 	)
 }
 
-func registerSCARD(p *redisPlugin) {
+func registerSCARD(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.scard",
@@ -4673,7 +4673,7 @@ func registerSCARD(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -4683,7 +4683,7 @@ func registerSCARD(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.SCard(p.redisContext, v0)
+			val := rdb.SCard(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -4699,7 +4699,7 @@ func registerSCARD(p *redisPlugin) {
 	)
 }
 
-func registerSDIFF(p *redisPlugin) {
+func registerSDIFF(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.sdiff",
@@ -4708,7 +4708,7 @@ func registerSDIFF(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -4718,19 +4718,19 @@ func registerSDIFF(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.SDiff(p.redisContext, v0...)
+			val := rdb.SDiff(m.RedisContext, v0...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp30167 []*ast.Term
+				var tmp12289 []*ast.Term
 				for _, v := range r0 {
 					term := ast.StringTerm(v)
-					tmp30167 = append(tmp30167, term)
+					tmp12289 = append(tmp12289, term)
 				}
-				term := ast.ArrayTerm(tmp30167...)
+				term := ast.ArrayTerm(tmp12289...)
 
 				return term, nil
 
@@ -4741,7 +4741,7 @@ func registerSDIFF(p *redisPlugin) {
 	)
 }
 
-func registerSDIFFSTORE(p *redisPlugin) {
+func registerSDIFFSTORE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.sdiffstore",
@@ -4750,7 +4750,7 @@ func registerSDIFFSTORE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -4765,7 +4765,7 @@ func registerSDIFFSTORE(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.SDiffStore(p.redisContext, v0, v1...)
+			val := rdb.SDiffStore(m.RedisContext, v0, v1...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -4781,7 +4781,7 @@ func registerSDIFFSTORE(p *redisPlugin) {
 	)
 }
 
-func registerSINTER(p *redisPlugin) {
+func registerSINTER(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.sinter",
@@ -4790,7 +4790,7 @@ func registerSINTER(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -4800,19 +4800,19 @@ func registerSINTER(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.SInter(p.redisContext, v0...)
+			val := rdb.SInter(m.RedisContext, v0...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp92740 []*ast.Term
+				var tmp66941 []*ast.Term
 				for _, v := range r0 {
 					term := ast.StringTerm(v)
-					tmp92740 = append(tmp92740, term)
+					tmp66941 = append(tmp66941, term)
 				}
-				term := ast.ArrayTerm(tmp92740...)
+				term := ast.ArrayTerm(tmp66941...)
 
 				return term, nil
 
@@ -4823,7 +4823,7 @@ func registerSINTER(p *redisPlugin) {
 	)
 }
 
-func registerSINTERSTORE(p *redisPlugin) {
+func registerSINTERSTORE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.sinterstore",
@@ -4832,7 +4832,7 @@ func registerSINTERSTORE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -4847,7 +4847,7 @@ func registerSINTERSTORE(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.SInterStore(p.redisContext, v0, v1...)
+			val := rdb.SInterStore(m.RedisContext, v0, v1...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -4863,7 +4863,7 @@ func registerSINTERSTORE(p *redisPlugin) {
 	)
 }
 
-func registerSISMEMBER(p *redisPlugin) {
+func registerSISMEMBER(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.sismember",
@@ -4872,7 +4872,7 @@ func registerSISMEMBER(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -4887,7 +4887,7 @@ func registerSISMEMBER(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.SIsMember(p.redisContext, v0, utils.Conv(v1))
+			val := rdb.SIsMember(m.RedisContext, v0, utils.Conv(v1))
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -4903,7 +4903,7 @@ func registerSISMEMBER(p *redisPlugin) {
 	)
 }
 
-func registerSMISMEMBER(p *redisPlugin) {
+func registerSMISMEMBER(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.smismember",
@@ -4912,7 +4912,7 @@ func registerSMISMEMBER(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -4927,19 +4927,19 @@ func registerSMISMEMBER(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.SMIsMember(p.redisContext, v0, utils.Conva(v1)...)
+			val := rdb.SMIsMember(m.RedisContext, v0, utils.Conva(v1)...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp44620 []*ast.Term
+				var tmp95333 []*ast.Term
 				for _, v := range r0 {
 					term := ast.BooleanTerm(v)
-					tmp44620 = append(tmp44620, term)
+					tmp95333 = append(tmp95333, term)
 				}
-				term := ast.ArrayTerm(tmp44620...)
+				term := ast.ArrayTerm(tmp95333...)
 
 				return term, nil
 
@@ -4950,7 +4950,7 @@ func registerSMISMEMBER(p *redisPlugin) {
 	)
 }
 
-func registerSMEMBERS(p *redisPlugin) {
+func registerSMEMBERS(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.smembers",
@@ -4959,7 +4959,7 @@ func registerSMEMBERS(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -4969,19 +4969,19 @@ func registerSMEMBERS(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.SMembers(p.redisContext, v0)
+			val := rdb.SMembers(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp87739 []*ast.Term
+				var tmp13468 []*ast.Term
 				for _, v := range r0 {
 					term := ast.StringTerm(v)
-					tmp87739 = append(tmp87739, term)
+					tmp13468 = append(tmp13468, term)
 				}
-				term := ast.ArrayTerm(tmp87739...)
+				term := ast.ArrayTerm(tmp13468...)
 
 				return term, nil
 
@@ -4992,7 +4992,7 @@ func registerSMEMBERS(p *redisPlugin) {
 	)
 }
 
-func registerSMEMBERSMAP(p *redisPlugin) {
+func registerSMEMBERSMAP(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.smembersmap",
@@ -5001,7 +5001,7 @@ func registerSMEMBERSMAP(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -5011,22 +5011,22 @@ func registerSMEMBERSMAP(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.SMembersMap(p.redisContext, v0)
+			val := rdb.SMembersMap(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp98252 [][2]*ast.Term
+				var tmp99002 [][2]*ast.Term
 				for key, _ := range r0 {
 					k := ast.StringTerm(key)
 
 					v := ast.ObjectTerm()
 
-					tmp98252 = append(tmp98252, [2]*ast.Term{k, v})
+					tmp99002 = append(tmp99002, [2]*ast.Term{k, v})
 				}
-				term := ast.ObjectTerm(tmp98252...)
+				term := ast.ObjectTerm(tmp99002...)
 
 				return term, nil
 
@@ -5037,7 +5037,7 @@ func registerSMEMBERSMAP(p *redisPlugin) {
 	)
 }
 
-func registerSMOVE(p *redisPlugin) {
+func registerSMOVE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.smove",
@@ -5046,7 +5046,7 @@ func registerSMOVE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -5066,7 +5066,7 @@ func registerSMOVE(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.SMove(p.redisContext, v0, v1, utils.Conv(v2))
+			val := rdb.SMove(m.RedisContext, v0, v1, utils.Conv(v2))
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -5082,7 +5082,7 @@ func registerSMOVE(p *redisPlugin) {
 	)
 }
 
-func registerSPOP(p *redisPlugin) {
+func registerSPOP(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.spop",
@@ -5091,7 +5091,7 @@ func registerSPOP(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -5101,7 +5101,7 @@ func registerSPOP(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.SPop(p.redisContext, v0)
+			val := rdb.SPop(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -5117,7 +5117,7 @@ func registerSPOP(p *redisPlugin) {
 	)
 }
 
-func registerSPOPN(p *redisPlugin) {
+func registerSPOPN(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.spopn",
@@ -5126,7 +5126,7 @@ func registerSPOPN(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -5141,19 +5141,19 @@ func registerSPOPN(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.SPopN(p.redisContext, v0, v1)
+			val := rdb.SPopN(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp66882 []*ast.Term
+				var tmp35545 []*ast.Term
 				for _, v := range r0 {
 					term := ast.StringTerm(v)
-					tmp66882 = append(tmp66882, term)
+					tmp35545 = append(tmp35545, term)
 				}
-				term := ast.ArrayTerm(tmp66882...)
+				term := ast.ArrayTerm(tmp35545...)
 
 				return term, nil
 
@@ -5164,7 +5164,7 @@ func registerSPOPN(p *redisPlugin) {
 	)
 }
 
-func registerSRANDMEMBER(p *redisPlugin) {
+func registerSRANDMEMBER(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.srandmember",
@@ -5173,7 +5173,7 @@ func registerSRANDMEMBER(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -5183,7 +5183,7 @@ func registerSRANDMEMBER(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.SRandMember(p.redisContext, v0)
+			val := rdb.SRandMember(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -5199,7 +5199,7 @@ func registerSRANDMEMBER(p *redisPlugin) {
 	)
 }
 
-func registerSRANDMEMBERN(p *redisPlugin) {
+func registerSRANDMEMBERN(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.srandmembern",
@@ -5208,7 +5208,7 @@ func registerSRANDMEMBERN(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -5223,19 +5223,19 @@ func registerSRANDMEMBERN(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.SRandMemberN(p.redisContext, v0, v1)
+			val := rdb.SRandMemberN(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp19968 []*ast.Term
+				var tmp38056 []*ast.Term
 				for _, v := range r0 {
 					term := ast.StringTerm(v)
-					tmp19968 = append(tmp19968, term)
+					tmp38056 = append(tmp38056, term)
 				}
-				term := ast.ArrayTerm(tmp19968...)
+				term := ast.ArrayTerm(tmp38056...)
 
 				return term, nil
 
@@ -5246,7 +5246,7 @@ func registerSRANDMEMBERN(p *redisPlugin) {
 	)
 }
 
-func registerSREM(p *redisPlugin) {
+func registerSREM(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.srem",
@@ -5255,7 +5255,7 @@ func registerSREM(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -5270,7 +5270,7 @@ func registerSREM(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.SRem(p.redisContext, v0, utils.Conva(v1)...)
+			val := rdb.SRem(m.RedisContext, v0, utils.Conva(v1)...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -5286,7 +5286,7 @@ func registerSREM(p *redisPlugin) {
 	)
 }
 
-func registerSUNION(p *redisPlugin) {
+func registerSUNION(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.sunion",
@@ -5295,7 +5295,7 @@ func registerSUNION(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -5305,19 +5305,19 @@ func registerSUNION(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.SUnion(p.redisContext, v0...)
+			val := rdb.SUnion(m.RedisContext, v0...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp73837 []*ast.Term
+				var tmp25847 []*ast.Term
 				for _, v := range r0 {
 					term := ast.StringTerm(v)
-					tmp73837 = append(tmp73837, term)
+					tmp25847 = append(tmp25847, term)
 				}
-				term := ast.ArrayTerm(tmp73837...)
+				term := ast.ArrayTerm(tmp25847...)
 
 				return term, nil
 
@@ -5328,7 +5328,7 @@ func registerSUNION(p *redisPlugin) {
 	)
 }
 
-func registerSUNIONSTORE(p *redisPlugin) {
+func registerSUNIONSTORE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.sunionstore",
@@ -5337,7 +5337,7 @@ func registerSUNIONSTORE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -5352,7 +5352,7 @@ func registerSUNIONSTORE(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.SUnionStore(p.redisContext, v0, v1...)
+			val := rdb.SUnionStore(m.RedisContext, v0, v1...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -5368,7 +5368,7 @@ func registerSUNIONSTORE(p *redisPlugin) {
 	)
 }
 
-func registerXADD(p *redisPlugin) {
+func registerXADD(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.xadd",
@@ -5377,7 +5377,7 @@ func registerXADD(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -5387,7 +5387,7 @@ func registerXADD(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.XAdd(p.redisContext, v0)
+			val := rdb.XAdd(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -5403,7 +5403,7 @@ func registerXADD(p *redisPlugin) {
 	)
 }
 
-func registerXDEL(p *redisPlugin) {
+func registerXDEL(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.xdel",
@@ -5412,7 +5412,7 @@ func registerXDEL(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -5427,7 +5427,7 @@ func registerXDEL(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.XDel(p.redisContext, v0, v1...)
+			val := rdb.XDel(m.RedisContext, v0, v1...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -5443,7 +5443,7 @@ func registerXDEL(p *redisPlugin) {
 	)
 }
 
-func registerXLEN(p *redisPlugin) {
+func registerXLEN(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.xlen",
@@ -5452,7 +5452,7 @@ func registerXLEN(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -5462,7 +5462,7 @@ func registerXLEN(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.XLen(p.redisContext, v0)
+			val := rdb.XLen(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -5478,7 +5478,7 @@ func registerXLEN(p *redisPlugin) {
 	)
 }
 
-func registerXRANGE(p *redisPlugin) {
+func registerXRANGE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.xrange",
@@ -5487,7 +5487,7 @@ func registerXRANGE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -5507,19 +5507,19 @@ func registerXRANGE(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.XRange(p.redisContext, v0, v1, v2)
+			val := rdb.XRange(m.RedisContext, v0, v1, v2)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp67339 []*ast.Term
+				var tmp80000 []*ast.Term
 				for _, v := range r0 {
 
 					termID := ast.StringTerm(v.ID)
 
-					var tmp51809 [][2]*ast.Term
+					var tmp17406 [][2]*ast.Term
 					for key, value := range v.Values {
 						k := ast.StringTerm(key)
 
@@ -5528,15 +5528,15 @@ func registerXRANGE(p *redisPlugin) {
 							v = ast.StringTerm(s)
 						}
 
-						tmp51809 = append(tmp51809, [2]*ast.Term{k, v})
+						tmp17406 = append(tmp17406, [2]*ast.Term{k, v})
 					}
-					termValues := ast.ObjectTerm(tmp51809...)
+					termValues := ast.ObjectTerm(tmp17406...)
 
 					term := ast.ObjectTerm([2]*ast.Term{ast.StringTerm("ID"), termID}, [2]*ast.Term{ast.StringTerm("Values"), termValues})
 
-					tmp67339 = append(tmp67339, term)
+					tmp80000 = append(tmp80000, term)
 				}
-				term := ast.ArrayTerm(tmp67339...)
+				term := ast.ArrayTerm(tmp80000...)
 
 				return term, nil
 
@@ -5547,7 +5547,7 @@ func registerXRANGE(p *redisPlugin) {
 	)
 }
 
-func registerXRANGEN(p *redisPlugin) {
+func registerXRANGEN(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.xrangen",
@@ -5556,7 +5556,7 @@ func registerXRANGEN(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -5581,19 +5581,19 @@ func registerXRANGEN(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.XRangeN(p.redisContext, v0, v1, v2, v3)
+			val := rdb.XRangeN(m.RedisContext, v0, v1, v2, v3)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp81656 []*ast.Term
+				var tmp44109 []*ast.Term
 				for _, v := range r0 {
 
 					termID := ast.StringTerm(v.ID)
 
-					var tmp41300 [][2]*ast.Term
+					var tmp81247 [][2]*ast.Term
 					for key, value := range v.Values {
 						k := ast.StringTerm(key)
 
@@ -5602,15 +5602,15 @@ func registerXRANGEN(p *redisPlugin) {
 							v = ast.StringTerm(s)
 						}
 
-						tmp41300 = append(tmp41300, [2]*ast.Term{k, v})
+						tmp81247 = append(tmp81247, [2]*ast.Term{k, v})
 					}
-					termValues := ast.ObjectTerm(tmp41300...)
+					termValues := ast.ObjectTerm(tmp81247...)
 
 					term := ast.ObjectTerm([2]*ast.Term{ast.StringTerm("ID"), termID}, [2]*ast.Term{ast.StringTerm("Values"), termValues})
 
-					tmp81656 = append(tmp81656, term)
+					tmp44109 = append(tmp44109, term)
 				}
-				term := ast.ArrayTerm(tmp81656...)
+				term := ast.ArrayTerm(tmp44109...)
 
 				return term, nil
 
@@ -5621,7 +5621,7 @@ func registerXRANGEN(p *redisPlugin) {
 	)
 }
 
-func registerXREVRANGE(p *redisPlugin) {
+func registerXREVRANGE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.xrevrange",
@@ -5630,7 +5630,7 @@ func registerXREVRANGE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -5650,19 +5650,19 @@ func registerXREVRANGE(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.XRevRange(p.redisContext, v0, v1, v2)
+			val := rdb.XRevRange(m.RedisContext, v0, v1, v2)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp97434 []*ast.Term
+				var tmp96208 []*ast.Term
 				for _, v := range r0 {
 
 					termID := ast.StringTerm(v.ID)
 
-					var tmp79153 [][2]*ast.Term
+					var tmp91761 [][2]*ast.Term
 					for key, value := range v.Values {
 						k := ast.StringTerm(key)
 
@@ -5671,15 +5671,15 @@ func registerXREVRANGE(p *redisPlugin) {
 							v = ast.StringTerm(s)
 						}
 
-						tmp79153 = append(tmp79153, [2]*ast.Term{k, v})
+						tmp91761 = append(tmp91761, [2]*ast.Term{k, v})
 					}
-					termValues := ast.ObjectTerm(tmp79153...)
+					termValues := ast.ObjectTerm(tmp91761...)
 
 					term := ast.ObjectTerm([2]*ast.Term{ast.StringTerm("ID"), termID}, [2]*ast.Term{ast.StringTerm("Values"), termValues})
 
-					tmp97434 = append(tmp97434, term)
+					tmp96208 = append(tmp96208, term)
 				}
-				term := ast.ArrayTerm(tmp97434...)
+				term := ast.ArrayTerm(tmp96208...)
 
 				return term, nil
 
@@ -5690,7 +5690,7 @@ func registerXREVRANGE(p *redisPlugin) {
 	)
 }
 
-func registerXREVRANGEN(p *redisPlugin) {
+func registerXREVRANGEN(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.xrevrangen",
@@ -5699,7 +5699,7 @@ func registerXREVRANGEN(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -5724,19 +5724,19 @@ func registerXREVRANGEN(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.XRevRangeN(p.redisContext, v0, v1, v2, v3)
+			val := rdb.XRevRangeN(m.RedisContext, v0, v1, v2, v3)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp95015 []*ast.Term
+				var tmp91383 []*ast.Term
 				for _, v := range r0 {
 
 					termID := ast.StringTerm(v.ID)
 
-					var tmp73064 [][2]*ast.Term
+					var tmp78623 [][2]*ast.Term
 					for key, value := range v.Values {
 						k := ast.StringTerm(key)
 
@@ -5745,15 +5745,15 @@ func registerXREVRANGEN(p *redisPlugin) {
 							v = ast.StringTerm(s)
 						}
 
-						tmp73064 = append(tmp73064, [2]*ast.Term{k, v})
+						tmp78623 = append(tmp78623, [2]*ast.Term{k, v})
 					}
-					termValues := ast.ObjectTerm(tmp73064...)
+					termValues := ast.ObjectTerm(tmp78623...)
 
 					term := ast.ObjectTerm([2]*ast.Term{ast.StringTerm("ID"), termID}, [2]*ast.Term{ast.StringTerm("Values"), termValues})
 
-					tmp95015 = append(tmp95015, term)
+					tmp91383 = append(tmp91383, term)
 				}
-				term := ast.ArrayTerm(tmp95015...)
+				term := ast.ArrayTerm(tmp91383...)
 
 				return term, nil
 
@@ -5764,7 +5764,7 @@ func registerXREVRANGEN(p *redisPlugin) {
 	)
 }
 
-func registerXREAD(p *redisPlugin) {
+func registerXREAD(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.xread",
@@ -5773,7 +5773,7 @@ func registerXREAD(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -5783,24 +5783,24 @@ func registerXREAD(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.XRead(p.redisContext, v0)
+			val := rdb.XRead(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp66155 []*ast.Term
+				var tmp58824 []*ast.Term
 				for _, v := range r0 {
 
 					termStream := ast.StringTerm(v.Stream)
 
-					var tmp67269 []*ast.Term
+					var tmp37669 []*ast.Term
 					for _, v := range v.Messages {
 
 						termID := ast.StringTerm(v.ID)
 
-						var tmp85885 [][2]*ast.Term
+						var tmp38051 [][2]*ast.Term
 						for key, value := range v.Values {
 							k := ast.StringTerm(key)
 
@@ -5809,21 +5809,21 @@ func registerXREAD(p *redisPlugin) {
 								v = ast.StringTerm(s)
 							}
 
-							tmp85885 = append(tmp85885, [2]*ast.Term{k, v})
+							tmp38051 = append(tmp38051, [2]*ast.Term{k, v})
 						}
-						termValues := ast.ObjectTerm(tmp85885...)
+						termValues := ast.ObjectTerm(tmp38051...)
 
 						term := ast.ObjectTerm([2]*ast.Term{ast.StringTerm("ID"), termID}, [2]*ast.Term{ast.StringTerm("Values"), termValues})
 
-						tmp67269 = append(tmp67269, term)
+						tmp37669 = append(tmp37669, term)
 					}
-					termMessages := ast.ArrayTerm(tmp67269...)
+					termMessages := ast.ArrayTerm(tmp37669...)
 
 					term := ast.ObjectTerm([2]*ast.Term{ast.StringTerm("Stream"), termStream}, [2]*ast.Term{ast.StringTerm("Messages"), termMessages})
 
-					tmp66155 = append(tmp66155, term)
+					tmp58824 = append(tmp58824, term)
 				}
-				term := ast.ArrayTerm(tmp66155...)
+				term := ast.ArrayTerm(tmp58824...)
 
 				return term, nil
 
@@ -5834,7 +5834,7 @@ func registerXREAD(p *redisPlugin) {
 	)
 }
 
-func registerXREADSTREAMS(p *redisPlugin) {
+func registerXREADSTREAMS(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.xreadstreams",
@@ -5843,7 +5843,7 @@ func registerXREADSTREAMS(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -5853,24 +5853,24 @@ func registerXREADSTREAMS(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.XReadStreams(p.redisContext, v0...)
+			val := rdb.XReadStreams(m.RedisContext, v0...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp52548 []*ast.Term
+				var tmp99783 []*ast.Term
 				for _, v := range r0 {
 
 					termStream := ast.StringTerm(v.Stream)
 
-					var tmp27304 []*ast.Term
+					var tmp34192 []*ast.Term
 					for _, v := range v.Messages {
 
 						termID := ast.StringTerm(v.ID)
 
-						var tmp53913 [][2]*ast.Term
+						var tmp52271 [][2]*ast.Term
 						for key, value := range v.Values {
 							k := ast.StringTerm(key)
 
@@ -5879,21 +5879,21 @@ func registerXREADSTREAMS(p *redisPlugin) {
 								v = ast.StringTerm(s)
 							}
 
-							tmp53913 = append(tmp53913, [2]*ast.Term{k, v})
+							tmp52271 = append(tmp52271, [2]*ast.Term{k, v})
 						}
-						termValues := ast.ObjectTerm(tmp53913...)
+						termValues := ast.ObjectTerm(tmp52271...)
 
 						term := ast.ObjectTerm([2]*ast.Term{ast.StringTerm("ID"), termID}, [2]*ast.Term{ast.StringTerm("Values"), termValues})
 
-						tmp27304 = append(tmp27304, term)
+						tmp34192 = append(tmp34192, term)
 					}
-					termMessages := ast.ArrayTerm(tmp27304...)
+					termMessages := ast.ArrayTerm(tmp34192...)
 
 					term := ast.ObjectTerm([2]*ast.Term{ast.StringTerm("Stream"), termStream}, [2]*ast.Term{ast.StringTerm("Messages"), termMessages})
 
-					tmp52548 = append(tmp52548, term)
+					tmp99783 = append(tmp99783, term)
 				}
-				term := ast.ArrayTerm(tmp52548...)
+				term := ast.ArrayTerm(tmp99783...)
 
 				return term, nil
 
@@ -5904,7 +5904,7 @@ func registerXREADSTREAMS(p *redisPlugin) {
 	)
 }
 
-func registerXGROUPCREATE(p *redisPlugin) {
+func registerXGROUPCREATE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.xgroupcreate",
@@ -5913,7 +5913,7 @@ func registerXGROUPCREATE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -5933,7 +5933,7 @@ func registerXGROUPCREATE(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.XGroupCreate(p.redisContext, v0, v1, v2)
+			val := rdb.XGroupCreate(m.RedisContext, v0, v1, v2)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -5949,7 +5949,7 @@ func registerXGROUPCREATE(p *redisPlugin) {
 	)
 }
 
-func registerXGROUPCREATEMKSTREAM(p *redisPlugin) {
+func registerXGROUPCREATEMKSTREAM(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.xgroupcreatemkstream",
@@ -5958,7 +5958,7 @@ func registerXGROUPCREATEMKSTREAM(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -5978,7 +5978,7 @@ func registerXGROUPCREATEMKSTREAM(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.XGroupCreateMkStream(p.redisContext, v0, v1, v2)
+			val := rdb.XGroupCreateMkStream(m.RedisContext, v0, v1, v2)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -5994,7 +5994,7 @@ func registerXGROUPCREATEMKSTREAM(p *redisPlugin) {
 	)
 }
 
-func registerXGROUPSETID(p *redisPlugin) {
+func registerXGROUPSETID(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.xgroupsetid",
@@ -6003,7 +6003,7 @@ func registerXGROUPSETID(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -6023,7 +6023,7 @@ func registerXGROUPSETID(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.XGroupSetID(p.redisContext, v0, v1, v2)
+			val := rdb.XGroupSetID(m.RedisContext, v0, v1, v2)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -6039,7 +6039,7 @@ func registerXGROUPSETID(p *redisPlugin) {
 	)
 }
 
-func registerXGROUPDESTROY(p *redisPlugin) {
+func registerXGROUPDESTROY(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.xgroupdestroy",
@@ -6048,7 +6048,7 @@ func registerXGROUPDESTROY(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -6063,7 +6063,7 @@ func registerXGROUPDESTROY(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.XGroupDestroy(p.redisContext, v0, v1)
+			val := rdb.XGroupDestroy(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -6079,7 +6079,7 @@ func registerXGROUPDESTROY(p *redisPlugin) {
 	)
 }
 
-func registerXGROUPCREATECONSUMER(p *redisPlugin) {
+func registerXGROUPCREATECONSUMER(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.xgroupcreateconsumer",
@@ -6088,7 +6088,7 @@ func registerXGROUPCREATECONSUMER(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -6108,7 +6108,7 @@ func registerXGROUPCREATECONSUMER(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.XGroupCreateConsumer(p.redisContext, v0, v1, v2)
+			val := rdb.XGroupCreateConsumer(m.RedisContext, v0, v1, v2)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -6124,7 +6124,7 @@ func registerXGROUPCREATECONSUMER(p *redisPlugin) {
 	)
 }
 
-func registerXGROUPDELCONSUMER(p *redisPlugin) {
+func registerXGROUPDELCONSUMER(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.xgroupdelconsumer",
@@ -6133,7 +6133,7 @@ func registerXGROUPDELCONSUMER(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -6153,7 +6153,7 @@ func registerXGROUPDELCONSUMER(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.XGroupDelConsumer(p.redisContext, v0, v1, v2)
+			val := rdb.XGroupDelConsumer(m.RedisContext, v0, v1, v2)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -6169,7 +6169,7 @@ func registerXGROUPDELCONSUMER(p *redisPlugin) {
 	)
 }
 
-func registerXREADGROUP(p *redisPlugin) {
+func registerXREADGROUP(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.xreadgroup",
@@ -6178,7 +6178,7 @@ func registerXREADGROUP(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -6188,24 +6188,24 @@ func registerXREADGROUP(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.XReadGroup(p.redisContext, v0)
+			val := rdb.XReadGroup(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp74768 []*ast.Term
+				var tmp91791 []*ast.Term
 				for _, v := range r0 {
 
 					termStream := ast.StringTerm(v.Stream)
 
-					var tmp42960 []*ast.Term
+					var tmp85200 []*ast.Term
 					for _, v := range v.Messages {
 
 						termID := ast.StringTerm(v.ID)
 
-						var tmp88231 [][2]*ast.Term
+						var tmp81388 [][2]*ast.Term
 						for key, value := range v.Values {
 							k := ast.StringTerm(key)
 
@@ -6214,21 +6214,21 @@ func registerXREADGROUP(p *redisPlugin) {
 								v = ast.StringTerm(s)
 							}
 
-							tmp88231 = append(tmp88231, [2]*ast.Term{k, v})
+							tmp81388 = append(tmp81388, [2]*ast.Term{k, v})
 						}
-						termValues := ast.ObjectTerm(tmp88231...)
+						termValues := ast.ObjectTerm(tmp81388...)
 
 						term := ast.ObjectTerm([2]*ast.Term{ast.StringTerm("ID"), termID}, [2]*ast.Term{ast.StringTerm("Values"), termValues})
 
-						tmp42960 = append(tmp42960, term)
+						tmp85200 = append(tmp85200, term)
 					}
-					termMessages := ast.ArrayTerm(tmp42960...)
+					termMessages := ast.ArrayTerm(tmp85200...)
 
 					term := ast.ObjectTerm([2]*ast.Term{ast.StringTerm("Stream"), termStream}, [2]*ast.Term{ast.StringTerm("Messages"), termMessages})
 
-					tmp74768 = append(tmp74768, term)
+					tmp91791 = append(tmp91791, term)
 				}
-				term := ast.ArrayTerm(tmp74768...)
+				term := ast.ArrayTerm(tmp91791...)
 
 				return term, nil
 
@@ -6239,7 +6239,7 @@ func registerXREADGROUP(p *redisPlugin) {
 	)
 }
 
-func registerXACK(p *redisPlugin) {
+func registerXACK(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.xack",
@@ -6248,7 +6248,7 @@ func registerXACK(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -6268,7 +6268,7 @@ func registerXACK(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.XAck(p.redisContext, v0, v1, v2...)
+			val := rdb.XAck(m.RedisContext, v0, v1, v2...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -6284,7 +6284,7 @@ func registerXACK(p *redisPlugin) {
 	)
 }
 
-func registerXPENDING(p *redisPlugin) {
+func registerXPENDING(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.xpending",
@@ -6293,7 +6293,7 @@ func registerXPENDING(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -6308,7 +6308,7 @@ func registerXPENDING(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.XPending(p.redisContext, v0, v1)
+			val := rdb.XPending(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -6321,13 +6321,13 @@ func registerXPENDING(p *redisPlugin) {
 
 				termHigher := ast.StringTerm(r0.Higher)
 
-				var tmp25995 [][2]*ast.Term
+				var tmp97341 [][2]*ast.Term
 				for key, value := range r0.Consumers {
 					k := ast.StringTerm(key)
 					v := ast.IntNumberTerm(int(value))
-					tmp25995 = append(tmp25995, [2]*ast.Term{k, v})
+					tmp97341 = append(tmp97341, [2]*ast.Term{k, v})
 				}
-				termConsumers := ast.ObjectTerm(tmp25995...)
+				termConsumers := ast.ObjectTerm(tmp97341...)
 
 				term := ast.ObjectTerm([2]*ast.Term{ast.StringTerm("Count"), termCount}, [2]*ast.Term{ast.StringTerm("Lower"), termLower}, [2]*ast.Term{ast.StringTerm("Higher"), termHigher}, [2]*ast.Term{ast.StringTerm("Consumers"), termConsumers})
 
@@ -6340,7 +6340,7 @@ func registerXPENDING(p *redisPlugin) {
 	)
 }
 
-func registerXPENDINGEXT(p *redisPlugin) {
+func registerXPENDINGEXT(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.xpendingext",
@@ -6349,7 +6349,7 @@ func registerXPENDINGEXT(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -6359,14 +6359,14 @@ func registerXPENDINGEXT(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.XPendingExt(p.redisContext, v0)
+			val := rdb.XPendingExt(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp81039 []*ast.Term
+				var tmp12974 []*ast.Term
 				for _, v := range r0 {
 
 					termID := ast.StringTerm(v.ID)
@@ -6379,9 +6379,9 @@ func registerXPENDINGEXT(p *redisPlugin) {
 
 					term := ast.ObjectTerm([2]*ast.Term{ast.StringTerm("ID"), termID}, [2]*ast.Term{ast.StringTerm("Consumer"), termConsumer}, [2]*ast.Term{ast.StringTerm("Idle"), termIdle}, [2]*ast.Term{ast.StringTerm("RetryCount"), termRetryCount})
 
-					tmp81039 = append(tmp81039, term)
+					tmp12974 = append(tmp12974, term)
 				}
-				term := ast.ArrayTerm(tmp81039...)
+				term := ast.ArrayTerm(tmp12974...)
 
 				return term, nil
 
@@ -6392,7 +6392,7 @@ func registerXPENDINGEXT(p *redisPlugin) {
 	)
 }
 
-func registerXCLAIM(p *redisPlugin) {
+func registerXCLAIM(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.xclaim",
@@ -6401,7 +6401,7 @@ func registerXCLAIM(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -6411,19 +6411,19 @@ func registerXCLAIM(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.XClaim(p.redisContext, v0)
+			val := rdb.XClaim(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp62750 []*ast.Term
+				var tmp49728 []*ast.Term
 				for _, v := range r0 {
 
 					termID := ast.StringTerm(v.ID)
 
-					var tmp84422 [][2]*ast.Term
+					var tmp98041 [][2]*ast.Term
 					for key, value := range v.Values {
 						k := ast.StringTerm(key)
 
@@ -6432,15 +6432,15 @@ func registerXCLAIM(p *redisPlugin) {
 							v = ast.StringTerm(s)
 						}
 
-						tmp84422 = append(tmp84422, [2]*ast.Term{k, v})
+						tmp98041 = append(tmp98041, [2]*ast.Term{k, v})
 					}
-					termValues := ast.ObjectTerm(tmp84422...)
+					termValues := ast.ObjectTerm(tmp98041...)
 
 					term := ast.ObjectTerm([2]*ast.Term{ast.StringTerm("ID"), termID}, [2]*ast.Term{ast.StringTerm("Values"), termValues})
 
-					tmp62750 = append(tmp62750, term)
+					tmp49728 = append(tmp49728, term)
 				}
-				term := ast.ArrayTerm(tmp62750...)
+				term := ast.ArrayTerm(tmp49728...)
 
 				return term, nil
 
@@ -6451,7 +6451,7 @@ func registerXCLAIM(p *redisPlugin) {
 	)
 }
 
-func registerXCLAIMJUSTID(p *redisPlugin) {
+func registerXCLAIMJUSTID(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.xclaimjustid",
@@ -6460,7 +6460,7 @@ func registerXCLAIMJUSTID(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -6470,19 +6470,19 @@ func registerXCLAIMJUSTID(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.XClaimJustID(p.redisContext, v0)
+			val := rdb.XClaimJustID(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp76638 []*ast.Term
+				var tmp15726 []*ast.Term
 				for _, v := range r0 {
 					term := ast.StringTerm(v)
-					tmp76638 = append(tmp76638, term)
+					tmp15726 = append(tmp15726, term)
 				}
-				term := ast.ArrayTerm(tmp76638...)
+				term := ast.ArrayTerm(tmp15726...)
 
 				return term, nil
 
@@ -6493,7 +6493,7 @@ func registerXCLAIMJUSTID(p *redisPlugin) {
 	)
 }
 
-func registerXAUTOCLAIM(p *redisPlugin) {
+func registerXAUTOCLAIM(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.xautoclaim",
@@ -6502,7 +6502,7 @@ func registerXAUTOCLAIM(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -6512,19 +6512,19 @@ func registerXAUTOCLAIM(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.XAutoClaim(p.redisContext, v0)
+			val := rdb.XAutoClaim(m.RedisContext, v0)
 			r0, r1 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp50671 []*ast.Term
+				var tmp71325 []*ast.Term
 				for _, v := range r0 {
 
 					termID := ast.StringTerm(v.ID)
 
-					var tmp00608 [][2]*ast.Term
+					var tmp43384 [][2]*ast.Term
 					for key, value := range v.Values {
 						k := ast.StringTerm(key)
 
@@ -6533,15 +6533,15 @@ func registerXAUTOCLAIM(p *redisPlugin) {
 							v = ast.StringTerm(s)
 						}
 
-						tmp00608 = append(tmp00608, [2]*ast.Term{k, v})
+						tmp43384 = append(tmp43384, [2]*ast.Term{k, v})
 					}
-					termValues := ast.ObjectTerm(tmp00608...)
+					termValues := ast.ObjectTerm(tmp43384...)
 
 					term := ast.ObjectTerm([2]*ast.Term{ast.StringTerm("ID"), termID}, [2]*ast.Term{ast.StringTerm("Values"), termValues})
 
-					tmp50671 = append(tmp50671, term)
+					tmp71325 = append(tmp71325, term)
 				}
-				tr0 := ast.ArrayTerm(tmp50671...)
+				tr0 := ast.ArrayTerm(tmp71325...)
 				tr1 := ast.StringTerm(r1)
 				return ast.ArrayTerm(tr0, tr1), nil
 
@@ -6552,7 +6552,7 @@ func registerXAUTOCLAIM(p *redisPlugin) {
 	)
 }
 
-func registerXAUTOCLAIMJUSTID(p *redisPlugin) {
+func registerXAUTOCLAIMJUSTID(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.xautoclaimjustid",
@@ -6561,7 +6561,7 @@ func registerXAUTOCLAIMJUSTID(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -6571,19 +6571,19 @@ func registerXAUTOCLAIMJUSTID(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.XAutoClaimJustID(p.redisContext, v0)
+			val := rdb.XAutoClaimJustID(m.RedisContext, v0)
 			r0, r1 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp52238 []*ast.Term
+				var tmp18054 []*ast.Term
 				for _, v := range r0 {
 					term := ast.StringTerm(v)
-					tmp52238 = append(tmp52238, term)
+					tmp18054 = append(tmp18054, term)
 				}
-				tr0 := ast.ArrayTerm(tmp52238...)
+				tr0 := ast.ArrayTerm(tmp18054...)
 				tr1 := ast.StringTerm(r1)
 				return ast.ArrayTerm(tr0, tr1), nil
 
@@ -6594,7 +6594,7 @@ func registerXAUTOCLAIMJUSTID(p *redisPlugin) {
 	)
 }
 
-func registerXTRIM(p *redisPlugin) {
+func registerXTRIM(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.xtrim",
@@ -6603,7 +6603,7 @@ func registerXTRIM(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -6618,7 +6618,7 @@ func registerXTRIM(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.XTrim(p.redisContext, v0, v1)
+			val := rdb.XTrim(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -6634,7 +6634,7 @@ func registerXTRIM(p *redisPlugin) {
 	)
 }
 
-func registerXTRIMAPPROX(p *redisPlugin) {
+func registerXTRIMAPPROX(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.xtrimapprox",
@@ -6643,7 +6643,7 @@ func registerXTRIMAPPROX(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -6658,7 +6658,7 @@ func registerXTRIMAPPROX(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.XTrimApprox(p.redisContext, v0, v1)
+			val := rdb.XTrimApprox(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -6674,7 +6674,7 @@ func registerXTRIMAPPROX(p *redisPlugin) {
 	)
 }
 
-func registerXTRIMMAXLEN(p *redisPlugin) {
+func registerXTRIMMAXLEN(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.xtrimmaxlen",
@@ -6683,7 +6683,7 @@ func registerXTRIMMAXLEN(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -6698,7 +6698,7 @@ func registerXTRIMMAXLEN(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.XTrimMaxLen(p.redisContext, v0, v1)
+			val := rdb.XTrimMaxLen(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -6714,7 +6714,7 @@ func registerXTRIMMAXLEN(p *redisPlugin) {
 	)
 }
 
-func registerXTRIMMAXLENAPPROX(p *redisPlugin) {
+func registerXTRIMMAXLENAPPROX(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.xtrimmaxlenapprox",
@@ -6723,7 +6723,7 @@ func registerXTRIMMAXLENAPPROX(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -6743,7 +6743,7 @@ func registerXTRIMMAXLENAPPROX(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.XTrimMaxLenApprox(p.redisContext, v0, v1, v2)
+			val := rdb.XTrimMaxLenApprox(m.RedisContext, v0, v1, v2)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -6759,7 +6759,7 @@ func registerXTRIMMAXLENAPPROX(p *redisPlugin) {
 	)
 }
 
-func registerXTRIMMINID(p *redisPlugin) {
+func registerXTRIMMINID(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.xtrimminid",
@@ -6768,7 +6768,7 @@ func registerXTRIMMINID(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -6783,7 +6783,7 @@ func registerXTRIMMINID(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.XTrimMinID(p.redisContext, v0, v1)
+			val := rdb.XTrimMinID(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -6799,7 +6799,7 @@ func registerXTRIMMINID(p *redisPlugin) {
 	)
 }
 
-func registerXTRIMMINIDAPPROX(p *redisPlugin) {
+func registerXTRIMMINIDAPPROX(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.xtrimminidapprox",
@@ -6808,7 +6808,7 @@ func registerXTRIMMINIDAPPROX(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -6828,7 +6828,7 @@ func registerXTRIMMINIDAPPROX(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.XTrimMinIDApprox(p.redisContext, v0, v1, v2)
+			val := rdb.XTrimMinIDApprox(m.RedisContext, v0, v1, v2)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -6844,7 +6844,7 @@ func registerXTRIMMINIDAPPROX(p *redisPlugin) {
 	)
 }
 
-func registerXINFOGROUPS(p *redisPlugin) {
+func registerXINFOGROUPS(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.xinfogroups",
@@ -6853,7 +6853,7 @@ func registerXINFOGROUPS(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -6863,14 +6863,14 @@ func registerXINFOGROUPS(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.XInfoGroups(p.redisContext, v0)
+			val := rdb.XInfoGroups(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp70406 []*ast.Term
+				var tmp17196 []*ast.Term
 				for _, v := range r0 {
 
 					termName := ast.StringTerm(v.Name)
@@ -6883,9 +6883,9 @@ func registerXINFOGROUPS(p *redisPlugin) {
 
 					term := ast.ObjectTerm([2]*ast.Term{ast.StringTerm("Name"), termName}, [2]*ast.Term{ast.StringTerm("Consumers"), termConsumers}, [2]*ast.Term{ast.StringTerm("Pending"), termPending}, [2]*ast.Term{ast.StringTerm("LastDeliveredID"), termLastDeliveredID})
 
-					tmp70406 = append(tmp70406, term)
+					tmp17196 = append(tmp17196, term)
 				}
-				term := ast.ArrayTerm(tmp70406...)
+				term := ast.ArrayTerm(tmp17196...)
 
 				return term, nil
 
@@ -6896,7 +6896,7 @@ func registerXINFOGROUPS(p *redisPlugin) {
 	)
 }
 
-func registerXINFOSTREAM(p *redisPlugin) {
+func registerXINFOSTREAM(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.xinfostream",
@@ -6905,7 +6905,7 @@ func registerXINFOSTREAM(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -6915,7 +6915,7 @@ func registerXINFOSTREAM(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.XInfoStream(p.redisContext, v0)
+			val := rdb.XInfoStream(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -6934,7 +6934,7 @@ func registerXINFOSTREAM(p *redisPlugin) {
 
 				termFirstEntryID := ast.StringTerm(r0.FirstEntry.ID)
 
-				var tmp55850 [][2]*ast.Term
+				var tmp25828 [][2]*ast.Term
 				for key, value := range r0.FirstEntry.Values {
 					k := ast.StringTerm(key)
 
@@ -6943,15 +6943,15 @@ func registerXINFOSTREAM(p *redisPlugin) {
 						v = ast.StringTerm(s)
 					}
 
-					tmp55850 = append(tmp55850, [2]*ast.Term{k, v})
+					tmp25828 = append(tmp25828, [2]*ast.Term{k, v})
 				}
-				termFirstEntryValues := ast.ObjectTerm(tmp55850...)
+				termFirstEntryValues := ast.ObjectTerm(tmp25828...)
 
 				termFirstEntry := ast.ObjectTerm([2]*ast.Term{ast.StringTerm("ID"), termFirstEntryID}, [2]*ast.Term{ast.StringTerm("Values"), termFirstEntryValues})
 
 				termLastEntryID := ast.StringTerm(r0.LastEntry.ID)
 
-				var tmp03180 [][2]*ast.Term
+				var tmp53271 [][2]*ast.Term
 				for key, value := range r0.LastEntry.Values {
 					k := ast.StringTerm(key)
 
@@ -6960,9 +6960,9 @@ func registerXINFOSTREAM(p *redisPlugin) {
 						v = ast.StringTerm(s)
 					}
 
-					tmp03180 = append(tmp03180, [2]*ast.Term{k, v})
+					tmp53271 = append(tmp53271, [2]*ast.Term{k, v})
 				}
-				termLastEntryValues := ast.ObjectTerm(tmp03180...)
+				termLastEntryValues := ast.ObjectTerm(tmp53271...)
 
 				termLastEntry := ast.ObjectTerm([2]*ast.Term{ast.StringTerm("ID"), termLastEntryID}, [2]*ast.Term{ast.StringTerm("Values"), termLastEntryValues})
 
@@ -6977,7 +6977,7 @@ func registerXINFOSTREAM(p *redisPlugin) {
 	)
 }
 
-func registerXINFOSTREAMFULL(p *redisPlugin) {
+func registerXINFOSTREAMFULL(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.xinfostreamfull",
@@ -6986,7 +6986,7 @@ func registerXINFOSTREAMFULL(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -7001,7 +7001,7 @@ func registerXINFOSTREAMFULL(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.XInfoStreamFull(p.redisContext, v0, v1)
+			val := rdb.XInfoStreamFull(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -7016,12 +7016,12 @@ func registerXINFOSTREAMFULL(p *redisPlugin) {
 
 				termLastGeneratedID := ast.StringTerm(r0.LastGeneratedID)
 
-				var tmp22800 []*ast.Term
+				var tmp41919 []*ast.Term
 				for _, v := range r0.Entries {
 
 					termID := ast.StringTerm(v.ID)
 
-					var tmp69734 [][2]*ast.Term
+					var tmp68763 [][2]*ast.Term
 					for key, value := range v.Values {
 						k := ast.StringTerm(key)
 
@@ -7030,17 +7030,17 @@ func registerXINFOSTREAMFULL(p *redisPlugin) {
 							v = ast.StringTerm(s)
 						}
 
-						tmp69734 = append(tmp69734, [2]*ast.Term{k, v})
+						tmp68763 = append(tmp68763, [2]*ast.Term{k, v})
 					}
-					termValues := ast.ObjectTerm(tmp69734...)
+					termValues := ast.ObjectTerm(tmp68763...)
 
 					term := ast.ObjectTerm([2]*ast.Term{ast.StringTerm("ID"), termID}, [2]*ast.Term{ast.StringTerm("Values"), termValues})
 
-					tmp22800 = append(tmp22800, term)
+					tmp41919 = append(tmp41919, term)
 				}
-				termEntries := ast.ArrayTerm(tmp22800...)
+				termEntries := ast.ArrayTerm(tmp41919...)
 
-				var tmp88663 []*ast.Term
+				var tmp69581 []*ast.Term
 				for _, v := range r0.Groups {
 
 					termName := ast.StringTerm(v.Name)
@@ -7049,7 +7049,7 @@ func registerXINFOSTREAMFULL(p *redisPlugin) {
 
 					termPelCount := ast.IntNumberTerm(int(v.PelCount))
 
-					var tmp55091 []*ast.Term
+					var tmp55570 []*ast.Term
 					for _, v := range v.Pending {
 
 						termID := ast.StringTerm(v.ID)
@@ -7062,11 +7062,11 @@ func registerXINFOSTREAMFULL(p *redisPlugin) {
 
 						term := ast.ObjectTerm([2]*ast.Term{ast.StringTerm("ID"), termID}, [2]*ast.Term{ast.StringTerm("Consumer"), termConsumer}, [2]*ast.Term{ast.StringTerm("DeliveryTime"), termDeliveryTime}, [2]*ast.Term{ast.StringTerm("DeliveryCount"), termDeliveryCount})
 
-						tmp55091 = append(tmp55091, term)
+						tmp55570 = append(tmp55570, term)
 					}
-					termPending := ast.ArrayTerm(tmp55091...)
+					termPending := ast.ArrayTerm(tmp55570...)
 
-					var tmp42084 []*ast.Term
+					var tmp35105 []*ast.Term
 					for _, v := range v.Consumers {
 
 						termName := ast.StringTerm(v.Name)
@@ -7075,7 +7075,7 @@ func registerXINFOSTREAMFULL(p *redisPlugin) {
 
 						termPelCount := ast.IntNumberTerm(int(v.PelCount))
 
-						var tmp84282 []*ast.Term
+						var tmp93830 []*ast.Term
 						for _, v := range v.Pending {
 
 							termID := ast.StringTerm(v.ID)
@@ -7086,21 +7086,21 @@ func registerXINFOSTREAMFULL(p *redisPlugin) {
 
 							term := ast.ObjectTerm([2]*ast.Term{ast.StringTerm("ID"), termID}, [2]*ast.Term{ast.StringTerm("DeliveryTime"), termDeliveryTime}, [2]*ast.Term{ast.StringTerm("DeliveryCount"), termDeliveryCount})
 
-							tmp84282 = append(tmp84282, term)
+							tmp93830 = append(tmp93830, term)
 						}
-						termPending := ast.ArrayTerm(tmp84282...)
+						termPending := ast.ArrayTerm(tmp93830...)
 
 						term := ast.ObjectTerm([2]*ast.Term{ast.StringTerm("Name"), termName}, [2]*ast.Term{ast.StringTerm("SeenTime"), termSeenTime}, [2]*ast.Term{ast.StringTerm("PelCount"), termPelCount}, [2]*ast.Term{ast.StringTerm("Pending"), termPending})
 
-						tmp42084 = append(tmp42084, term)
+						tmp35105 = append(tmp35105, term)
 					}
-					termConsumers := ast.ArrayTerm(tmp42084...)
+					termConsumers := ast.ArrayTerm(tmp35105...)
 
 					term := ast.ObjectTerm([2]*ast.Term{ast.StringTerm("Name"), termName}, [2]*ast.Term{ast.StringTerm("LastDeliveredID"), termLastDeliveredID}, [2]*ast.Term{ast.StringTerm("PelCount"), termPelCount}, [2]*ast.Term{ast.StringTerm("Pending"), termPending}, [2]*ast.Term{ast.StringTerm("Consumers"), termConsumers})
 
-					tmp88663 = append(tmp88663, term)
+					tmp69581 = append(tmp69581, term)
 				}
-				termGroups := ast.ArrayTerm(tmp88663...)
+				termGroups := ast.ArrayTerm(tmp69581...)
 
 				term := ast.ObjectTerm([2]*ast.Term{ast.StringTerm("Length"), termLength}, [2]*ast.Term{ast.StringTerm("RadixTreeKeys"), termRadixTreeKeys}, [2]*ast.Term{ast.StringTerm("RadixTreeNodes"), termRadixTreeNodes}, [2]*ast.Term{ast.StringTerm("LastGeneratedID"), termLastGeneratedID}, [2]*ast.Term{ast.StringTerm("Entries"), termEntries}, [2]*ast.Term{ast.StringTerm("Groups"), termGroups})
 
@@ -7113,7 +7113,7 @@ func registerXINFOSTREAMFULL(p *redisPlugin) {
 	)
 }
 
-func registerXINFOCONSUMERS(p *redisPlugin) {
+func registerXINFOCONSUMERS(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.xinfoconsumers",
@@ -7122,7 +7122,7 @@ func registerXINFOCONSUMERS(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -7137,14 +7137,14 @@ func registerXINFOCONSUMERS(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.XInfoConsumers(p.redisContext, v0, v1)
+			val := rdb.XInfoConsumers(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp91807 []*ast.Term
+				var tmp90808 []*ast.Term
 				for _, v := range r0 {
 
 					termName := ast.StringTerm(v.Name)
@@ -7155,9 +7155,9 @@ func registerXINFOCONSUMERS(p *redisPlugin) {
 
 					term := ast.ObjectTerm([2]*ast.Term{ast.StringTerm("Name"), termName}, [2]*ast.Term{ast.StringTerm("Pending"), termPending}, [2]*ast.Term{ast.StringTerm("Idle"), termIdle})
 
-					tmp91807 = append(tmp91807, term)
+					tmp90808 = append(tmp90808, term)
 				}
-				term := ast.ArrayTerm(tmp91807...)
+				term := ast.ArrayTerm(tmp90808...)
 
 				return term, nil
 
@@ -7168,7 +7168,7 @@ func registerXINFOCONSUMERS(p *redisPlugin) {
 	)
 }
 
-func registerBZPOPMAX(p *redisPlugin) {
+func registerBZPOPMAX(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.bzpopmax",
@@ -7177,7 +7177,7 @@ func registerBZPOPMAX(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -7192,7 +7192,7 @@ func registerBZPOPMAX(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.BZPopMax(p.redisContext, v0, v1...)
+			val := rdb.BZPopMax(m.RedisContext, v0, v1...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -7212,7 +7212,7 @@ func registerBZPOPMAX(p *redisPlugin) {
 	)
 }
 
-func registerBZPOPMIN(p *redisPlugin) {
+func registerBZPOPMIN(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.bzpopmin",
@@ -7221,7 +7221,7 @@ func registerBZPOPMIN(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -7236,7 +7236,7 @@ func registerBZPOPMIN(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.BZPopMin(p.redisContext, v0, v1...)
+			val := rdb.BZPopMin(m.RedisContext, v0, v1...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -7256,7 +7256,7 @@ func registerBZPOPMIN(p *redisPlugin) {
 	)
 }
 
-func registerZADD(p *redisPlugin) {
+func registerZADD(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zadd",
@@ -7265,7 +7265,7 @@ func registerZADD(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -7280,7 +7280,7 @@ func registerZADD(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZAdd(p.redisContext, v0, v1...)
+			val := rdb.ZAdd(m.RedisContext, v0, v1...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -7296,7 +7296,7 @@ func registerZADD(p *redisPlugin) {
 	)
 }
 
-func registerZADDNX(p *redisPlugin) {
+func registerZADDNX(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zaddnx",
@@ -7305,7 +7305,7 @@ func registerZADDNX(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -7320,7 +7320,7 @@ func registerZADDNX(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZAddNX(p.redisContext, v0, v1...)
+			val := rdb.ZAddNX(m.RedisContext, v0, v1...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -7336,7 +7336,7 @@ func registerZADDNX(p *redisPlugin) {
 	)
 }
 
-func registerZADDXX(p *redisPlugin) {
+func registerZADDXX(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zaddxx",
@@ -7345,7 +7345,7 @@ func registerZADDXX(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -7360,7 +7360,7 @@ func registerZADDXX(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZAddXX(p.redisContext, v0, v1...)
+			val := rdb.ZAddXX(m.RedisContext, v0, v1...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -7376,7 +7376,7 @@ func registerZADDXX(p *redisPlugin) {
 	)
 }
 
-func registerZADDCH(p *redisPlugin) {
+func registerZADDCH(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zaddch",
@@ -7385,7 +7385,7 @@ func registerZADDCH(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -7400,7 +7400,7 @@ func registerZADDCH(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZAddCh(p.redisContext, v0, v1...)
+			val := rdb.ZAddCh(m.RedisContext, v0, v1...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -7416,7 +7416,7 @@ func registerZADDCH(p *redisPlugin) {
 	)
 }
 
-func registerZADDNXCH(p *redisPlugin) {
+func registerZADDNXCH(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zaddnxch",
@@ -7425,7 +7425,7 @@ func registerZADDNXCH(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -7440,7 +7440,7 @@ func registerZADDNXCH(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZAddNXCh(p.redisContext, v0, v1...)
+			val := rdb.ZAddNXCh(m.RedisContext, v0, v1...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -7456,7 +7456,7 @@ func registerZADDNXCH(p *redisPlugin) {
 	)
 }
 
-func registerZADDXXCH(p *redisPlugin) {
+func registerZADDXXCH(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zaddxxch",
@@ -7465,7 +7465,7 @@ func registerZADDXXCH(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -7480,7 +7480,7 @@ func registerZADDXXCH(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZAddXXCh(p.redisContext, v0, v1...)
+			val := rdb.ZAddXXCh(m.RedisContext, v0, v1...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -7496,7 +7496,7 @@ func registerZADDXXCH(p *redisPlugin) {
 	)
 }
 
-func registerZADDARGS(p *redisPlugin) {
+func registerZADDARGS(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zaddargs",
@@ -7505,7 +7505,7 @@ func registerZADDARGS(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -7520,7 +7520,7 @@ func registerZADDARGS(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZAddArgs(p.redisContext, v0, v1)
+			val := rdb.ZAddArgs(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -7536,7 +7536,7 @@ func registerZADDARGS(p *redisPlugin) {
 	)
 }
 
-func registerZADDARGSINCR(p *redisPlugin) {
+func registerZADDARGSINCR(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zaddargsincr",
@@ -7545,7 +7545,7 @@ func registerZADDARGSINCR(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -7560,7 +7560,7 @@ func registerZADDARGSINCR(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZAddArgsIncr(p.redisContext, v0, v1)
+			val := rdb.ZAddArgsIncr(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -7576,7 +7576,7 @@ func registerZADDARGSINCR(p *redisPlugin) {
 	)
 }
 
-func registerZINCR(p *redisPlugin) {
+func registerZINCR(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zincr",
@@ -7585,7 +7585,7 @@ func registerZINCR(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -7600,7 +7600,7 @@ func registerZINCR(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZIncr(p.redisContext, v0, v1)
+			val := rdb.ZIncr(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -7616,7 +7616,7 @@ func registerZINCR(p *redisPlugin) {
 	)
 }
 
-func registerZINCRNX(p *redisPlugin) {
+func registerZINCRNX(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zincrnx",
@@ -7625,7 +7625,7 @@ func registerZINCRNX(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -7640,7 +7640,7 @@ func registerZINCRNX(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZIncrNX(p.redisContext, v0, v1)
+			val := rdb.ZIncrNX(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -7656,7 +7656,7 @@ func registerZINCRNX(p *redisPlugin) {
 	)
 }
 
-func registerZINCRXX(p *redisPlugin) {
+func registerZINCRXX(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zincrxx",
@@ -7665,7 +7665,7 @@ func registerZINCRXX(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -7680,7 +7680,7 @@ func registerZINCRXX(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZIncrXX(p.redisContext, v0, v1)
+			val := rdb.ZIncrXX(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -7696,7 +7696,7 @@ func registerZINCRXX(p *redisPlugin) {
 	)
 }
 
-func registerZCARD(p *redisPlugin) {
+func registerZCARD(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zcard",
@@ -7705,7 +7705,7 @@ func registerZCARD(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -7715,7 +7715,7 @@ func registerZCARD(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZCard(p.redisContext, v0)
+			val := rdb.ZCard(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -7731,7 +7731,7 @@ func registerZCARD(p *redisPlugin) {
 	)
 }
 
-func registerZCOUNT(p *redisPlugin) {
+func registerZCOUNT(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zcount",
@@ -7740,7 +7740,7 @@ func registerZCOUNT(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -7760,7 +7760,7 @@ func registerZCOUNT(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZCount(p.redisContext, v0, v1, v2)
+			val := rdb.ZCount(m.RedisContext, v0, v1, v2)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -7776,7 +7776,7 @@ func registerZCOUNT(p *redisPlugin) {
 	)
 }
 
-func registerZLEXCOUNT(p *redisPlugin) {
+func registerZLEXCOUNT(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zlexcount",
@@ -7785,7 +7785,7 @@ func registerZLEXCOUNT(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -7805,7 +7805,7 @@ func registerZLEXCOUNT(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZLexCount(p.redisContext, v0, v1, v2)
+			val := rdb.ZLexCount(m.RedisContext, v0, v1, v2)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -7821,7 +7821,7 @@ func registerZLEXCOUNT(p *redisPlugin) {
 	)
 }
 
-func registerZINCRBY(p *redisPlugin) {
+func registerZINCRBY(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zincrby",
@@ -7830,7 +7830,7 @@ func registerZINCRBY(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -7850,7 +7850,7 @@ func registerZINCRBY(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZIncrBy(p.redisContext, v0, v1, v2)
+			val := rdb.ZIncrBy(m.RedisContext, v0, v1, v2)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -7866,7 +7866,7 @@ func registerZINCRBY(p *redisPlugin) {
 	)
 }
 
-func registerZINTER(p *redisPlugin) {
+func registerZINTER(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zinter",
@@ -7875,7 +7875,7 @@ func registerZINTER(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -7885,19 +7885,19 @@ func registerZINTER(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZInter(p.redisContext, v0)
+			val := rdb.ZInter(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp16789 []*ast.Term
+				var tmp57872 []*ast.Term
 				for _, v := range r0 {
 					term := ast.StringTerm(v)
-					tmp16789 = append(tmp16789, term)
+					tmp57872 = append(tmp57872, term)
 				}
-				term := ast.ArrayTerm(tmp16789...)
+				term := ast.ArrayTerm(tmp57872...)
 
 				return term, nil
 
@@ -7908,7 +7908,7 @@ func registerZINTER(p *redisPlugin) {
 	)
 }
 
-func registerZINTERWITHSCORES(p *redisPlugin) {
+func registerZINTERWITHSCORES(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zinterwithscores",
@@ -7917,7 +7917,7 @@ func registerZINTERWITHSCORES(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -7927,14 +7927,14 @@ func registerZINTERWITHSCORES(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZInterWithScores(p.redisContext, v0)
+			val := rdb.ZInterWithScores(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp17315 []*ast.Term
+				var tmp03910 []*ast.Term
 				for _, v := range r0 {
 
 					termScore := ast.FloatNumberTerm(float64(v.Score))
@@ -7946,9 +7946,9 @@ func registerZINTERWITHSCORES(p *redisPlugin) {
 
 					term := ast.ObjectTerm([2]*ast.Term{ast.StringTerm("Score"), termScore}, [2]*ast.Term{ast.StringTerm("Member"), termMember})
 
-					tmp17315 = append(tmp17315, term)
+					tmp03910 = append(tmp03910, term)
 				}
-				term := ast.ArrayTerm(tmp17315...)
+				term := ast.ArrayTerm(tmp03910...)
 
 				return term, nil
 
@@ -7959,7 +7959,7 @@ func registerZINTERWITHSCORES(p *redisPlugin) {
 	)
 }
 
-func registerZINTERSTORE(p *redisPlugin) {
+func registerZINTERSTORE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zinterstore",
@@ -7968,7 +7968,7 @@ func registerZINTERSTORE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -7983,7 +7983,7 @@ func registerZINTERSTORE(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZInterStore(p.redisContext, v0, v1)
+			val := rdb.ZInterStore(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -7999,7 +7999,7 @@ func registerZINTERSTORE(p *redisPlugin) {
 	)
 }
 
-func registerZMSCORE(p *redisPlugin) {
+func registerZMSCORE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zmscore",
@@ -8008,7 +8008,7 @@ func registerZMSCORE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -8023,19 +8023,19 @@ func registerZMSCORE(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZMScore(p.redisContext, v0, v1...)
+			val := rdb.ZMScore(m.RedisContext, v0, v1...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp80844 []*ast.Term
+				var tmp96171 []*ast.Term
 				for _, v := range r0 {
 					term := ast.FloatNumberTerm(float64(v))
-					tmp80844 = append(tmp80844, term)
+					tmp96171 = append(tmp96171, term)
 				}
-				term := ast.ArrayTerm(tmp80844...)
+				term := ast.ArrayTerm(tmp96171...)
 
 				return term, nil
 
@@ -8046,7 +8046,7 @@ func registerZMSCORE(p *redisPlugin) {
 	)
 }
 
-func registerZPOPMAX(p *redisPlugin) {
+func registerZPOPMAX(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zpopmax",
@@ -8055,7 +8055,7 @@ func registerZPOPMAX(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -8070,14 +8070,14 @@ func registerZPOPMAX(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZPopMax(p.redisContext, v0, v1...)
+			val := rdb.ZPopMax(m.RedisContext, v0, v1...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp69420 []*ast.Term
+				var tmp48128 []*ast.Term
 				for _, v := range r0 {
 
 					termScore := ast.FloatNumberTerm(float64(v.Score))
@@ -8089,9 +8089,9 @@ func registerZPOPMAX(p *redisPlugin) {
 
 					term := ast.ObjectTerm([2]*ast.Term{ast.StringTerm("Score"), termScore}, [2]*ast.Term{ast.StringTerm("Member"), termMember})
 
-					tmp69420 = append(tmp69420, term)
+					tmp48128 = append(tmp48128, term)
 				}
-				term := ast.ArrayTerm(tmp69420...)
+				term := ast.ArrayTerm(tmp48128...)
 
 				return term, nil
 
@@ -8102,7 +8102,7 @@ func registerZPOPMAX(p *redisPlugin) {
 	)
 }
 
-func registerZPOPMIN(p *redisPlugin) {
+func registerZPOPMIN(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zpopmin",
@@ -8111,7 +8111,7 @@ func registerZPOPMIN(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -8126,14 +8126,14 @@ func registerZPOPMIN(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZPopMin(p.redisContext, v0, v1...)
+			val := rdb.ZPopMin(m.RedisContext, v0, v1...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp35901 []*ast.Term
+				var tmp99286 []*ast.Term
 				for _, v := range r0 {
 
 					termScore := ast.FloatNumberTerm(float64(v.Score))
@@ -8145,9 +8145,9 @@ func registerZPOPMIN(p *redisPlugin) {
 
 					term := ast.ObjectTerm([2]*ast.Term{ast.StringTerm("Score"), termScore}, [2]*ast.Term{ast.StringTerm("Member"), termMember})
 
-					tmp35901 = append(tmp35901, term)
+					tmp99286 = append(tmp99286, term)
 				}
-				term := ast.ArrayTerm(tmp35901...)
+				term := ast.ArrayTerm(tmp99286...)
 
 				return term, nil
 
@@ -8158,7 +8158,7 @@ func registerZPOPMIN(p *redisPlugin) {
 	)
 }
 
-func registerZRANGE(p *redisPlugin) {
+func registerZRANGE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zrange",
@@ -8167,7 +8167,7 @@ func registerZRANGE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -8187,19 +8187,19 @@ func registerZRANGE(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZRange(p.redisContext, v0, v1, v2)
+			val := rdb.ZRange(m.RedisContext, v0, v1, v2)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp87389 []*ast.Term
+				var tmp71307 []*ast.Term
 				for _, v := range r0 {
 					term := ast.StringTerm(v)
-					tmp87389 = append(tmp87389, term)
+					tmp71307 = append(tmp71307, term)
 				}
-				term := ast.ArrayTerm(tmp87389...)
+				term := ast.ArrayTerm(tmp71307...)
 
 				return term, nil
 
@@ -8210,7 +8210,7 @@ func registerZRANGE(p *redisPlugin) {
 	)
 }
 
-func registerZRANGEWITHSCORES(p *redisPlugin) {
+func registerZRANGEWITHSCORES(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zrangewithscores",
@@ -8219,7 +8219,7 @@ func registerZRANGEWITHSCORES(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -8239,14 +8239,14 @@ func registerZRANGEWITHSCORES(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZRangeWithScores(p.redisContext, v0, v1, v2)
+			val := rdb.ZRangeWithScores(m.RedisContext, v0, v1, v2)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp28575 []*ast.Term
+				var tmp52682 []*ast.Term
 				for _, v := range r0 {
 
 					termScore := ast.FloatNumberTerm(float64(v.Score))
@@ -8258,9 +8258,9 @@ func registerZRANGEWITHSCORES(p *redisPlugin) {
 
 					term := ast.ObjectTerm([2]*ast.Term{ast.StringTerm("Score"), termScore}, [2]*ast.Term{ast.StringTerm("Member"), termMember})
 
-					tmp28575 = append(tmp28575, term)
+					tmp52682 = append(tmp52682, term)
 				}
-				term := ast.ArrayTerm(tmp28575...)
+				term := ast.ArrayTerm(tmp52682...)
 
 				return term, nil
 
@@ -8271,7 +8271,7 @@ func registerZRANGEWITHSCORES(p *redisPlugin) {
 	)
 }
 
-func registerZRANGEBYSCORE(p *redisPlugin) {
+func registerZRANGEBYSCORE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zrangebyscore",
@@ -8280,7 +8280,7 @@ func registerZRANGEBYSCORE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -8295,19 +8295,19 @@ func registerZRANGEBYSCORE(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZRangeByScore(p.redisContext, v0, v1)
+			val := rdb.ZRangeByScore(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp33480 []*ast.Term
+				var tmp15820 []*ast.Term
 				for _, v := range r0 {
 					term := ast.StringTerm(v)
-					tmp33480 = append(tmp33480, term)
+					tmp15820 = append(tmp15820, term)
 				}
-				term := ast.ArrayTerm(tmp33480...)
+				term := ast.ArrayTerm(tmp15820...)
 
 				return term, nil
 
@@ -8318,7 +8318,7 @@ func registerZRANGEBYSCORE(p *redisPlugin) {
 	)
 }
 
-func registerZRANGEBYLEX(p *redisPlugin) {
+func registerZRANGEBYLEX(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zrangebylex",
@@ -8327,7 +8327,7 @@ func registerZRANGEBYLEX(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -8342,19 +8342,19 @@ func registerZRANGEBYLEX(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZRangeByLex(p.redisContext, v0, v1)
+			val := rdb.ZRangeByLex(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp31686 []*ast.Term
+				var tmp10847 []*ast.Term
 				for _, v := range r0 {
 					term := ast.StringTerm(v)
-					tmp31686 = append(tmp31686, term)
+					tmp10847 = append(tmp10847, term)
 				}
-				term := ast.ArrayTerm(tmp31686...)
+				term := ast.ArrayTerm(tmp10847...)
 
 				return term, nil
 
@@ -8365,7 +8365,7 @@ func registerZRANGEBYLEX(p *redisPlugin) {
 	)
 }
 
-func registerZRANGEBYSCOREWITHSCORES(p *redisPlugin) {
+func registerZRANGEBYSCOREWITHSCORES(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zrangebyscorewithscores",
@@ -8374,7 +8374,7 @@ func registerZRANGEBYSCOREWITHSCORES(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -8389,14 +8389,14 @@ func registerZRANGEBYSCOREWITHSCORES(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZRangeByScoreWithScores(p.redisContext, v0, v1)
+			val := rdb.ZRangeByScoreWithScores(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp83824 []*ast.Term
+				var tmp10678 []*ast.Term
 				for _, v := range r0 {
 
 					termScore := ast.FloatNumberTerm(float64(v.Score))
@@ -8408,9 +8408,9 @@ func registerZRANGEBYSCOREWITHSCORES(p *redisPlugin) {
 
 					term := ast.ObjectTerm([2]*ast.Term{ast.StringTerm("Score"), termScore}, [2]*ast.Term{ast.StringTerm("Member"), termMember})
 
-					tmp83824 = append(tmp83824, term)
+					tmp10678 = append(tmp10678, term)
 				}
-				term := ast.ArrayTerm(tmp83824...)
+				term := ast.ArrayTerm(tmp10678...)
 
 				return term, nil
 
@@ -8421,7 +8421,7 @@ func registerZRANGEBYSCOREWITHSCORES(p *redisPlugin) {
 	)
 }
 
-func registerZRANGEARGS(p *redisPlugin) {
+func registerZRANGEARGS(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zrangeargs",
@@ -8430,7 +8430,7 @@ func registerZRANGEARGS(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -8440,19 +8440,19 @@ func registerZRANGEARGS(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZRangeArgs(p.redisContext, v0)
+			val := rdb.ZRangeArgs(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp89959 []*ast.Term
+				var tmp43426 []*ast.Term
 				for _, v := range r0 {
 					term := ast.StringTerm(v)
-					tmp89959 = append(tmp89959, term)
+					tmp43426 = append(tmp43426, term)
 				}
-				term := ast.ArrayTerm(tmp89959...)
+				term := ast.ArrayTerm(tmp43426...)
 
 				return term, nil
 
@@ -8463,7 +8463,7 @@ func registerZRANGEARGS(p *redisPlugin) {
 	)
 }
 
-func registerZRANGEARGSWITHSCORES(p *redisPlugin) {
+func registerZRANGEARGSWITHSCORES(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zrangeargswithscores",
@@ -8472,7 +8472,7 @@ func registerZRANGEARGSWITHSCORES(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -8482,14 +8482,14 @@ func registerZRANGEARGSWITHSCORES(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZRangeArgsWithScores(p.redisContext, v0)
+			val := rdb.ZRangeArgsWithScores(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp39550 []*ast.Term
+				var tmp17125 []*ast.Term
 				for _, v := range r0 {
 
 					termScore := ast.FloatNumberTerm(float64(v.Score))
@@ -8501,9 +8501,9 @@ func registerZRANGEARGSWITHSCORES(p *redisPlugin) {
 
 					term := ast.ObjectTerm([2]*ast.Term{ast.StringTerm("Score"), termScore}, [2]*ast.Term{ast.StringTerm("Member"), termMember})
 
-					tmp39550 = append(tmp39550, term)
+					tmp17125 = append(tmp17125, term)
 				}
-				term := ast.ArrayTerm(tmp39550...)
+				term := ast.ArrayTerm(tmp17125...)
 
 				return term, nil
 
@@ -8514,7 +8514,7 @@ func registerZRANGEARGSWITHSCORES(p *redisPlugin) {
 	)
 }
 
-func registerZRANGESTORE(p *redisPlugin) {
+func registerZRANGESTORE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zrangestore",
@@ -8523,7 +8523,7 @@ func registerZRANGESTORE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -8538,7 +8538,7 @@ func registerZRANGESTORE(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZRangeStore(p.redisContext, v0, v1)
+			val := rdb.ZRangeStore(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -8554,7 +8554,7 @@ func registerZRANGESTORE(p *redisPlugin) {
 	)
 }
 
-func registerZRANK(p *redisPlugin) {
+func registerZRANK(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zrank",
@@ -8563,7 +8563,7 @@ func registerZRANK(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -8578,7 +8578,7 @@ func registerZRANK(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZRank(p.redisContext, v0, v1)
+			val := rdb.ZRank(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -8594,7 +8594,7 @@ func registerZRANK(p *redisPlugin) {
 	)
 }
 
-func registerZREM(p *redisPlugin) {
+func registerZREM(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zrem",
@@ -8603,7 +8603,7 @@ func registerZREM(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -8618,7 +8618,7 @@ func registerZREM(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZRem(p.redisContext, v0, utils.Conva(v1)...)
+			val := rdb.ZRem(m.RedisContext, v0, utils.Conva(v1)...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -8634,7 +8634,7 @@ func registerZREM(p *redisPlugin) {
 	)
 }
 
-func registerZREMRANGEBYRANK(p *redisPlugin) {
+func registerZREMRANGEBYRANK(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zremrangebyrank",
@@ -8643,7 +8643,7 @@ func registerZREMRANGEBYRANK(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -8663,7 +8663,7 @@ func registerZREMRANGEBYRANK(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZRemRangeByRank(p.redisContext, v0, v1, v2)
+			val := rdb.ZRemRangeByRank(m.RedisContext, v0, v1, v2)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -8679,7 +8679,7 @@ func registerZREMRANGEBYRANK(p *redisPlugin) {
 	)
 }
 
-func registerZREMRANGEBYSCORE(p *redisPlugin) {
+func registerZREMRANGEBYSCORE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zremrangebyscore",
@@ -8688,7 +8688,7 @@ func registerZREMRANGEBYSCORE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -8708,7 +8708,7 @@ func registerZREMRANGEBYSCORE(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZRemRangeByScore(p.redisContext, v0, v1, v2)
+			val := rdb.ZRemRangeByScore(m.RedisContext, v0, v1, v2)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -8724,7 +8724,7 @@ func registerZREMRANGEBYSCORE(p *redisPlugin) {
 	)
 }
 
-func registerZREMRANGEBYLEX(p *redisPlugin) {
+func registerZREMRANGEBYLEX(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zremrangebylex",
@@ -8733,7 +8733,7 @@ func registerZREMRANGEBYLEX(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -8753,7 +8753,7 @@ func registerZREMRANGEBYLEX(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZRemRangeByLex(p.redisContext, v0, v1, v2)
+			val := rdb.ZRemRangeByLex(m.RedisContext, v0, v1, v2)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -8769,7 +8769,7 @@ func registerZREMRANGEBYLEX(p *redisPlugin) {
 	)
 }
 
-func registerZREVRANGE(p *redisPlugin) {
+func registerZREVRANGE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zrevrange",
@@ -8778,7 +8778,7 @@ func registerZREVRANGE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -8798,19 +8798,19 @@ func registerZREVRANGE(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZRevRange(p.redisContext, v0, v1, v2)
+			val := rdb.ZRevRange(m.RedisContext, v0, v1, v2)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp12917 []*ast.Term
+				var tmp85431 []*ast.Term
 				for _, v := range r0 {
 					term := ast.StringTerm(v)
-					tmp12917 = append(tmp12917, term)
+					tmp85431 = append(tmp85431, term)
 				}
-				term := ast.ArrayTerm(tmp12917...)
+				term := ast.ArrayTerm(tmp85431...)
 
 				return term, nil
 
@@ -8821,7 +8821,7 @@ func registerZREVRANGE(p *redisPlugin) {
 	)
 }
 
-func registerZREVRANGEWITHSCORES(p *redisPlugin) {
+func registerZREVRANGEWITHSCORES(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zrevrangewithscores",
@@ -8830,7 +8830,7 @@ func registerZREVRANGEWITHSCORES(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -8850,14 +8850,14 @@ func registerZREVRANGEWITHSCORES(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZRevRangeWithScores(p.redisContext, v0, v1, v2)
+			val := rdb.ZRevRangeWithScores(m.RedisContext, v0, v1, v2)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp84482 []*ast.Term
+				var tmp93199 []*ast.Term
 				for _, v := range r0 {
 
 					termScore := ast.FloatNumberTerm(float64(v.Score))
@@ -8869,9 +8869,9 @@ func registerZREVRANGEWITHSCORES(p *redisPlugin) {
 
 					term := ast.ObjectTerm([2]*ast.Term{ast.StringTerm("Score"), termScore}, [2]*ast.Term{ast.StringTerm("Member"), termMember})
 
-					tmp84482 = append(tmp84482, term)
+					tmp93199 = append(tmp93199, term)
 				}
-				term := ast.ArrayTerm(tmp84482...)
+				term := ast.ArrayTerm(tmp93199...)
 
 				return term, nil
 
@@ -8882,7 +8882,7 @@ func registerZREVRANGEWITHSCORES(p *redisPlugin) {
 	)
 }
 
-func registerZREVRANGEBYSCORE(p *redisPlugin) {
+func registerZREVRANGEBYSCORE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zrevrangebyscore",
@@ -8891,7 +8891,7 @@ func registerZREVRANGEBYSCORE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -8906,19 +8906,19 @@ func registerZREVRANGEBYSCORE(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZRevRangeByScore(p.redisContext, v0, v1)
+			val := rdb.ZRevRangeByScore(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp18351 []*ast.Term
+				var tmp78393 []*ast.Term
 				for _, v := range r0 {
 					term := ast.StringTerm(v)
-					tmp18351 = append(tmp18351, term)
+					tmp78393 = append(tmp78393, term)
 				}
-				term := ast.ArrayTerm(tmp18351...)
+				term := ast.ArrayTerm(tmp78393...)
 
 				return term, nil
 
@@ -8929,7 +8929,7 @@ func registerZREVRANGEBYSCORE(p *redisPlugin) {
 	)
 }
 
-func registerZREVRANGEBYLEX(p *redisPlugin) {
+func registerZREVRANGEBYLEX(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zrevrangebylex",
@@ -8938,7 +8938,7 @@ func registerZREVRANGEBYLEX(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -8953,19 +8953,19 @@ func registerZREVRANGEBYLEX(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZRevRangeByLex(p.redisContext, v0, v1)
+			val := rdb.ZRevRangeByLex(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp60402 []*ast.Term
+				var tmp54585 []*ast.Term
 				for _, v := range r0 {
 					term := ast.StringTerm(v)
-					tmp60402 = append(tmp60402, term)
+					tmp54585 = append(tmp54585, term)
 				}
-				term := ast.ArrayTerm(tmp60402...)
+				term := ast.ArrayTerm(tmp54585...)
 
 				return term, nil
 
@@ -8976,7 +8976,7 @@ func registerZREVRANGEBYLEX(p *redisPlugin) {
 	)
 }
 
-func registerZREVRANGEBYSCOREWITHSCORES(p *redisPlugin) {
+func registerZREVRANGEBYSCOREWITHSCORES(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zrevrangebyscorewithscores",
@@ -8985,7 +8985,7 @@ func registerZREVRANGEBYSCOREWITHSCORES(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -9000,14 +9000,14 @@ func registerZREVRANGEBYSCOREWITHSCORES(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZRevRangeByScoreWithScores(p.redisContext, v0, v1)
+			val := rdb.ZRevRangeByScoreWithScores(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp78305 []*ast.Term
+				var tmp07439 []*ast.Term
 				for _, v := range r0 {
 
 					termScore := ast.FloatNumberTerm(float64(v.Score))
@@ -9019,9 +9019,9 @@ func registerZREVRANGEBYSCOREWITHSCORES(p *redisPlugin) {
 
 					term := ast.ObjectTerm([2]*ast.Term{ast.StringTerm("Score"), termScore}, [2]*ast.Term{ast.StringTerm("Member"), termMember})
 
-					tmp78305 = append(tmp78305, term)
+					tmp07439 = append(tmp07439, term)
 				}
-				term := ast.ArrayTerm(tmp78305...)
+				term := ast.ArrayTerm(tmp07439...)
 
 				return term, nil
 
@@ -9032,7 +9032,7 @@ func registerZREVRANGEBYSCOREWITHSCORES(p *redisPlugin) {
 	)
 }
 
-func registerZREVRANK(p *redisPlugin) {
+func registerZREVRANK(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zrevrank",
@@ -9041,7 +9041,7 @@ func registerZREVRANK(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -9056,7 +9056,7 @@ func registerZREVRANK(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZRevRank(p.redisContext, v0, v1)
+			val := rdb.ZRevRank(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -9072,7 +9072,7 @@ func registerZREVRANK(p *redisPlugin) {
 	)
 }
 
-func registerZSCORE(p *redisPlugin) {
+func registerZSCORE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zscore",
@@ -9081,7 +9081,7 @@ func registerZSCORE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -9096,7 +9096,7 @@ func registerZSCORE(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZScore(p.redisContext, v0, v1)
+			val := rdb.ZScore(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -9112,7 +9112,7 @@ func registerZSCORE(p *redisPlugin) {
 	)
 }
 
-func registerZUNIONSTORE(p *redisPlugin) {
+func registerZUNIONSTORE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zunionstore",
@@ -9121,7 +9121,7 @@ func registerZUNIONSTORE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -9136,7 +9136,7 @@ func registerZUNIONSTORE(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZUnionStore(p.redisContext, v0, v1)
+			val := rdb.ZUnionStore(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -9152,7 +9152,7 @@ func registerZUNIONSTORE(p *redisPlugin) {
 	)
 }
 
-func registerZUNION(p *redisPlugin) {
+func registerZUNION(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zunion",
@@ -9161,7 +9161,7 @@ func registerZUNION(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -9171,19 +9171,19 @@ func registerZUNION(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZUnion(p.redisContext, v0)
+			val := rdb.ZUnion(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp18108 []*ast.Term
+				var tmp98312 []*ast.Term
 				for _, v := range r0 {
 					term := ast.StringTerm(v)
-					tmp18108 = append(tmp18108, term)
+					tmp98312 = append(tmp98312, term)
 				}
-				term := ast.ArrayTerm(tmp18108...)
+				term := ast.ArrayTerm(tmp98312...)
 
 				return term, nil
 
@@ -9194,7 +9194,7 @@ func registerZUNION(p *redisPlugin) {
 	)
 }
 
-func registerZUNIONWITHSCORES(p *redisPlugin) {
+func registerZUNIONWITHSCORES(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zunionwithscores",
@@ -9203,7 +9203,7 @@ func registerZUNIONWITHSCORES(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -9213,14 +9213,14 @@ func registerZUNIONWITHSCORES(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZUnionWithScores(p.redisContext, v0)
+			val := rdb.ZUnionWithScores(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp11280 []*ast.Term
+				var tmp02537 []*ast.Term
 				for _, v := range r0 {
 
 					termScore := ast.FloatNumberTerm(float64(v.Score))
@@ -9232,9 +9232,9 @@ func registerZUNIONWITHSCORES(p *redisPlugin) {
 
 					term := ast.ObjectTerm([2]*ast.Term{ast.StringTerm("Score"), termScore}, [2]*ast.Term{ast.StringTerm("Member"), termMember})
 
-					tmp11280 = append(tmp11280, term)
+					tmp02537 = append(tmp02537, term)
 				}
-				term := ast.ArrayTerm(tmp11280...)
+				term := ast.ArrayTerm(tmp02537...)
 
 				return term, nil
 
@@ -9245,7 +9245,7 @@ func registerZUNIONWITHSCORES(p *redisPlugin) {
 	)
 }
 
-func registerZRANDMEMBER(p *redisPlugin) {
+func registerZRANDMEMBER(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zrandmember",
@@ -9254,7 +9254,7 @@ func registerZRANDMEMBER(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -9274,19 +9274,19 @@ func registerZRANDMEMBER(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZRandMember(p.redisContext, v0, v1, v2)
+			val := rdb.ZRandMember(m.RedisContext, v0, v1, v2)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp73558 []*ast.Term
+				var tmp40545 []*ast.Term
 				for _, v := range r0 {
 					term := ast.StringTerm(v)
-					tmp73558 = append(tmp73558, term)
+					tmp40545 = append(tmp40545, term)
 				}
-				term := ast.ArrayTerm(tmp73558...)
+				term := ast.ArrayTerm(tmp40545...)
 
 				return term, nil
 
@@ -9297,7 +9297,7 @@ func registerZRANDMEMBER(p *redisPlugin) {
 	)
 }
 
-func registerZDIFF(p *redisPlugin) {
+func registerZDIFF(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zdiff",
@@ -9306,7 +9306,7 @@ func registerZDIFF(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -9316,19 +9316,19 @@ func registerZDIFF(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZDiff(p.redisContext, v0...)
+			val := rdb.ZDiff(m.RedisContext, v0...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp10531 []*ast.Term
+				var tmp85477 []*ast.Term
 				for _, v := range r0 {
 					term := ast.StringTerm(v)
-					tmp10531 = append(tmp10531, term)
+					tmp85477 = append(tmp85477, term)
 				}
-				term := ast.ArrayTerm(tmp10531...)
+				term := ast.ArrayTerm(tmp85477...)
 
 				return term, nil
 
@@ -9339,7 +9339,7 @@ func registerZDIFF(p *redisPlugin) {
 	)
 }
 
-func registerZDIFFWITHSCORES(p *redisPlugin) {
+func registerZDIFFWITHSCORES(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zdiffwithscores",
@@ -9348,7 +9348,7 @@ func registerZDIFFWITHSCORES(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -9358,14 +9358,14 @@ func registerZDIFFWITHSCORES(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZDiffWithScores(p.redisContext, v0...)
+			val := rdb.ZDiffWithScores(m.RedisContext, v0...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp63619 []*ast.Term
+				var tmp82067 []*ast.Term
 				for _, v := range r0 {
 
 					termScore := ast.FloatNumberTerm(float64(v.Score))
@@ -9377,9 +9377,9 @@ func registerZDIFFWITHSCORES(p *redisPlugin) {
 
 					term := ast.ObjectTerm([2]*ast.Term{ast.StringTerm("Score"), termScore}, [2]*ast.Term{ast.StringTerm("Member"), termMember})
 
-					tmp63619 = append(tmp63619, term)
+					tmp82067 = append(tmp82067, term)
 				}
-				term := ast.ArrayTerm(tmp63619...)
+				term := ast.ArrayTerm(tmp82067...)
 
 				return term, nil
 
@@ -9390,7 +9390,7 @@ func registerZDIFFWITHSCORES(p *redisPlugin) {
 	)
 }
 
-func registerZDIFFSTORE(p *redisPlugin) {
+func registerZDIFFSTORE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.zdiffstore",
@@ -9399,7 +9399,7 @@ func registerZDIFFSTORE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -9414,7 +9414,7 @@ func registerZDIFFSTORE(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ZDiffStore(p.redisContext, v0, v1...)
+			val := rdb.ZDiffStore(m.RedisContext, v0, v1...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -9430,7 +9430,7 @@ func registerZDIFFSTORE(p *redisPlugin) {
 	)
 }
 
-func registerPFADD(p *redisPlugin) {
+func registerPFADD(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.pfadd",
@@ -9439,7 +9439,7 @@ func registerPFADD(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -9454,7 +9454,7 @@ func registerPFADD(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.PFAdd(p.redisContext, v0, utils.Conva(v1)...)
+			val := rdb.PFAdd(m.RedisContext, v0, utils.Conva(v1)...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -9470,7 +9470,7 @@ func registerPFADD(p *redisPlugin) {
 	)
 }
 
-func registerPFCOUNT(p *redisPlugin) {
+func registerPFCOUNT(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.pfcount",
@@ -9479,7 +9479,7 @@ func registerPFCOUNT(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -9489,7 +9489,7 @@ func registerPFCOUNT(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.PFCount(p.redisContext, v0...)
+			val := rdb.PFCount(m.RedisContext, v0...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -9505,7 +9505,7 @@ func registerPFCOUNT(p *redisPlugin) {
 	)
 }
 
-func registerPFMERGE(p *redisPlugin) {
+func registerPFMERGE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.pfmerge",
@@ -9514,7 +9514,7 @@ func registerPFMERGE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -9529,7 +9529,7 @@ func registerPFMERGE(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.PFMerge(p.redisContext, v0, v1...)
+			val := rdb.PFMerge(m.RedisContext, v0, v1...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -9545,7 +9545,7 @@ func registerPFMERGE(p *redisPlugin) {
 	)
 }
 
-func registerBGREWRITEAOF(p *redisPlugin) {
+func registerBGREWRITEAOF(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.bgrewriteaof",
@@ -9554,12 +9554,12 @@ func registerBGREWRITEAOF(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
 
-			val := rdb.BgRewriteAOF(p.redisContext)
+			val := rdb.BgRewriteAOF(m.RedisContext)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -9575,7 +9575,7 @@ func registerBGREWRITEAOF(p *redisPlugin) {
 	)
 }
 
-func registerBGSAVE(p *redisPlugin) {
+func registerBGSAVE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.bgsave",
@@ -9584,12 +9584,12 @@ func registerBGSAVE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
 
-			val := rdb.BgSave(p.redisContext)
+			val := rdb.BgSave(m.RedisContext)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -9605,7 +9605,7 @@ func registerBGSAVE(p *redisPlugin) {
 	)
 }
 
-func registerCLIENTKILL(p *redisPlugin) {
+func registerCLIENTKILL(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.clientkill",
@@ -9614,7 +9614,7 @@ func registerCLIENTKILL(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -9624,7 +9624,7 @@ func registerCLIENTKILL(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ClientKill(p.redisContext, v0)
+			val := rdb.ClientKill(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -9640,7 +9640,7 @@ func registerCLIENTKILL(p *redisPlugin) {
 	)
 }
 
-func registerCLIENTKILLBYFILTER(p *redisPlugin) {
+func registerCLIENTKILLBYFILTER(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.clientkillbyfilter",
@@ -9649,7 +9649,7 @@ func registerCLIENTKILLBYFILTER(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -9659,7 +9659,7 @@ func registerCLIENTKILLBYFILTER(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ClientKillByFilter(p.redisContext, v0...)
+			val := rdb.ClientKillByFilter(m.RedisContext, v0...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -9675,7 +9675,7 @@ func registerCLIENTKILLBYFILTER(p *redisPlugin) {
 	)
 }
 
-func registerCLIENTLIST(p *redisPlugin) {
+func registerCLIENTLIST(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.clientlist",
@@ -9684,12 +9684,12 @@ func registerCLIENTLIST(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
 
-			val := rdb.ClientList(p.redisContext)
+			val := rdb.ClientList(m.RedisContext)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -9705,7 +9705,7 @@ func registerCLIENTLIST(p *redisPlugin) {
 	)
 }
 
-func registerCLIENTPAUSE(p *redisPlugin) {
+func registerCLIENTPAUSE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.clientpause",
@@ -9714,7 +9714,7 @@ func registerCLIENTPAUSE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -9724,7 +9724,7 @@ func registerCLIENTPAUSE(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ClientPause(p.redisContext, v0)
+			val := rdb.ClientPause(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -9740,7 +9740,7 @@ func registerCLIENTPAUSE(p *redisPlugin) {
 	)
 }
 
-func registerCLIENTID(p *redisPlugin) {
+func registerCLIENTID(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.clientid",
@@ -9749,12 +9749,12 @@ func registerCLIENTID(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
 
-			val := rdb.ClientID(p.redisContext)
+			val := rdb.ClientID(m.RedisContext)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -9770,7 +9770,7 @@ func registerCLIENTID(p *redisPlugin) {
 	)
 }
 
-func registerCONFIGGET(p *redisPlugin) {
+func registerCONFIGGET(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.configget",
@@ -9779,7 +9779,7 @@ func registerCONFIGGET(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -9789,14 +9789,14 @@ func registerCONFIGGET(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ConfigGet(p.redisContext, v0)
+			val := rdb.ConfigGet(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp47809 []*ast.Term
+				var tmp75339 []*ast.Term
 				for _, v := range r0 {
 
 					term := ast.NullTerm()
@@ -9804,9 +9804,9 @@ func registerCONFIGGET(p *redisPlugin) {
 						term = ast.StringTerm(s)
 					}
 
-					tmp47809 = append(tmp47809, term)
+					tmp75339 = append(tmp75339, term)
 				}
-				term := ast.ArrayTerm(tmp47809...)
+				term := ast.ArrayTerm(tmp75339...)
 
 				return term, nil
 
@@ -9817,7 +9817,7 @@ func registerCONFIGGET(p *redisPlugin) {
 	)
 }
 
-func registerCONFIGRESETSTAT(p *redisPlugin) {
+func registerCONFIGRESETSTAT(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.configresetstat",
@@ -9826,12 +9826,12 @@ func registerCONFIGRESETSTAT(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
 
-			val := rdb.ConfigResetStat(p.redisContext)
+			val := rdb.ConfigResetStat(m.RedisContext)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -9847,7 +9847,7 @@ func registerCONFIGRESETSTAT(p *redisPlugin) {
 	)
 }
 
-func registerCONFIGSET(p *redisPlugin) {
+func registerCONFIGSET(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.configset",
@@ -9856,7 +9856,7 @@ func registerCONFIGSET(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -9871,7 +9871,7 @@ func registerCONFIGSET(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ConfigSet(p.redisContext, v0, v1)
+			val := rdb.ConfigSet(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -9887,7 +9887,7 @@ func registerCONFIGSET(p *redisPlugin) {
 	)
 }
 
-func registerCONFIGREWRITE(p *redisPlugin) {
+func registerCONFIGREWRITE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.configrewrite",
@@ -9896,12 +9896,12 @@ func registerCONFIGREWRITE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
 
-			val := rdb.ConfigRewrite(p.redisContext)
+			val := rdb.ConfigRewrite(m.RedisContext)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -9917,7 +9917,7 @@ func registerCONFIGREWRITE(p *redisPlugin) {
 	)
 }
 
-func registerDBSIZE(p *redisPlugin) {
+func registerDBSIZE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.dbsize",
@@ -9926,12 +9926,12 @@ func registerDBSIZE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
 
-			val := rdb.DBSize(p.redisContext)
+			val := rdb.DBSize(m.RedisContext)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -9947,7 +9947,7 @@ func registerDBSIZE(p *redisPlugin) {
 	)
 }
 
-func registerFLUSHALL(p *redisPlugin) {
+func registerFLUSHALL(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.flushall",
@@ -9956,12 +9956,12 @@ func registerFLUSHALL(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
 
-			val := rdb.FlushAll(p.redisContext)
+			val := rdb.FlushAll(m.RedisContext)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -9977,7 +9977,7 @@ func registerFLUSHALL(p *redisPlugin) {
 	)
 }
 
-func registerFLUSHALLASYNC(p *redisPlugin) {
+func registerFLUSHALLASYNC(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.flushallasync",
@@ -9986,12 +9986,12 @@ func registerFLUSHALLASYNC(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
 
-			val := rdb.FlushAllAsync(p.redisContext)
+			val := rdb.FlushAllAsync(m.RedisContext)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -10007,7 +10007,7 @@ func registerFLUSHALLASYNC(p *redisPlugin) {
 	)
 }
 
-func registerFLUSHDB(p *redisPlugin) {
+func registerFLUSHDB(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.flushdb",
@@ -10016,12 +10016,12 @@ func registerFLUSHDB(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
 
-			val := rdb.FlushDB(p.redisContext)
+			val := rdb.FlushDB(m.RedisContext)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -10037,7 +10037,7 @@ func registerFLUSHDB(p *redisPlugin) {
 	)
 }
 
-func registerFLUSHDBASYNC(p *redisPlugin) {
+func registerFLUSHDBASYNC(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.flushdbasync",
@@ -10046,12 +10046,12 @@ func registerFLUSHDBASYNC(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
 
-			val := rdb.FlushDBAsync(p.redisContext)
+			val := rdb.FlushDBAsync(m.RedisContext)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -10067,7 +10067,7 @@ func registerFLUSHDBASYNC(p *redisPlugin) {
 	)
 }
 
-func registerINFO(p *redisPlugin) {
+func registerINFO(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.info",
@@ -10076,7 +10076,7 @@ func registerINFO(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -10086,7 +10086,7 @@ func registerINFO(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.Info(p.redisContext, v0...)
+			val := rdb.Info(m.RedisContext, v0...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -10102,7 +10102,7 @@ func registerINFO(p *redisPlugin) {
 	)
 }
 
-func registerLASTSAVE(p *redisPlugin) {
+func registerLASTSAVE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.lastsave",
@@ -10111,12 +10111,12 @@ func registerLASTSAVE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
 
-			val := rdb.LastSave(p.redisContext)
+			val := rdb.LastSave(m.RedisContext)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -10132,7 +10132,7 @@ func registerLASTSAVE(p *redisPlugin) {
 	)
 }
 
-func registerSAVE(p *redisPlugin) {
+func registerSAVE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.save",
@@ -10141,12 +10141,12 @@ func registerSAVE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
 
-			val := rdb.Save(p.redisContext)
+			val := rdb.Save(m.RedisContext)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -10162,7 +10162,7 @@ func registerSAVE(p *redisPlugin) {
 	)
 }
 
-func registerSHUTDOWN(p *redisPlugin) {
+func registerSHUTDOWN(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.shutdown",
@@ -10171,12 +10171,12 @@ func registerSHUTDOWN(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
 
-			val := rdb.Shutdown(p.redisContext)
+			val := rdb.Shutdown(m.RedisContext)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -10192,7 +10192,7 @@ func registerSHUTDOWN(p *redisPlugin) {
 	)
 }
 
-func registerSHUTDOWNSAVE(p *redisPlugin) {
+func registerSHUTDOWNSAVE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.shutdownsave",
@@ -10201,12 +10201,12 @@ func registerSHUTDOWNSAVE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
 
-			val := rdb.ShutdownSave(p.redisContext)
+			val := rdb.ShutdownSave(m.RedisContext)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -10222,7 +10222,7 @@ func registerSHUTDOWNSAVE(p *redisPlugin) {
 	)
 }
 
-func registerSHUTDOWNNOSAVE(p *redisPlugin) {
+func registerSHUTDOWNNOSAVE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.shutdownnosave",
@@ -10231,12 +10231,12 @@ func registerSHUTDOWNNOSAVE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
 
-			val := rdb.ShutdownNoSave(p.redisContext)
+			val := rdb.ShutdownNoSave(m.RedisContext)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -10252,7 +10252,7 @@ func registerSHUTDOWNNOSAVE(p *redisPlugin) {
 	)
 }
 
-func registerSLAVEOF(p *redisPlugin) {
+func registerSLAVEOF(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.slaveof",
@@ -10261,7 +10261,7 @@ func registerSLAVEOF(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -10276,7 +10276,7 @@ func registerSLAVEOF(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.SlaveOf(p.redisContext, v0, v1)
+			val := rdb.SlaveOf(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -10292,7 +10292,7 @@ func registerSLAVEOF(p *redisPlugin) {
 	)
 }
 
-func registerTIME(p *redisPlugin) {
+func registerTIME(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.time",
@@ -10301,12 +10301,12 @@ func registerTIME(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
 
-			val := rdb.Time(p.redisContext)
+			val := rdb.Time(m.RedisContext)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -10322,7 +10322,7 @@ func registerTIME(p *redisPlugin) {
 	)
 }
 
-func registerDEBUGOBJECT(p *redisPlugin) {
+func registerDEBUGOBJECT(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.debugobject",
@@ -10331,7 +10331,7 @@ func registerDEBUGOBJECT(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -10341,7 +10341,7 @@ func registerDEBUGOBJECT(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.DebugObject(p.redisContext, v0)
+			val := rdb.DebugObject(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -10357,7 +10357,7 @@ func registerDEBUGOBJECT(p *redisPlugin) {
 	)
 }
 
-func registerREADONLY(p *redisPlugin) {
+func registerREADONLY(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.readonly",
@@ -10366,12 +10366,12 @@ func registerREADONLY(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
 
-			val := rdb.ReadOnly(p.redisContext)
+			val := rdb.ReadOnly(m.RedisContext)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -10387,7 +10387,7 @@ func registerREADONLY(p *redisPlugin) {
 	)
 }
 
-func registerREADWRITE(p *redisPlugin) {
+func registerREADWRITE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.readwrite",
@@ -10396,12 +10396,12 @@ func registerREADWRITE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
 
-			val := rdb.ReadWrite(p.redisContext)
+			val := rdb.ReadWrite(m.RedisContext)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -10417,7 +10417,7 @@ func registerREADWRITE(p *redisPlugin) {
 	)
 }
 
-func registerMEMORYUSAGE(p *redisPlugin) {
+func registerMEMORYUSAGE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.memoryusage",
@@ -10426,7 +10426,7 @@ func registerMEMORYUSAGE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -10441,7 +10441,7 @@ func registerMEMORYUSAGE(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.MemoryUsage(p.redisContext, v0, v1...)
+			val := rdb.MemoryUsage(m.RedisContext, v0, v1...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -10457,7 +10457,7 @@ func registerMEMORYUSAGE(p *redisPlugin) {
 	)
 }
 
-func registerEVAL(p *redisPlugin) {
+func registerEVAL(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.eval",
@@ -10466,7 +10466,7 @@ func registerEVAL(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -10486,7 +10486,7 @@ func registerEVAL(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.Eval(p.redisContext, v0, v1, utils.Conva(v2)...)
+			val := rdb.Eval(m.RedisContext, v0, v1, utils.Conva(v2)...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -10506,7 +10506,7 @@ func registerEVAL(p *redisPlugin) {
 	)
 }
 
-func registerEVALSHA(p *redisPlugin) {
+func registerEVALSHA(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.evalsha",
@@ -10515,7 +10515,7 @@ func registerEVALSHA(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -10535,7 +10535,7 @@ func registerEVALSHA(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.EvalSha(p.redisContext, v0, v1, utils.Conva(v2)...)
+			val := rdb.EvalSha(m.RedisContext, v0, v1, utils.Conva(v2)...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -10555,7 +10555,7 @@ func registerEVALSHA(p *redisPlugin) {
 	)
 }
 
-func registerSCRIPTEXISTS(p *redisPlugin) {
+func registerSCRIPTEXISTS(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.scriptexists",
@@ -10564,7 +10564,7 @@ func registerSCRIPTEXISTS(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -10574,19 +10574,19 @@ func registerSCRIPTEXISTS(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ScriptExists(p.redisContext, v0...)
+			val := rdb.ScriptExists(m.RedisContext, v0...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp76967 []*ast.Term
+				var tmp90224 []*ast.Term
 				for _, v := range r0 {
 					term := ast.BooleanTerm(v)
-					tmp76967 = append(tmp76967, term)
+					tmp90224 = append(tmp90224, term)
 				}
-				term := ast.ArrayTerm(tmp76967...)
+				term := ast.ArrayTerm(tmp90224...)
 
 				return term, nil
 
@@ -10597,7 +10597,7 @@ func registerSCRIPTEXISTS(p *redisPlugin) {
 	)
 }
 
-func registerSCRIPTFLUSH(p *redisPlugin) {
+func registerSCRIPTFLUSH(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.scriptflush",
@@ -10606,12 +10606,12 @@ func registerSCRIPTFLUSH(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
 
-			val := rdb.ScriptFlush(p.redisContext)
+			val := rdb.ScriptFlush(m.RedisContext)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -10627,7 +10627,7 @@ func registerSCRIPTFLUSH(p *redisPlugin) {
 	)
 }
 
-func registerSCRIPTKILL(p *redisPlugin) {
+func registerSCRIPTKILL(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.scriptkill",
@@ -10636,12 +10636,12 @@ func registerSCRIPTKILL(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
 
-			val := rdb.ScriptKill(p.redisContext)
+			val := rdb.ScriptKill(m.RedisContext)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -10657,7 +10657,7 @@ func registerSCRIPTKILL(p *redisPlugin) {
 	)
 }
 
-func registerSCRIPTLOAD(p *redisPlugin) {
+func registerSCRIPTLOAD(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.scriptload",
@@ -10666,7 +10666,7 @@ func registerSCRIPTLOAD(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -10676,7 +10676,7 @@ func registerSCRIPTLOAD(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ScriptLoad(p.redisContext, v0)
+			val := rdb.ScriptLoad(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -10692,7 +10692,7 @@ func registerSCRIPTLOAD(p *redisPlugin) {
 	)
 }
 
-func registerPUBLISH(p *redisPlugin) {
+func registerPUBLISH(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.publish",
@@ -10701,7 +10701,7 @@ func registerPUBLISH(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -10716,7 +10716,7 @@ func registerPUBLISH(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.Publish(p.redisContext, v0, utils.Conv(v1))
+			val := rdb.Publish(m.RedisContext, v0, utils.Conv(v1))
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -10732,7 +10732,7 @@ func registerPUBLISH(p *redisPlugin) {
 	)
 }
 
-func registerPUBSUBCHANNELS(p *redisPlugin) {
+func registerPUBSUBCHANNELS(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.pubsubchannels",
@@ -10741,7 +10741,7 @@ func registerPUBSUBCHANNELS(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -10751,19 +10751,19 @@ func registerPUBSUBCHANNELS(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.PubSubChannels(p.redisContext, v0)
+			val := rdb.PubSubChannels(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp93087 []*ast.Term
+				var tmp94118 []*ast.Term
 				for _, v := range r0 {
 					term := ast.StringTerm(v)
-					tmp93087 = append(tmp93087, term)
+					tmp94118 = append(tmp94118, term)
 				}
-				term := ast.ArrayTerm(tmp93087...)
+				term := ast.ArrayTerm(tmp94118...)
 
 				return term, nil
 
@@ -10774,7 +10774,7 @@ func registerPUBSUBCHANNELS(p *redisPlugin) {
 	)
 }
 
-func registerPUBSUBNUMSUB(p *redisPlugin) {
+func registerPUBSUBNUMSUB(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.pubsubnumsub",
@@ -10783,7 +10783,7 @@ func registerPUBSUBNUMSUB(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -10793,20 +10793,20 @@ func registerPUBSUBNUMSUB(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.PubSubNumSub(p.redisContext, v0...)
+			val := rdb.PubSubNumSub(m.RedisContext, v0...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp88613 [][2]*ast.Term
+				var tmp41170 [][2]*ast.Term
 				for key, value := range r0 {
 					k := ast.StringTerm(key)
 					v := ast.IntNumberTerm(int(value))
-					tmp88613 = append(tmp88613, [2]*ast.Term{k, v})
+					tmp41170 = append(tmp41170, [2]*ast.Term{k, v})
 				}
-				term := ast.ObjectTerm(tmp88613...)
+				term := ast.ObjectTerm(tmp41170...)
 
 				return term, nil
 
@@ -10817,7 +10817,7 @@ func registerPUBSUBNUMSUB(p *redisPlugin) {
 	)
 }
 
-func registerPUBSUBNUMPAT(p *redisPlugin) {
+func registerPUBSUBNUMPAT(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.pubsubnumpat",
@@ -10826,12 +10826,12 @@ func registerPUBSUBNUMPAT(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
 
-			val := rdb.PubSubNumPat(p.redisContext)
+			val := rdb.PubSubNumPat(m.RedisContext)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -10847,7 +10847,7 @@ func registerPUBSUBNUMPAT(p *redisPlugin) {
 	)
 }
 
-func registerCLUSTERSLOTS(p *redisPlugin) {
+func registerCLUSTERSLOTS(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.clusterslots",
@@ -10856,26 +10856,26 @@ func registerCLUSTERSLOTS(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
 
-			val := rdb.ClusterSlots(p.redisContext)
+			val := rdb.ClusterSlots(m.RedisContext)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp62128 []*ast.Term
+				var tmp46984 []*ast.Term
 				for _, v := range r0 {
 
 					termStart := ast.IntNumberTerm(int(v.Start))
 
 					termEnd := ast.IntNumberTerm(int(v.End))
 
-					var tmp89234 []*ast.Term
+					var tmp38775 []*ast.Term
 					for _, v := range v.Nodes {
 
 						termID := ast.StringTerm(v.ID)
@@ -10884,15 +10884,15 @@ func registerCLUSTERSLOTS(p *redisPlugin) {
 
 						term := ast.ObjectTerm([2]*ast.Term{ast.StringTerm("ID"), termID}, [2]*ast.Term{ast.StringTerm("Addr"), termAddr})
 
-						tmp89234 = append(tmp89234, term)
+						tmp38775 = append(tmp38775, term)
 					}
-					termNodes := ast.ArrayTerm(tmp89234...)
+					termNodes := ast.ArrayTerm(tmp38775...)
 
 					term := ast.ObjectTerm([2]*ast.Term{ast.StringTerm("Start"), termStart}, [2]*ast.Term{ast.StringTerm("End"), termEnd}, [2]*ast.Term{ast.StringTerm("Nodes"), termNodes})
 
-					tmp62128 = append(tmp62128, term)
+					tmp46984 = append(tmp46984, term)
 				}
-				term := ast.ArrayTerm(tmp62128...)
+				term := ast.ArrayTerm(tmp46984...)
 
 				return term, nil
 
@@ -10903,7 +10903,7 @@ func registerCLUSTERSLOTS(p *redisPlugin) {
 	)
 }
 
-func registerCLUSTERNODES(p *redisPlugin) {
+func registerCLUSTERNODES(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.clusternodes",
@@ -10912,12 +10912,12 @@ func registerCLUSTERNODES(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
 
-			val := rdb.ClusterNodes(p.redisContext)
+			val := rdb.ClusterNodes(m.RedisContext)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -10933,7 +10933,7 @@ func registerCLUSTERNODES(p *redisPlugin) {
 	)
 }
 
-func registerCLUSTERMEET(p *redisPlugin) {
+func registerCLUSTERMEET(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.clustermeet",
@@ -10942,7 +10942,7 @@ func registerCLUSTERMEET(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -10957,7 +10957,7 @@ func registerCLUSTERMEET(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ClusterMeet(p.redisContext, v0, v1)
+			val := rdb.ClusterMeet(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -10973,7 +10973,7 @@ func registerCLUSTERMEET(p *redisPlugin) {
 	)
 }
 
-func registerCLUSTERFORGET(p *redisPlugin) {
+func registerCLUSTERFORGET(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.clusterforget",
@@ -10982,7 +10982,7 @@ func registerCLUSTERFORGET(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -10992,7 +10992,7 @@ func registerCLUSTERFORGET(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ClusterForget(p.redisContext, v0)
+			val := rdb.ClusterForget(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -11008,7 +11008,7 @@ func registerCLUSTERFORGET(p *redisPlugin) {
 	)
 }
 
-func registerCLUSTERREPLICATE(p *redisPlugin) {
+func registerCLUSTERREPLICATE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.clusterreplicate",
@@ -11017,7 +11017,7 @@ func registerCLUSTERREPLICATE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -11027,7 +11027,7 @@ func registerCLUSTERREPLICATE(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ClusterReplicate(p.redisContext, v0)
+			val := rdb.ClusterReplicate(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -11043,7 +11043,7 @@ func registerCLUSTERREPLICATE(p *redisPlugin) {
 	)
 }
 
-func registerCLUSTERRESETSOFT(p *redisPlugin) {
+func registerCLUSTERRESETSOFT(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.clusterresetsoft",
@@ -11052,12 +11052,12 @@ func registerCLUSTERRESETSOFT(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
 
-			val := rdb.ClusterResetSoft(p.redisContext)
+			val := rdb.ClusterResetSoft(m.RedisContext)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -11073,7 +11073,7 @@ func registerCLUSTERRESETSOFT(p *redisPlugin) {
 	)
 }
 
-func registerCLUSTERRESETHARD(p *redisPlugin) {
+func registerCLUSTERRESETHARD(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.clusterresethard",
@@ -11082,12 +11082,12 @@ func registerCLUSTERRESETHARD(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
 
-			val := rdb.ClusterResetHard(p.redisContext)
+			val := rdb.ClusterResetHard(m.RedisContext)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -11103,7 +11103,7 @@ func registerCLUSTERRESETHARD(p *redisPlugin) {
 	)
 }
 
-func registerCLUSTERINFO(p *redisPlugin) {
+func registerCLUSTERINFO(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.clusterinfo",
@@ -11112,12 +11112,12 @@ func registerCLUSTERINFO(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
 
-			val := rdb.ClusterInfo(p.redisContext)
+			val := rdb.ClusterInfo(m.RedisContext)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -11133,7 +11133,7 @@ func registerCLUSTERINFO(p *redisPlugin) {
 	)
 }
 
-func registerCLUSTERKEYSLOT(p *redisPlugin) {
+func registerCLUSTERKEYSLOT(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.clusterkeyslot",
@@ -11142,7 +11142,7 @@ func registerCLUSTERKEYSLOT(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -11152,7 +11152,7 @@ func registerCLUSTERKEYSLOT(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ClusterKeySlot(p.redisContext, v0)
+			val := rdb.ClusterKeySlot(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -11168,7 +11168,7 @@ func registerCLUSTERKEYSLOT(p *redisPlugin) {
 	)
 }
 
-func registerCLUSTERGETKEYSINSLOT(p *redisPlugin) {
+func registerCLUSTERGETKEYSINSLOT(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.clustergetkeysinslot",
@@ -11177,7 +11177,7 @@ func registerCLUSTERGETKEYSINSLOT(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -11192,19 +11192,19 @@ func registerCLUSTERGETKEYSINSLOT(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ClusterGetKeysInSlot(p.redisContext, v0, v1)
+			val := rdb.ClusterGetKeysInSlot(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp87325 []*ast.Term
+				var tmp05818 []*ast.Term
 				for _, v := range r0 {
 					term := ast.StringTerm(v)
-					tmp87325 = append(tmp87325, term)
+					tmp05818 = append(tmp05818, term)
 				}
-				term := ast.ArrayTerm(tmp87325...)
+				term := ast.ArrayTerm(tmp05818...)
 
 				return term, nil
 
@@ -11215,7 +11215,7 @@ func registerCLUSTERGETKEYSINSLOT(p *redisPlugin) {
 	)
 }
 
-func registerCLUSTERCOUNTFAILUREREPORTS(p *redisPlugin) {
+func registerCLUSTERCOUNTFAILUREREPORTS(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.clustercountfailurereports",
@@ -11224,7 +11224,7 @@ func registerCLUSTERCOUNTFAILUREREPORTS(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -11234,7 +11234,7 @@ func registerCLUSTERCOUNTFAILUREREPORTS(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ClusterCountFailureReports(p.redisContext, v0)
+			val := rdb.ClusterCountFailureReports(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -11250,7 +11250,7 @@ func registerCLUSTERCOUNTFAILUREREPORTS(p *redisPlugin) {
 	)
 }
 
-func registerCLUSTERCOUNTKEYSINSLOT(p *redisPlugin) {
+func registerCLUSTERCOUNTKEYSINSLOT(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.clustercountkeysinslot",
@@ -11259,7 +11259,7 @@ func registerCLUSTERCOUNTKEYSINSLOT(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -11269,7 +11269,7 @@ func registerCLUSTERCOUNTKEYSINSLOT(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ClusterCountKeysInSlot(p.redisContext, v0)
+			val := rdb.ClusterCountKeysInSlot(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -11285,7 +11285,7 @@ func registerCLUSTERCOUNTKEYSINSLOT(p *redisPlugin) {
 	)
 }
 
-func registerCLUSTERDELSLOTS(p *redisPlugin) {
+func registerCLUSTERDELSLOTS(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.clusterdelslots",
@@ -11294,7 +11294,7 @@ func registerCLUSTERDELSLOTS(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -11304,7 +11304,7 @@ func registerCLUSTERDELSLOTS(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ClusterDelSlots(p.redisContext, v0...)
+			val := rdb.ClusterDelSlots(m.RedisContext, v0...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -11320,7 +11320,7 @@ func registerCLUSTERDELSLOTS(p *redisPlugin) {
 	)
 }
 
-func registerCLUSTERDELSLOTSRANGE(p *redisPlugin) {
+func registerCLUSTERDELSLOTSRANGE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.clusterdelslotsrange",
@@ -11329,7 +11329,7 @@ func registerCLUSTERDELSLOTSRANGE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -11344,7 +11344,7 @@ func registerCLUSTERDELSLOTSRANGE(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ClusterDelSlotsRange(p.redisContext, v0, v1)
+			val := rdb.ClusterDelSlotsRange(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -11360,7 +11360,7 @@ func registerCLUSTERDELSLOTSRANGE(p *redisPlugin) {
 	)
 }
 
-func registerCLUSTERSAVECONFIG(p *redisPlugin) {
+func registerCLUSTERSAVECONFIG(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.clustersaveconfig",
@@ -11369,12 +11369,12 @@ func registerCLUSTERSAVECONFIG(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
 
-			val := rdb.ClusterSaveConfig(p.redisContext)
+			val := rdb.ClusterSaveConfig(m.RedisContext)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -11390,7 +11390,7 @@ func registerCLUSTERSAVECONFIG(p *redisPlugin) {
 	)
 }
 
-func registerCLUSTERSLAVES(p *redisPlugin) {
+func registerCLUSTERSLAVES(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.clusterslaves",
@@ -11399,7 +11399,7 @@ func registerCLUSTERSLAVES(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -11409,19 +11409,19 @@ func registerCLUSTERSLAVES(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ClusterSlaves(p.redisContext, v0)
+			val := rdb.ClusterSlaves(m.RedisContext, v0)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp96409 []*ast.Term
+				var tmp88797 []*ast.Term
 				for _, v := range r0 {
 					term := ast.StringTerm(v)
-					tmp96409 = append(tmp96409, term)
+					tmp88797 = append(tmp88797, term)
 				}
-				term := ast.ArrayTerm(tmp96409...)
+				term := ast.ArrayTerm(tmp88797...)
 
 				return term, nil
 
@@ -11432,7 +11432,7 @@ func registerCLUSTERSLAVES(p *redisPlugin) {
 	)
 }
 
-func registerCLUSTERFAILOVER(p *redisPlugin) {
+func registerCLUSTERFAILOVER(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.clusterfailover",
@@ -11441,12 +11441,12 @@ func registerCLUSTERFAILOVER(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
 
-			val := rdb.ClusterFailover(p.redisContext)
+			val := rdb.ClusterFailover(m.RedisContext)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -11462,7 +11462,7 @@ func registerCLUSTERFAILOVER(p *redisPlugin) {
 	)
 }
 
-func registerCLUSTERADDSLOTS(p *redisPlugin) {
+func registerCLUSTERADDSLOTS(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.clusteraddslots",
@@ -11471,7 +11471,7 @@ func registerCLUSTERADDSLOTS(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -11481,7 +11481,7 @@ func registerCLUSTERADDSLOTS(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ClusterAddSlots(p.redisContext, v0...)
+			val := rdb.ClusterAddSlots(m.RedisContext, v0...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -11497,7 +11497,7 @@ func registerCLUSTERADDSLOTS(p *redisPlugin) {
 	)
 }
 
-func registerCLUSTERADDSLOTSRANGE(p *redisPlugin) {
+func registerCLUSTERADDSLOTSRANGE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.clusteraddslotsrange",
@@ -11506,7 +11506,7 @@ func registerCLUSTERADDSLOTSRANGE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -11521,7 +11521,7 @@ func registerCLUSTERADDSLOTSRANGE(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.ClusterAddSlotsRange(p.redisContext, v0, v1)
+			val := rdb.ClusterAddSlotsRange(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -11537,7 +11537,7 @@ func registerCLUSTERADDSLOTSRANGE(p *redisPlugin) {
 	)
 }
 
-func registerGEOADD(p *redisPlugin) {
+func registerGEOADD(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.geoadd",
@@ -11546,7 +11546,7 @@ func registerGEOADD(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -11561,7 +11561,7 @@ func registerGEOADD(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.GeoAdd(p.redisContext, v0, v1...)
+			val := rdb.GeoAdd(m.RedisContext, v0, v1...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -11577,7 +11577,7 @@ func registerGEOADD(p *redisPlugin) {
 	)
 }
 
-func registerGEOPOS(p *redisPlugin) {
+func registerGEOPOS(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.geopos",
@@ -11586,7 +11586,7 @@ func registerGEOPOS(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -11601,17 +11601,17 @@ func registerGEOPOS(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.GeoPos(p.redisContext, v0, v1...)
+			val := rdb.GeoPos(m.RedisContext, v0, v1...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp17311 []*ast.Term
+				var tmp66652 []*ast.Term
 				for _, v := range r0 {
 					if v == nil {
-						tmp17311 = append(tmp17311, ast.NullTerm())
+						tmp66652 = append(tmp66652, ast.NullTerm())
 						continue
 					}
 
@@ -11621,9 +11621,9 @@ func registerGEOPOS(p *redisPlugin) {
 
 					term := ast.ObjectTerm([2]*ast.Term{ast.StringTerm("Longitude"), termLongitude}, [2]*ast.Term{ast.StringTerm("Latitude"), termLatitude})
 
-					tmp17311 = append(tmp17311, term)
+					tmp66652 = append(tmp66652, term)
 				}
-				term := ast.ArrayTerm(tmp17311...)
+				term := ast.ArrayTerm(tmp66652...)
 
 				return term, nil
 
@@ -11634,7 +11634,7 @@ func registerGEOPOS(p *redisPlugin) {
 	)
 }
 
-func registerGEORADIUS(p *redisPlugin) {
+func registerGEORADIUS(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.georadius",
@@ -11643,7 +11643,7 @@ func registerGEORADIUS(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -11668,14 +11668,14 @@ func registerGEORADIUS(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.GeoRadius(p.redisContext, v0, v1, v2, v3)
+			val := rdb.GeoRadius(m.RedisContext, v0, v1, v2, v3)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp39626 []*ast.Term
+				var tmp51335 []*ast.Term
 				for _, v := range r0 {
 
 					termName := ast.StringTerm(v.Name)
@@ -11690,9 +11690,9 @@ func registerGEORADIUS(p *redisPlugin) {
 
 					term := ast.ObjectTerm([2]*ast.Term{ast.StringTerm("Name"), termName}, [2]*ast.Term{ast.StringTerm("Longitude"), termLongitude}, [2]*ast.Term{ast.StringTerm("Latitude"), termLatitude}, [2]*ast.Term{ast.StringTerm("Dist"), termDist}, [2]*ast.Term{ast.StringTerm("GeoHash"), termGeoHash})
 
-					tmp39626 = append(tmp39626, term)
+					tmp51335 = append(tmp51335, term)
 				}
-				term := ast.ArrayTerm(tmp39626...)
+				term := ast.ArrayTerm(tmp51335...)
 
 				return term, nil
 
@@ -11703,7 +11703,7 @@ func registerGEORADIUS(p *redisPlugin) {
 	)
 }
 
-func registerGEORADIUSSTORE(p *redisPlugin) {
+func registerGEORADIUSSTORE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.georadiusstore",
@@ -11712,7 +11712,7 @@ func registerGEORADIUSSTORE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -11737,7 +11737,7 @@ func registerGEORADIUSSTORE(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.GeoRadiusStore(p.redisContext, v0, v1, v2, v3)
+			val := rdb.GeoRadiusStore(m.RedisContext, v0, v1, v2, v3)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -11753,7 +11753,7 @@ func registerGEORADIUSSTORE(p *redisPlugin) {
 	)
 }
 
-func registerGEORADIUSBYMEMBER(p *redisPlugin) {
+func registerGEORADIUSBYMEMBER(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.georadiusbymember",
@@ -11762,7 +11762,7 @@ func registerGEORADIUSBYMEMBER(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -11782,14 +11782,14 @@ func registerGEORADIUSBYMEMBER(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.GeoRadiusByMember(p.redisContext, v0, v1, v2)
+			val := rdb.GeoRadiusByMember(m.RedisContext, v0, v1, v2)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp99705 []*ast.Term
+				var tmp72292 []*ast.Term
 				for _, v := range r0 {
 
 					termName := ast.StringTerm(v.Name)
@@ -11804,9 +11804,9 @@ func registerGEORADIUSBYMEMBER(p *redisPlugin) {
 
 					term := ast.ObjectTerm([2]*ast.Term{ast.StringTerm("Name"), termName}, [2]*ast.Term{ast.StringTerm("Longitude"), termLongitude}, [2]*ast.Term{ast.StringTerm("Latitude"), termLatitude}, [2]*ast.Term{ast.StringTerm("Dist"), termDist}, [2]*ast.Term{ast.StringTerm("GeoHash"), termGeoHash})
 
-					tmp99705 = append(tmp99705, term)
+					tmp72292 = append(tmp72292, term)
 				}
-				term := ast.ArrayTerm(tmp99705...)
+				term := ast.ArrayTerm(tmp72292...)
 
 				return term, nil
 
@@ -11817,7 +11817,7 @@ func registerGEORADIUSBYMEMBER(p *redisPlugin) {
 	)
 }
 
-func registerGEORADIUSBYMEMBERSTORE(p *redisPlugin) {
+func registerGEORADIUSBYMEMBERSTORE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.georadiusbymemberstore",
@@ -11826,7 +11826,7 @@ func registerGEORADIUSBYMEMBERSTORE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -11846,7 +11846,7 @@ func registerGEORADIUSBYMEMBERSTORE(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.GeoRadiusByMemberStore(p.redisContext, v0, v1, v2)
+			val := rdb.GeoRadiusByMemberStore(m.RedisContext, v0, v1, v2)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -11862,7 +11862,7 @@ func registerGEORADIUSBYMEMBERSTORE(p *redisPlugin) {
 	)
 }
 
-func registerGEOSEARCH(p *redisPlugin) {
+func registerGEOSEARCH(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.geosearch",
@@ -11871,7 +11871,7 @@ func registerGEOSEARCH(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -11886,19 +11886,19 @@ func registerGEOSEARCH(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.GeoSearch(p.redisContext, v0, v1)
+			val := rdb.GeoSearch(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp47393 []*ast.Term
+				var tmp55134 []*ast.Term
 				for _, v := range r0 {
 					term := ast.StringTerm(v)
-					tmp47393 = append(tmp47393, term)
+					tmp55134 = append(tmp55134, term)
 				}
-				term := ast.ArrayTerm(tmp47393...)
+				term := ast.ArrayTerm(tmp55134...)
 
 				return term, nil
 
@@ -11909,7 +11909,7 @@ func registerGEOSEARCH(p *redisPlugin) {
 	)
 }
 
-func registerGEOSEARCHLOCATION(p *redisPlugin) {
+func registerGEOSEARCHLOCATION(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.geosearchlocation",
@@ -11918,7 +11918,7 @@ func registerGEOSEARCHLOCATION(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -11933,14 +11933,14 @@ func registerGEOSEARCHLOCATION(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.GeoSearchLocation(p.redisContext, v0, v1)
+			val := rdb.GeoSearchLocation(m.RedisContext, v0, v1)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp36292 []*ast.Term
+				var tmp07617 []*ast.Term
 				for _, v := range r0 {
 
 					termName := ast.StringTerm(v.Name)
@@ -11955,9 +11955,9 @@ func registerGEOSEARCHLOCATION(p *redisPlugin) {
 
 					term := ast.ObjectTerm([2]*ast.Term{ast.StringTerm("Name"), termName}, [2]*ast.Term{ast.StringTerm("Longitude"), termLongitude}, [2]*ast.Term{ast.StringTerm("Latitude"), termLatitude}, [2]*ast.Term{ast.StringTerm("Dist"), termDist}, [2]*ast.Term{ast.StringTerm("GeoHash"), termGeoHash})
 
-					tmp36292 = append(tmp36292, term)
+					tmp07617 = append(tmp07617, term)
 				}
-				term := ast.ArrayTerm(tmp36292...)
+				term := ast.ArrayTerm(tmp07617...)
 
 				return term, nil
 
@@ -11968,7 +11968,7 @@ func registerGEOSEARCHLOCATION(p *redisPlugin) {
 	)
 }
 
-func registerGEOSEARCHSTORE(p *redisPlugin) {
+func registerGEOSEARCHSTORE(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.geosearchstore",
@@ -11977,7 +11977,7 @@ func registerGEOSEARCHSTORE(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -11997,7 +11997,7 @@ func registerGEOSEARCHSTORE(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.GeoSearchStore(p.redisContext, v0, v1, v2)
+			val := rdb.GeoSearchStore(m.RedisContext, v0, v1, v2)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -12013,7 +12013,7 @@ func registerGEOSEARCHSTORE(p *redisPlugin) {
 	)
 }
 
-func registerGEODIST(p *redisPlugin) {
+func registerGEODIST(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.geodist",
@@ -12022,7 +12022,7 @@ func registerGEODIST(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -12047,7 +12047,7 @@ func registerGEODIST(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.GeoDist(p.redisContext, v0, v1, v2, v3)
+			val := rdb.GeoDist(m.RedisContext, v0, v1, v2, v3)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
@@ -12063,7 +12063,7 @@ func registerGEODIST(p *redisPlugin) {
 	)
 }
 
-func registerGEOHASH(p *redisPlugin) {
+func registerGEOHASH(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.geohash",
@@ -12072,7 +12072,7 @@ func registerGEOHASH(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -12087,19 +12087,19 @@ func registerGEOHASH(p *redisPlugin) {
 				return nil, err
 			}
 
-			val := rdb.GeoHash(p.redisContext, v0, v1...)
+			val := rdb.GeoHash(m.RedisContext, v0, v1...)
 			r0 := val.Val()
 			switch err := val.Err(); err {
 			case redis.Nil:
 				return ast.NullTerm(), nil
 			case nil:
 
-				var tmp03113 []*ast.Term
+				var tmp66970 []*ast.Term
 				for _, v := range r0 {
 					term := ast.StringTerm(v)
-					tmp03113 = append(tmp03113, term)
+					tmp66970 = append(tmp66970, term)
 				}
-				term := ast.ArrayTerm(tmp03113...)
+				term := ast.ArrayTerm(tmp66970...)
 
 				return term, nil
 
@@ -12110,287 +12110,287 @@ func registerGEOHASH(p *redisPlugin) {
 	)
 }
 
-func (p *redisPlugin) registerAutogenCommands() {
-	registerCLIENTGETNAME(p)
-	registerECHO(p)
-	registerPING(p)
-	registerQUIT(p)
-	registerDEL(p)
-	registerUNLINK(p)
-	registerDUMP(p)
-	registerEXISTS(p)
-	registerEXPIRE(p)
-	registerEXPIREAT(p)
-	registerEXPIRENX(p)
-	registerEXPIREXX(p)
-	registerEXPIREGT(p)
-	registerEXPIRELT(p)
-	registerKEYS(p)
-	registerMIGRATE(p)
-	registerMOVE(p)
-	registerOBJECTREFCOUNT(p)
-	registerOBJECTENCODING(p)
-	registerOBJECTIDLETIME(p)
-	registerPERSIST(p)
-	registerPEXPIRE(p)
-	registerPEXPIREAT(p)
-	registerPTTL(p)
-	registerRANDOMKEY(p)
-	registerRENAME(p)
-	registerRENAMENX(p)
-	registerRESTORE(p)
-	registerRESTOREREPLACE(p)
-	registerSORT(p)
-	registerSORTSTORE(p)
-	registerSORTINTERFACES(p)
-	registerTOUCH(p)
-	registerTTL(p)
-	registerTYPE(p)
-	registerAPPEND(p)
-	registerDECR(p)
-	registerDECRBY(p)
-	registerGET(p)
-	registerGETRANGE(p)
-	registerGETSET(p)
-	registerGETEX(p)
-	registerGETDEL(p)
-	registerINCR(p)
-	registerINCRBY(p)
-	registerINCRBYFLOAT(p)
-	registerMGET(p)
-	registerMSET(p)
-	registerMSETNX(p)
-	registerSET(p)
-	registerSETARGS(p)
-	registerSETEX(p)
-	registerSETNX(p)
-	registerSETXX(p)
-	registerSETRANGE(p)
-	registerSTRLEN(p)
-	registerCOPY(p)
-	registerGETBIT(p)
-	registerSETBIT(p)
-	registerBITCOUNT(p)
-	registerBITOPAND(p)
-	registerBITOPOR(p)
-	registerBITOPXOR(p)
-	registerBITOPNOT(p)
-	registerBITPOS(p)
-	registerBITFIELD(p)
-	registerSCAN(p)
-	registerSCANTYPE(p)
-	registerSSCAN(p)
-	registerHSCAN(p)
-	registerZSCAN(p)
-	registerHDEL(p)
-	registerHEXISTS(p)
-	registerHGET(p)
-	registerHGETALL(p)
-	registerHINCRBY(p)
-	registerHINCRBYFLOAT(p)
-	registerHKEYS(p)
-	registerHLEN(p)
-	registerHMGET(p)
-	registerHSET(p)
-	registerHMSET(p)
-	registerHSETNX(p)
-	registerHVALS(p)
-	registerHRANDFIELD(p)
-	registerBLPOP(p)
-	registerBRPOP(p)
-	registerBRPOPLPUSH(p)
-	registerLINDEX(p)
-	registerLINSERT(p)
-	registerLINSERTBEFORE(p)
-	registerLINSERTAFTER(p)
-	registerLLEN(p)
-	registerLPOP(p)
-	registerLPOPCOUNT(p)
-	registerLPOS(p)
-	registerLPOSCOUNT(p)
-	registerLPUSH(p)
-	registerLPUSHX(p)
-	registerLRANGE(p)
-	registerLREM(p)
-	registerLSET(p)
-	registerLTRIM(p)
-	registerRPOP(p)
-	registerRPOPCOUNT(p)
-	registerRPOPLPUSH(p)
-	registerRPUSH(p)
-	registerRPUSHX(p)
-	registerLMOVE(p)
-	registerBLMOVE(p)
-	registerSADD(p)
-	registerSCARD(p)
-	registerSDIFF(p)
-	registerSDIFFSTORE(p)
-	registerSINTER(p)
-	registerSINTERSTORE(p)
-	registerSISMEMBER(p)
-	registerSMISMEMBER(p)
-	registerSMEMBERS(p)
-	registerSMEMBERSMAP(p)
-	registerSMOVE(p)
-	registerSPOP(p)
-	registerSPOPN(p)
-	registerSRANDMEMBER(p)
-	registerSRANDMEMBERN(p)
-	registerSREM(p)
-	registerSUNION(p)
-	registerSUNIONSTORE(p)
-	registerXADD(p)
-	registerXDEL(p)
-	registerXLEN(p)
-	registerXRANGE(p)
-	registerXRANGEN(p)
-	registerXREVRANGE(p)
-	registerXREVRANGEN(p)
-	registerXREAD(p)
-	registerXREADSTREAMS(p)
-	registerXGROUPCREATE(p)
-	registerXGROUPCREATEMKSTREAM(p)
-	registerXGROUPSETID(p)
-	registerXGROUPDESTROY(p)
-	registerXGROUPCREATECONSUMER(p)
-	registerXGROUPDELCONSUMER(p)
-	registerXREADGROUP(p)
-	registerXACK(p)
-	registerXPENDING(p)
-	registerXPENDINGEXT(p)
-	registerXCLAIM(p)
-	registerXCLAIMJUSTID(p)
-	registerXAUTOCLAIM(p)
-	registerXAUTOCLAIMJUSTID(p)
-	registerXTRIM(p)
-	registerXTRIMAPPROX(p)
-	registerXTRIMMAXLEN(p)
-	registerXTRIMMAXLENAPPROX(p)
-	registerXTRIMMINID(p)
-	registerXTRIMMINIDAPPROX(p)
-	registerXINFOGROUPS(p)
-	registerXINFOSTREAM(p)
-	registerXINFOSTREAMFULL(p)
-	registerXINFOCONSUMERS(p)
-	registerBZPOPMAX(p)
-	registerBZPOPMIN(p)
-	registerZADD(p)
-	registerZADDNX(p)
-	registerZADDXX(p)
-	registerZADDCH(p)
-	registerZADDNXCH(p)
-	registerZADDXXCH(p)
-	registerZADDARGS(p)
-	registerZADDARGSINCR(p)
-	registerZINCR(p)
-	registerZINCRNX(p)
-	registerZINCRXX(p)
-	registerZCARD(p)
-	registerZCOUNT(p)
-	registerZLEXCOUNT(p)
-	registerZINCRBY(p)
-	registerZINTER(p)
-	registerZINTERWITHSCORES(p)
-	registerZINTERSTORE(p)
-	registerZMSCORE(p)
-	registerZPOPMAX(p)
-	registerZPOPMIN(p)
-	registerZRANGE(p)
-	registerZRANGEWITHSCORES(p)
-	registerZRANGEBYSCORE(p)
-	registerZRANGEBYLEX(p)
-	registerZRANGEBYSCOREWITHSCORES(p)
-	registerZRANGEARGS(p)
-	registerZRANGEARGSWITHSCORES(p)
-	registerZRANGESTORE(p)
-	registerZRANK(p)
-	registerZREM(p)
-	registerZREMRANGEBYRANK(p)
-	registerZREMRANGEBYSCORE(p)
-	registerZREMRANGEBYLEX(p)
-	registerZREVRANGE(p)
-	registerZREVRANGEWITHSCORES(p)
-	registerZREVRANGEBYSCORE(p)
-	registerZREVRANGEBYLEX(p)
-	registerZREVRANGEBYSCOREWITHSCORES(p)
-	registerZREVRANK(p)
-	registerZSCORE(p)
-	registerZUNIONSTORE(p)
-	registerZUNION(p)
-	registerZUNIONWITHSCORES(p)
-	registerZRANDMEMBER(p)
-	registerZDIFF(p)
-	registerZDIFFWITHSCORES(p)
-	registerZDIFFSTORE(p)
-	registerPFADD(p)
-	registerPFCOUNT(p)
-	registerPFMERGE(p)
-	registerBGREWRITEAOF(p)
-	registerBGSAVE(p)
-	registerCLIENTKILL(p)
-	registerCLIENTKILLBYFILTER(p)
-	registerCLIENTLIST(p)
-	registerCLIENTPAUSE(p)
-	registerCLIENTID(p)
-	registerCONFIGGET(p)
-	registerCONFIGRESETSTAT(p)
-	registerCONFIGSET(p)
-	registerCONFIGREWRITE(p)
-	registerDBSIZE(p)
-	registerFLUSHALL(p)
-	registerFLUSHALLASYNC(p)
-	registerFLUSHDB(p)
-	registerFLUSHDBASYNC(p)
-	registerINFO(p)
-	registerLASTSAVE(p)
-	registerSAVE(p)
-	registerSHUTDOWN(p)
-	registerSHUTDOWNSAVE(p)
-	registerSHUTDOWNNOSAVE(p)
-	registerSLAVEOF(p)
-	registerTIME(p)
-	registerDEBUGOBJECT(p)
-	registerREADONLY(p)
-	registerREADWRITE(p)
-	registerMEMORYUSAGE(p)
-	registerEVAL(p)
-	registerEVALSHA(p)
-	registerSCRIPTEXISTS(p)
-	registerSCRIPTFLUSH(p)
-	registerSCRIPTKILL(p)
-	registerSCRIPTLOAD(p)
-	registerPUBLISH(p)
-	registerPUBSUBCHANNELS(p)
-	registerPUBSUBNUMSUB(p)
-	registerPUBSUBNUMPAT(p)
-	registerCLUSTERSLOTS(p)
-	registerCLUSTERNODES(p)
-	registerCLUSTERMEET(p)
-	registerCLUSTERFORGET(p)
-	registerCLUSTERREPLICATE(p)
-	registerCLUSTERRESETSOFT(p)
-	registerCLUSTERRESETHARD(p)
-	registerCLUSTERINFO(p)
-	registerCLUSTERKEYSLOT(p)
-	registerCLUSTERGETKEYSINSLOT(p)
-	registerCLUSTERCOUNTFAILUREREPORTS(p)
-	registerCLUSTERCOUNTKEYSINSLOT(p)
-	registerCLUSTERDELSLOTS(p)
-	registerCLUSTERDELSLOTSRANGE(p)
-	registerCLUSTERSAVECONFIG(p)
-	registerCLUSTERSLAVES(p)
-	registerCLUSTERFAILOVER(p)
-	registerCLUSTERADDSLOTS(p)
-	registerCLUSTERADDSLOTSRANGE(p)
-	registerGEOADD(p)
-	registerGEOPOS(p)
-	registerGEORADIUS(p)
-	registerGEORADIUSSTORE(p)
-	registerGEORADIUSBYMEMBER(p)
-	registerGEORADIUSBYMEMBERSTORE(p)
-	registerGEOSEARCH(p)
-	registerGEOSEARCHLOCATION(p)
-	registerGEOSEARCHSTORE(p)
-	registerGEODIST(p)
-	registerGEOHASH(p)
+func (m *RedisManager) registerAutogenCommands() {
+	registerCLIENTGETNAME(m)
+	registerECHO(m)
+	registerPING(m)
+	registerQUIT(m)
+	registerDEL(m)
+	registerUNLINK(m)
+	registerDUMP(m)
+	registerEXISTS(m)
+	registerEXPIRE(m)
+	registerEXPIREAT(m)
+	registerEXPIRENX(m)
+	registerEXPIREXX(m)
+	registerEXPIREGT(m)
+	registerEXPIRELT(m)
+	registerKEYS(m)
+	registerMIGRATE(m)
+	registerMOVE(m)
+	registerOBJECTREFCOUNT(m)
+	registerOBJECTENCODING(m)
+	registerOBJECTIDLETIME(m)
+	registerPERSIST(m)
+	registerPEXPIRE(m)
+	registerPEXPIREAT(m)
+	registerPTTL(m)
+	registerRANDOMKEY(m)
+	registerRENAME(m)
+	registerRENAMENX(m)
+	registerRESTORE(m)
+	registerRESTOREREPLACE(m)
+	registerSORT(m)
+	registerSORTSTORE(m)
+	registerSORTINTERFACES(m)
+	registerTOUCH(m)
+	registerTTL(m)
+	registerTYPE(m)
+	registerAPPEND(m)
+	registerDECR(m)
+	registerDECRBY(m)
+	registerGET(m)
+	registerGETRANGE(m)
+	registerGETSET(m)
+	registerGETEX(m)
+	registerGETDEL(m)
+	registerINCR(m)
+	registerINCRBY(m)
+	registerINCRBYFLOAT(m)
+	registerMGET(m)
+	registerMSET(m)
+	registerMSETNX(m)
+	registerSET(m)
+	registerSETARGS(m)
+	registerSETEX(m)
+	registerSETNX(m)
+	registerSETXX(m)
+	registerSETRANGE(m)
+	registerSTRLEN(m)
+	registerCOPY(m)
+	registerGETBIT(m)
+	registerSETBIT(m)
+	registerBITCOUNT(m)
+	registerBITOPAND(m)
+	registerBITOPOR(m)
+	registerBITOPXOR(m)
+	registerBITOPNOT(m)
+	registerBITPOS(m)
+	registerBITFIELD(m)
+	registerSCAN(m)
+	registerSCANTYPE(m)
+	registerSSCAN(m)
+	registerHSCAN(m)
+	registerZSCAN(m)
+	registerHDEL(m)
+	registerHEXISTS(m)
+	registerHGET(m)
+	registerHGETALL(m)
+	registerHINCRBY(m)
+	registerHINCRBYFLOAT(m)
+	registerHKEYS(m)
+	registerHLEN(m)
+	registerHMGET(m)
+	registerHSET(m)
+	registerHMSET(m)
+	registerHSETNX(m)
+	registerHVALS(m)
+	registerHRANDFIELD(m)
+	registerBLPOP(m)
+	registerBRPOP(m)
+	registerBRPOPLPUSH(m)
+	registerLINDEX(m)
+	registerLINSERT(m)
+	registerLINSERTBEFORE(m)
+	registerLINSERTAFTER(m)
+	registerLLEN(m)
+	registerLPOP(m)
+	registerLPOPCOUNT(m)
+	registerLPOS(m)
+	registerLPOSCOUNT(m)
+	registerLPUSH(m)
+	registerLPUSHX(m)
+	registerLRANGE(m)
+	registerLREM(m)
+	registerLSET(m)
+	registerLTRIM(m)
+	registerRPOP(m)
+	registerRPOPCOUNT(m)
+	registerRPOPLPUSH(m)
+	registerRPUSH(m)
+	registerRPUSHX(m)
+	registerLMOVE(m)
+	registerBLMOVE(m)
+	registerSADD(m)
+	registerSCARD(m)
+	registerSDIFF(m)
+	registerSDIFFSTORE(m)
+	registerSINTER(m)
+	registerSINTERSTORE(m)
+	registerSISMEMBER(m)
+	registerSMISMEMBER(m)
+	registerSMEMBERS(m)
+	registerSMEMBERSMAP(m)
+	registerSMOVE(m)
+	registerSPOP(m)
+	registerSPOPN(m)
+	registerSRANDMEMBER(m)
+	registerSRANDMEMBERN(m)
+	registerSREM(m)
+	registerSUNION(m)
+	registerSUNIONSTORE(m)
+	registerXADD(m)
+	registerXDEL(m)
+	registerXLEN(m)
+	registerXRANGE(m)
+	registerXRANGEN(m)
+	registerXREVRANGE(m)
+	registerXREVRANGEN(m)
+	registerXREAD(m)
+	registerXREADSTREAMS(m)
+	registerXGROUPCREATE(m)
+	registerXGROUPCREATEMKSTREAM(m)
+	registerXGROUPSETID(m)
+	registerXGROUPDESTROY(m)
+	registerXGROUPCREATECONSUMER(m)
+	registerXGROUPDELCONSUMER(m)
+	registerXREADGROUP(m)
+	registerXACK(m)
+	registerXPENDING(m)
+	registerXPENDINGEXT(m)
+	registerXCLAIM(m)
+	registerXCLAIMJUSTID(m)
+	registerXAUTOCLAIM(m)
+	registerXAUTOCLAIMJUSTID(m)
+	registerXTRIM(m)
+	registerXTRIMAPPROX(m)
+	registerXTRIMMAXLEN(m)
+	registerXTRIMMAXLENAPPROX(m)
+	registerXTRIMMINID(m)
+	registerXTRIMMINIDAPPROX(m)
+	registerXINFOGROUPS(m)
+	registerXINFOSTREAM(m)
+	registerXINFOSTREAMFULL(m)
+	registerXINFOCONSUMERS(m)
+	registerBZPOPMAX(m)
+	registerBZPOPMIN(m)
+	registerZADD(m)
+	registerZADDNX(m)
+	registerZADDXX(m)
+	registerZADDCH(m)
+	registerZADDNXCH(m)
+	registerZADDXXCH(m)
+	registerZADDARGS(m)
+	registerZADDARGSINCR(m)
+	registerZINCR(m)
+	registerZINCRNX(m)
+	registerZINCRXX(m)
+	registerZCARD(m)
+	registerZCOUNT(m)
+	registerZLEXCOUNT(m)
+	registerZINCRBY(m)
+	registerZINTER(m)
+	registerZINTERWITHSCORES(m)
+	registerZINTERSTORE(m)
+	registerZMSCORE(m)
+	registerZPOPMAX(m)
+	registerZPOPMIN(m)
+	registerZRANGE(m)
+	registerZRANGEWITHSCORES(m)
+	registerZRANGEBYSCORE(m)
+	registerZRANGEBYLEX(m)
+	registerZRANGEBYSCOREWITHSCORES(m)
+	registerZRANGEARGS(m)
+	registerZRANGEARGSWITHSCORES(m)
+	registerZRANGESTORE(m)
+	registerZRANK(m)
+	registerZREM(m)
+	registerZREMRANGEBYRANK(m)
+	registerZREMRANGEBYSCORE(m)
+	registerZREMRANGEBYLEX(m)
+	registerZREVRANGE(m)
+	registerZREVRANGEWITHSCORES(m)
+	registerZREVRANGEBYSCORE(m)
+	registerZREVRANGEBYLEX(m)
+	registerZREVRANGEBYSCOREWITHSCORES(m)
+	registerZREVRANK(m)
+	registerZSCORE(m)
+	registerZUNIONSTORE(m)
+	registerZUNION(m)
+	registerZUNIONWITHSCORES(m)
+	registerZRANDMEMBER(m)
+	registerZDIFF(m)
+	registerZDIFFWITHSCORES(m)
+	registerZDIFFSTORE(m)
+	registerPFADD(m)
+	registerPFCOUNT(m)
+	registerPFMERGE(m)
+	registerBGREWRITEAOF(m)
+	registerBGSAVE(m)
+	registerCLIENTKILL(m)
+	registerCLIENTKILLBYFILTER(m)
+	registerCLIENTLIST(m)
+	registerCLIENTPAUSE(m)
+	registerCLIENTID(m)
+	registerCONFIGGET(m)
+	registerCONFIGRESETSTAT(m)
+	registerCONFIGSET(m)
+	registerCONFIGREWRITE(m)
+	registerDBSIZE(m)
+	registerFLUSHALL(m)
+	registerFLUSHALLASYNC(m)
+	registerFLUSHDB(m)
+	registerFLUSHDBASYNC(m)
+	registerINFO(m)
+	registerLASTSAVE(m)
+	registerSAVE(m)
+	registerSHUTDOWN(m)
+	registerSHUTDOWNSAVE(m)
+	registerSHUTDOWNNOSAVE(m)
+	registerSLAVEOF(m)
+	registerTIME(m)
+	registerDEBUGOBJECT(m)
+	registerREADONLY(m)
+	registerREADWRITE(m)
+	registerMEMORYUSAGE(m)
+	registerEVAL(m)
+	registerEVALSHA(m)
+	registerSCRIPTEXISTS(m)
+	registerSCRIPTFLUSH(m)
+	registerSCRIPTKILL(m)
+	registerSCRIPTLOAD(m)
+	registerPUBLISH(m)
+	registerPUBSUBCHANNELS(m)
+	registerPUBSUBNUMSUB(m)
+	registerPUBSUBNUMPAT(m)
+	registerCLUSTERSLOTS(m)
+	registerCLUSTERNODES(m)
+	registerCLUSTERMEET(m)
+	registerCLUSTERFORGET(m)
+	registerCLUSTERREPLICATE(m)
+	registerCLUSTERRESETSOFT(m)
+	registerCLUSTERRESETHARD(m)
+	registerCLUSTERINFO(m)
+	registerCLUSTERKEYSLOT(m)
+	registerCLUSTERGETKEYSINSLOT(m)
+	registerCLUSTERCOUNTFAILUREREPORTS(m)
+	registerCLUSTERCOUNTKEYSINSLOT(m)
+	registerCLUSTERDELSLOTS(m)
+	registerCLUSTERDELSLOTSRANGE(m)
+	registerCLUSTERSAVECONFIG(m)
+	registerCLUSTERSLAVES(m)
+	registerCLUSTERFAILOVER(m)
+	registerCLUSTERADDSLOTS(m)
+	registerCLUSTERADDSLOTSRANGE(m)
+	registerGEOADD(m)
+	registerGEOPOS(m)
+	registerGEORADIUS(m)
+	registerGEORADIUSSTORE(m)
+	registerGEORADIUSBYMEMBER(m)
+	registerGEORADIUSBYMEMBERSTORE(m)
+	registerGEOSEARCH(m)
+	registerGEOSEARCHLOCATION(m)
+	registerGEOSEARCHSTORE(m)
+	registerGEODIST(m)
+	registerGEOHASH(m)
 }

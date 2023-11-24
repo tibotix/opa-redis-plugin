@@ -770,7 +770,7 @@ def main():
     
     if gen_impl:
         print("// Code generated! DO NOT EDIT")
-        print("package internal")
+        print("package redisManager")
         print("""
 import (
     "time"
@@ -800,10 +800,10 @@ import (
             print(f" - `{signature.cmd_name.upper()}( {args!s} ) -> {signature.return_type.to_go_rego_types_api_code()}`")
 
     register_main_func = """
-func (p *redisPlugin) registerAutogenCommands() {"""
+func (m *RedisManager) registerAutogenCommands() {"""
     for f in register_functions:
         register_main_func += f"""
-    {f}(p)"""
+    {f}(m)"""
     register_main_func += """
 }"""
     if gen_impl:
@@ -821,7 +821,7 @@ def generate_function_code_for_signature(signature: CmdSignature):
     args = ",".join(map(lambda p:p.to_go_rego_types_api_code(), signature.parameter_types))
 
     code = f"""
-func register{signature.cmd_name.upper()}(p *redisPlugin) {{
+func register{signature.cmd_name.upper()}(m *RedisManager) {{
     rego.RegisterBuiltinDyn(
         &rego.Function{{
             Name: \"redis.{signature.cmd_name.lower()}\",
@@ -830,14 +830,14 @@ func register{signature.cmd_name.upper()}(p *redisPlugin) {{
             Nondeterministic: true,
         }},
         func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {{
-            rdb, err := p.redisProxy.Get()
+            rdb, err := m.RedisProxy.Get()
             if err != nil {{
                 return nil, err
             }}
 
 """
 
-    parameter_args = ["p.redisContext"]
+    parameter_args = ["m.RedisContext"]
     for idx, p in enumerate(signature.parameter_types):
         var_name = f"v{idx!s}"
         parameter_args.append(p.to_go_parameter_code(var_name, idx==len(signature.parameter_types)-1))

@@ -1,4 +1,4 @@
-package internal
+package redisManager
 
 import (
 	"github.com/tibotix/opa-redis-plugin/utils"
@@ -9,7 +9,7 @@ import (
 	"github.com/open-policy-agent/opa/types"
 )
 
-func registerDO(p *redisPlugin) {
+func registerDO(m *RedisManager) {
 	rego.RegisterBuiltinDyn(
 		&rego.Function{
 			Name:             "redis.do",
@@ -18,7 +18,7 @@ func registerDO(p *redisPlugin) {
 			Nondeterministic: true,
 		},
 		func(bctx rego.BuiltinContext, terms []*ast.Term) (*ast.Term, error) {
-			rdb, err := p.redisProxy.Get()
+			rdb, err := m.RedisProxy.Get()
 			if err != nil {
 				return nil, err
 			}
@@ -28,7 +28,7 @@ func registerDO(p *redisPlugin) {
 				return nil, err
 			}
 
-			val, err := rdb.Do(p.redisContext, utils.Conva(v0)...).Text()
+			val, err := rdb.Do(m.RedisContext, utils.Conva(v0)...).Text()
 			switch {
 			case err == redis.Nil:
 				return ast.NullTerm(), nil
@@ -41,6 +41,6 @@ func registerDO(p *redisPlugin) {
 	)
 }
 
-func (p *redisPlugin) registerManualCommands() {
-	registerDO(p)
+func (m *RedisManager) registerManualCommands() {
+	registerDO(m)
 }
