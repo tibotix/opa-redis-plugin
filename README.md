@@ -32,7 +32,10 @@ import (
 )
 
 func main() {
-	runtime.RegisterPlugin(opa_redis_plugin.PluginName, opa_redis_plugin.Factory{})
+	redisManager := opa_redis_plugin.NewRedisManager()
+	redisManager.RegisterCommands()
+
+	runtime.RegisterPlugin(opa_redis_plugin.PluginName, opa_redis_plugin.NewFactory(redisManager))
 
 	if err := cmd.RootCommand.Execute(); err != nil {
 		os.Exit(1)
@@ -96,6 +99,8 @@ redis.do(["SET", "mykey", "myvalue"])
 # Limitations
 
 Currently, Redis [Transactions](https://redis.io/docs/manual/transactions/) and [Pipelines](https://redis.io/docs/manual/pipelining/) are not supported yet. Pull Requests are welcome.
+
+Additionally, `opa eval` does not work with this plugin, as `opa eval` does not load plugins.
 
 # Credits
 

@@ -17,6 +17,9 @@ func NewFactory(rm *redisManager.RedisManager) Factory {
 		rm,
 	}
 }
+func NewRedisManager() *redisManager.RedisManager {
+	return redisManager.New()
+}
 
 // PluginName is the name to register with the OPA plugin manager
 const PluginName = internal.PluginName
