@@ -431,7 +431,13 @@ func NewRuntime(ctx context.Context, params Params) (*Runtime, error) {
 		}
 	}
 
-	disco, err := discovery.New(manager, discovery.Factories(registeredPlugins), discovery.Metrics(metrics))
+	var bootConfig map[string]interface{}
+	err = util.Unmarshal(config, &bootConfig)
+	if err != nil {
+		return nil, fmt.Errorf("config error: %w", err)
+	}
+
+	disco, err := discovery.New(manager, discovery.Factories(registeredPlugins), discovery.Metrics(metrics), discovery.BootConfig(bootConfig))
 	if err != nil {
 		return nil, fmt.Errorf("config error: %w", err)
 	}
@@ -534,13 +540,6 @@ func (rt *Runtime) Serve(ctx context.Context) error {
 			rt.logger.WithFields(map[string]interface{}{"err": err}).Error("Failed to start OpenTelemetry trace exporter.")
 			return err
 		}
-
-		defer func() {
-			err := rt.traceExporter.Shutdown(ctx)
-			if err != nil {
-				rt.logger.WithFields(map[string]interface{}{"err": err}).Error("Failed to shutdown OpenTelemetry trace exporter gracefully.")
-			}
-		}()
 	}
 
 	rt.server = server.New().
@@ -857,6 +856,13 @@ func (rt *Runtime) gracefulServerShutdown(s *server.Server) error {
 		return err
 	}
 	rt.logger.Info("Server shutdown.")
+
+	if rt.traceExporter != nil {
+		err = rt.traceExporter.Shutdown(ctx)
+		if err != nil {
+			rt.logger.WithFields(map[string]interface{}{"err": err}).Error("Failed to shutdown OpenTelemetry trace exporter gracefully.")
+		}
+	}
 	return nil
 }
 
