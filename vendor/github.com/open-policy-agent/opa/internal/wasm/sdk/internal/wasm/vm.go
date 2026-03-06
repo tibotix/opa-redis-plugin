@@ -14,16 +14,16 @@ import (
 	"strings"
 	"time"
 
-	wasmtime "github.com/bytecodealliance/wasmtime-go/v3"
+	wasmtime "github.com/bytecodealliance/wasmtime-go/v37"
 
-	"github.com/open-policy-agent/opa/ast"
 	sdk_errors "github.com/open-policy-agent/opa/internal/wasm/sdk/opa/errors"
 	"github.com/open-policy-agent/opa/internal/wasm/util"
-	"github.com/open-policy-agent/opa/metrics"
-	"github.com/open-policy-agent/opa/topdown"
-	"github.com/open-policy-agent/opa/topdown/builtins"
-	"github.com/open-policy-agent/opa/topdown/cache"
-	"github.com/open-policy-agent/opa/topdown/print"
+	"github.com/open-policy-agent/opa/v1/ast"
+	"github.com/open-policy-agent/opa/v1/metrics"
+	"github.com/open-policy-agent/opa/v1/topdown"
+	"github.com/open-policy-agent/opa/v1/topdown/builtins"
+	"github.com/open-policy-agent/opa/v1/topdown/cache"
+	"github.com/open-policy-agent/opa/v1/topdown/print"
 )
 
 // VM is a wrapper around a Wasm VM instance
@@ -79,7 +79,12 @@ func newVM(opts vmOpts, engine *wasmtime.Engine) (*VM, error) {
 	v := &VM{engine: engine}
 	store := wasmtime.NewStore(engine)
 	store.SetEpochDeadline(1)
-	memorytype := wasmtime.NewMemoryType(opts.memoryMin, true, opts.memoryMax)
+	memorytype := wasmtime.NewMemoryType(
+		opts.memoryMin,
+		true,
+		opts.memoryMax,
+		false,
+	)
 	memory, err := wasmtime.NewMemory(store, memorytype)
 	if err != nil {
 		return nil, err
@@ -94,11 +99,11 @@ func newVM(opts vmOpts, engine *wasmtime.Engine) (*VM, error) {
 	v.dispatcher = newBuiltinDispatcher()
 	externs := opaFunctions(v.dispatcher, store)
 	for name, extern := range externs {
-		if err := linker.Define("env", name, extern); err != nil {
+		if err := linker.Define(store, "env", name, extern); err != nil {
 			return nil, fmt.Errorf("linker: env.%s: %w", name, err)
 		}
 	}
-	if err := linker.Define("env", "memory", memory); err != nil {
+	if err := linker.Define(store, "env", "memory", memory); err != nil {
 		return nil, fmt.Errorf("linker: env.memory: %w", err)
 	}
 
@@ -228,7 +233,7 @@ func newVM(opts vmOpts, engine *wasmtime.Engine) (*VM, error) {
 
 	builtinMap := map[int32]topdown.BuiltinFunc{}
 
-	for name, id := range builtins.(map[string]interface{}) {
+	for name, id := range builtins.(map[string]any) {
 		f := topdown.GetBuiltin(name)
 		if f == nil {
 			return nil, fmt.Errorf("builtin '%s' not found", name)
@@ -255,7 +260,7 @@ func newVM(opts vmOpts, engine *wasmtime.Engine) (*VM, error) {
 		return nil, err
 	}
 
-	for ep, value := range epMap.(map[string]interface{}) {
+	for ep, value := range epMap.(map[string]any) {
 		id, err := value.(json.Number).Int64()
 		if err != nil {
 			return nil, err
@@ -276,14 +281,14 @@ func getABIVersion(i *wasmtime.Instance, store wasmtime.Storelike) (int32, int32
 			return majorVal.I32(), minorVal.I32(), nil
 		}
 	}
-	return 0, 0, fmt.Errorf("failed to read ABI version")
+	return 0, 0, errors.New("failed to read ABI version")
 }
 
 // Eval performs an evaluation of the specified entrypoint, with any provided
 // input, and returns the resulting value dumped to a string.
 func (i *VM) Eval(ctx context.Context,
 	entrypoint int32,
-	input *interface{},
+	input *any,
 	metrics metrics.Metrics,
 	seed io.Reader,
 	ns time.Time,
@@ -353,10 +358,7 @@ func (i *VM) Eval(ctx context.Context,
 	metrics.Timer("wasm_vm_eval_call").Stop()
 
 	data := i.memory.UnsafeData(i.store)[resultAddr:]
-	n := bytes.IndexByte(data, 0)
-	if n < 0 {
-		n = 0
-	}
+	n := max(bytes.IndexByte(data, 0), 0)
 
 	// Skip free'ing input and result JSON as the heap will be reset next round anyway.
 	return data[:n], nil
@@ -367,7 +369,7 @@ func (i *VM) Eval(ctx context.Context,
 // Wasm modules lacking the needed export (i.e., ABI 1.1).
 func (i *VM) evalCompat(ctx context.Context,
 	entrypoint int32,
-	input *interface{},
+	input *any,
 	metrics metrics.Metrics,
 	seed io.Reader,
 	ns time.Time,
@@ -439,10 +441,7 @@ func (i *VM) evalCompat(ctx context.Context,
 	}
 
 	data := i.memory.UnsafeData(i.store)[serialized:]
-	n := bytes.IndexByte(data, 0)
-	if n < 0 {
-		n = 0
-	}
+	n := max(bytes.IndexByte(data, 0), 0)
 
 	metrics.Timer("wasm_vm_eval_prepare_result").Stop()
 
@@ -487,11 +486,11 @@ func (i *VM) SetPolicyData(ctx context.Context, opts vmOpts) error {
 			}
 		}
 		mem := i.memory.UnsafeData(i.store)
-		len := int32(len(opts.parsedData))
-		copy(mem[i.baseHeapPtr:i.baseHeapPtr+len], opts.parsedData)
+		length := int32(len(opts.parsedData))
+		copy(mem[i.baseHeapPtr:i.baseHeapPtr+length], opts.parsedData)
 		i.dataAddr = opts.parsedDataAddr
 
-		i.evalHeapPtr = i.baseHeapPtr + len
+		i.evalHeapPtr = i.baseHeapPtr + length
 		err := i.setHeapState(ctx, i.evalHeapPtr)
 		if err != nil {
 			return err
@@ -546,7 +545,7 @@ func (i *VM) Entrypoints() map[string]int32 {
 // SetDataPath will update the current data on the VM by setting the value at the
 // specified path. If an error occurs the instance is still in a valid state, however
 // the data will not have been modified.
-func (i *VM) SetDataPath(ctx context.Context, path []string, value interface{}) error {
+func (i *VM) SetDataPath(ctx context.Context, path []string, value any) error {
 	// Reset the heap ptr before patching the vm to try and keep any
 	// new allocations safe from subsequent heap resets on eval.
 	if err := i.setHeapState(ctx, i.evalHeapPtr); err != nil {
@@ -649,24 +648,21 @@ func (i *VM) RemoveDataPath(ctx context.Context, path []string) error {
 
 // fromRegoJSON parses serialized JSON from the Wasm memory buffer into
 // native go types.
-func (i *VM) fromRegoJSON(ctx context.Context, addr int32, free bool) (interface{}, error) {
+func (i *VM) fromRegoJSON(ctx context.Context, addr int32, free bool) (any, error) {
 	serialized, err := i.jsonDump(ctx, addr)
 	if err != nil {
 		return nil, err
 	}
 
 	data := i.memory.UnsafeData(i.store)[serialized:]
-	n := bytes.IndexByte(data, 0)
-	if n < 0 {
-		n = 0
-	}
+	n := max(bytes.IndexByte(data, 0), 0)
 
 	// Parse the result into go types.
 
 	decoder := json.NewDecoder(bytes.NewReader(data[0:n]))
 	decoder.UseNumber()
 
-	var result interface{}
+	var result any
 	if err := decoder.Decode(&result); err != nil {
 		return nil, err
 	}
@@ -682,7 +678,7 @@ func (i *VM) fromRegoJSON(ctx context.Context, addr int32, free bool) (interface
 
 // toRegoJSON converts go native JSON to Rego JSON. If the value is
 // an AST type it will be dumped using its stringer.
-func (i *VM) toRegoJSON(ctx context.Context, v interface{}, free bool) (int32, error) {
+func (i *VM) toRegoJSON(ctx context.Context, v any, free bool) (int32, error) {
 	var raw []byte
 	switch v := v.(type) {
 	case []byte:
@@ -751,8 +747,8 @@ func callVoid(ctx context.Context, vm *VM, name string, args ...int32) error {
 	return err
 }
 
-func callOrCancel(ctx context.Context, vm *VM, name string, args ...int32) (interface{}, error) {
-	sl := make([]interface{}, len(args))
+func callOrCancel(ctx context.Context, vm *VM, name string, args ...int32) (any, error) {
+	sl := make([]any, len(args))
 	for i := range sl {
 		sl[i] = args[i]
 	}
@@ -780,7 +776,7 @@ func callOrCancel(ctx context.Context, vm *VM, name string, args ...int32) (inte
 	// If this call into the VM ends up calling host functions (builtins not
 	// implemented in Wasm), and those panic, wasmtime will re-throw them,
 	// and this is where we deal with that:
-	res, err := func() (res interface{}, err error) {
+	res, err := func() (res any, err error) {
 		defer close(done)
 		defer func() {
 			if e := recover(); e != nil {

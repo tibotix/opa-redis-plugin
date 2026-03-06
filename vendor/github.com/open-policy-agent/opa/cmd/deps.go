@@ -8,17 +8,20 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"os"
 
-	"github.com/open-policy-agent/opa/dependencies"
 	"github.com/open-policy-agent/opa/internal/presentation"
+	"github.com/open-policy-agent/opa/v1/dependencies"
 
 	"github.com/spf13/cobra"
 
-	"github.com/open-policy-agent/opa/ast"
+	"github.com/open-policy-agent/opa/cmd/formats"
 	"github.com/open-policy-agent/opa/cmd/internal/env"
-	"github.com/open-policy-agent/opa/loader"
-	"github.com/open-policy-agent/opa/util"
+	"github.com/open-policy-agent/opa/v1/ast"
+	"github.com/open-policy-agent/opa/v1/bundle"
+	"github.com/open-policy-agent/opa/v1/loader"
+	"github.com/open-policy-agent/opa/v1/util"
 )
 
 type depsCommandParams struct {
@@ -26,32 +29,29 @@ type depsCommandParams struct {
 	outputFormat *util.EnumFlag
 	ignore       []string
 	bundlePaths  repeatedStringFlag
+	v0Compatible bool
 	v1Compatible bool
 }
 
 func (p *depsCommandParams) regoVersion() ast.RegoVersion {
+	// The '--v0-compatible' flag takes precedence over the '--v1-compatible' flag.
+	if p.v0Compatible {
+		return ast.RegoV0
+	}
 	if p.v1Compatible {
 		return ast.RegoV1
 	}
-	return ast.RegoV0
+	return ast.DefaultRegoVersion
 }
-
-const (
-	depsFormatPretty = "pretty"
-	depsFormatJSON   = "json"
-)
 
 func newDepsCommandParams() depsCommandParams {
-	var params depsCommandParams
-
-	params.outputFormat = util.NewEnumFlag(depsFormatPretty, []string{
-		depsFormatPretty, depsFormatJSON,
-	})
-
-	return params
+	return depsCommandParams{
+		outputFormat: formats.Flag(formats.Pretty, formats.JSON),
+	}
 }
 
-func init() {
+func initDeps(root *cobra.Command, _ string) {
+	executable := root.Name()
 
 	params := newDepsCommandParams()
 
@@ -62,23 +62,21 @@ func init() {
 
 Dependencies are categorized as either base documents, which is any data loaded
 from the outside world, or virtual documents, i.e values that are computed from rules.
+`,
 
-Example
--------
+		Example: `
 Given a policy like this:
 
 	package policy
-
-	import rego.v1
 
 	allow if is_admin
 
 	is_admin if "admin" in input.user.roles
 
 To evaluate the dependencies of a simple query (e.g. data.policy.allow),
-we'd run opa deps like demonstrated below:
+we'd run ` + executable + ` deps like demonstrated below:
 
-	$ opa deps --data policy.rego data.policy.allow
+	$ ` + executable + ` deps --data policy.rego data.policy.allow
 	+------------------+----------------------+
 	|  BASE DOCUMENTS  |  VIRTUAL DOCUMENTS   |
 	+------------------+----------------------+
@@ -96,11 +94,14 @@ data.policy.is_admin.
 			}
 			return env.CmdFlags.CheckEnvironmentVariables(cmd)
 		},
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cmd.SilenceErrors = true
+			cmd.SilenceUsage = true
 			if err := deps(args, params, os.Stdout); err != nil {
 				fmt.Fprintln(os.Stderr, err)
-				os.Exit(1)
+				return err
 			}
+			return nil
 		},
 	}
 
@@ -110,52 +111,43 @@ data.policy.is_admin.
 	addOutputFormat(depsCommand.Flags(), params.outputFormat)
 	addV1CompatibleFlag(depsCommand.Flags(), &params.v1Compatible, false)
 
-	RootCommand.AddCommand(depsCommand)
+	root.AddCommand(depsCommand)
 }
 
 func deps(args []string, params depsCommandParams, w io.Writer) error {
-
 	query, err := ast.ParseBody(args[0])
 	if err != nil {
 		return err
 	}
 
-	modules := map[string]*ast.Module{}
+	var modules map[string]*ast.Module
 
 	if len(params.dataPaths.v) > 0 {
-		f := loaderFilter{
-			Ignore: params.ignore,
-		}
-
 		result, err := loader.NewFileLoader().
+			WithBundleLazyLoadingMode(bundle.HasExtension()).
 			WithRegoVersion(params.regoVersion()).
-			Filtered(params.dataPaths.v, f.Apply)
+			Filtered(params.dataPaths.v, ignored(params.ignore).Apply)
 		if err != nil {
 			return err
 		}
 
-		for _, m := range result.Modules {
-			modules[m.Name] = m.Parsed
-		}
+		modules = result.ParsedModules()
 	}
 
 	if len(params.bundlePaths.v) > 0 {
+		modules = make(map[string]*ast.Module, len(params.bundlePaths.v))
 		for _, path := range params.bundlePaths.v {
-			b, err := loader.NewFileLoader().WithSkipBundleVerification(true).AsBundle(path)
+			b, err := loader.NewFileLoader().WithBundleLazyLoadingMode(bundle.HasExtension()).WithSkipBundleVerification(true).AsBundle(path)
 			if err != nil {
 				return err
 			}
 
-			for name, mod := range b.ParsedModules(path) {
-				modules[name] = mod
-			}
+			maps.Copy(modules, b.ParsedModules(path))
 		}
 	}
 
 	compiler := ast.NewCompiler()
-	compiler.Compile(modules)
-
-	if compiler.Failed() {
+	if compiler.Compile(modules); compiler.Failed() {
 		return compiler.Errors
 	}
 
@@ -175,7 +167,7 @@ func deps(args []string, params depsCommandParams, w io.Writer) error {
 	}
 
 	switch params.outputFormat.String() {
-	case depsFormatJSON:
+	case formats.JSON:
 		return presentation.JSON(w, output)
 	default:
 		return output.Pretty(w)

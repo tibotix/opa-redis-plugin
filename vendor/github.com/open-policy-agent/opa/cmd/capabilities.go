@@ -9,31 +9,40 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/open-policy-agent/opa/ast"
 	"github.com/open-policy-agent/opa/cmd/internal/env"
+	"github.com/open-policy-agent/opa/v1/ast"
 	"github.com/spf13/cobra"
 )
 
 type capabilitiesParams struct {
-	showCurrent bool
-	version     string
-	file        string
+	showCurrent  bool
+	version      string
+	file         string
+	v0Compatible bool
 }
 
-func init() {
+func (p *capabilitiesParams) regoVersion() ast.RegoVersion {
+	if p.v0Compatible {
+		return ast.RegoV0
+	}
+	return ast.DefaultRegoVersion
+}
+
+func initCapabilities(root *cobra.Command, brand string) {
+	executable := root.Name()
 
 	capabilitiesParams := capabilitiesParams{}
 
 	var capabilitiesCommand = &cobra.Command{
 		Use:   "capabilities",
-		Short: "Print the capabilities of OPA",
-		Long: `Show capabilities for OPA.
+		Short: "Print the capabilities of " + brand,
+		Long: `Show capabilities for ` + brand + `.
 
-The 'capabilities' command prints the OPA capabilities, prior to and including the version of OPA used.
+The 'capabilities' command prints the ` + brand + ` capabilities, prior to and including the version of ` + brand + ` used.
 
 Print a list of all existing capabilities version names
 
-    $ opa capabilities
+    $ ` + executable + ` capabilities
     v0.17.0
     v0.17.1
     ...
@@ -44,7 +53,7 @@ Print a list of all existing capabilities version names
 
 Print the capabilities of the current version
 
-    $ opa capabilities --current
+    $ ` + executable + ` capabilities --current
     {
         "builtins": [...],
         "future_keywords": [...],
@@ -53,7 +62,7 @@ Print the capabilities of the current version
 
 Print the capabilities of a specific version
 
-    $ opa capabilities --version v0.32.1
+    $ ` + executable + ` capabilities --version v0.32.1
     {
         "builtins": [...],
         "future_keywords": null,
@@ -62,7 +71,7 @@ Print the capabilities of a specific version
 
 Print the capabilities of a capabilities file
 
-    $ opa capabilities --file ./capabilities/v0.32.1.json
+    $ ` + executable + ` capabilities --file ./capabilities/v0.32.1.json
     {
         "builtins": [...],
         "future_keywords": null,
@@ -70,10 +79,13 @@ Print the capabilities of a capabilities file
     }
 
 `,
-		PreRunE: func(cmd *cobra.Command, args []string) error {
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			return env.CmdFlags.CheckEnvironmentVariables(cmd)
 		},
-		RunE: func(*cobra.Command, []string) error {
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			cmd.SilenceErrors = true
+			cmd.SilenceUsage = true
+
 			cs, err := doCapabilities(capabilitiesParams)
 			if err != nil {
 				return err
@@ -84,9 +96,10 @@ Print the capabilities of a capabilities file
 	}
 	capabilitiesCommand.Flags().BoolVar(&capabilitiesParams.showCurrent, "current", false, "print current capabilities")
 	capabilitiesCommand.Flags().StringVar(&capabilitiesParams.version, "version", "", "print capabilities of a specific version")
-	capabilitiesCommand.Flags().StringVar(&capabilitiesParams.file, "file", "", "print current capabilities")
+	capabilitiesCommand.Flags().StringVar(&capabilitiesParams.file, "file", "", "print capabilities defined by a file")
+	addV0CompatibleFlag(capabilitiesCommand.Flags(), &capabilitiesParams.v0Compatible, false)
 
-	RootCommand.AddCommand(capabilitiesCommand)
+	root.AddCommand(capabilitiesCommand)
 }
 
 func doCapabilities(params capabilitiesParams) (string, error) {
@@ -100,7 +113,7 @@ func doCapabilities(params capabilitiesParams) (string, error) {
 	} else if len(params.file) > 0 {
 		c, err = ast.LoadCapabilitiesFile(params.file)
 	} else if params.showCurrent {
-		c = ast.CapabilitiesForThisVersion()
+		c = ast.CapabilitiesForThisVersion(ast.CapabilitiesRegoVersion(params.regoVersion()))
 	} else {
 		return showVersions()
 	}

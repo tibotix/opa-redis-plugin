@@ -8,33 +8,36 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"math"
 	"net/http"
 	"os"
-	"sort"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/open-policy-agent/opa/ast"
+	"github.com/olekukonko/tablewriter/tw"
 
-	"github.com/open-policy-agent/opa/server/types"
+	"github.com/open-policy-agent/opa/v1/ast"
 
-	"github.com/open-policy-agent/opa/logging"
-	"github.com/open-policy-agent/opa/runtime"
+	"github.com/open-policy-agent/opa/v1/server/types"
+
+	"github.com/open-policy-agent/opa/v1/logging"
+	"github.com/open-policy-agent/opa/v1/runtime"
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 
+	"github.com/open-policy-agent/opa/cmd/formats"
 	"github.com/open-policy-agent/opa/cmd/internal/env"
-	"github.com/open-policy-agent/opa/compile"
 	"github.com/open-policy-agent/opa/internal/presentation"
-	"github.com/open-policy-agent/opa/metrics"
-	"github.com/open-policy-agent/opa/rego"
-	"github.com/open-policy-agent/opa/util"
+	"github.com/open-policy-agent/opa/v1/compile"
+	"github.com/open-policy-agent/opa/v1/metrics"
+	"github.com/open-policy-agent/opa/v1/rego"
+	"github.com/open-policy-agent/opa/v1/util"
 )
 
 // benchmarkCommandParams are a superset of evalCommandParams
@@ -50,26 +53,21 @@ type benchmarkCommandParams struct {
 	configFile             string
 }
 
-const (
-	benchmarkGoBenchOutput = "gobench"
-)
-
 func newBenchmarkEvalParams() benchmarkCommandParams {
 	return benchmarkCommandParams{
 		evalCommandParams: evalCommandParams{
-			outputFormat: util.NewEnumFlag(evalPrettyOutput, []string{
-				evalJSONOutput,
-				evalPrettyOutput,
-				benchmarkGoBenchOutput,
-			}),
-			target: util.NewEnumFlag(compile.TargetRego, []string{compile.TargetRego, compile.TargetWasm}),
-			schema: &schemaFlags{},
+			outputFormat: formats.Flag(formats.Pretty, formats.JSON, formats.GoBench),
+			target:       util.NewEnumFlag(compile.TargetRego, []string{compile.TargetRego, compile.TargetWasm}),
+			schema:       &schemaFlags{},
+			capabilities: newCapabilitiesFlag(),
 		},
 		gracefulShutdownPeriod: 10,
 	}
 }
 
-func init() {
+func initBench(root *cobra.Command, brand string) {
+	executable := root.Name()
+
 	params := newBenchmarkEvalParams()
 
 	benchCommand := &cobra.Command{
@@ -82,11 +80,10 @@ evaluation will be repeated a number of times and performance results will be re
 
 Example with bundle and input data:
 
-	opa bench -b ./policy-bundle -i input.json 'data.authz.allow'
+	` + executable + ` bench -b ./policy-bundle -i input.json 'data.authz.allow'
 
+To run benchmarks against a running ` + brand + ` server to evaluate server overhead use the --e2e flag.
 To enable more detailed analysis use the --metrics and --benchmem flags.
-
-To run benchmarks against a running OPA server to evaluate server overhead use the --e2e flag.
 
 The optional "gobench" output format conforms to the Go Benchmark Data Format.
 `,
@@ -95,16 +92,27 @@ The optional "gobench" output format conforms to the Go Benchmark Data Format.
 			if err := env.CmdFlags.CheckEnvironmentVariables(cmd); err != nil {
 				return err
 			}
+			// Initialize testing package for benchmarking. This is needed to set default values for some flags that may
+			// otherwise be dereferenced on some code paths causing panics, as reported in:
+			// https://github.com/open-policy-agent/opa/issues/7205
+			testing.Init()
+
 			return validateEvalParams(&params.evalCommandParams, args)
 		},
-		Run: func(_ *cobra.Command, args []string) {
-			exit, err := benchMain(args, params, os.Stdout, &goBenchRunner{})
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cmd.SilenceErrors = true
+			cmd.SilenceUsage = true
+
+			exit, err := benchMain(args, params, os.Stdout, os.Stderr, &goBenchRunner{})
 			if err != nil {
 				// NOTE: err should only be non-nil if a (highly unlikely)
 				// presentation error occurs.
 				fmt.Fprintf(os.Stderr, "error: %v\n", err)
 			}
-			os.Exit(exit)
+			if exit != 0 {
+				return newExitError(exit)
+			}
+			return nil
 		},
 	}
 
@@ -124,33 +132,35 @@ The optional "gobench" output format conforms to the Go Benchmark Data Format.
 	addIgnoreFlag(benchCommand.Flags(), &params.ignore)
 	addSchemaFlags(benchCommand.Flags(), params.schema)
 	addTargetFlag(benchCommand.Flags(), params.target)
+	addV0CompatibleFlag(benchCommand.Flags(), &params.v0Compatible, false)
 	addV1CompatibleFlag(benchCommand.Flags(), &params.v1Compatible, false)
+	addReadAstValuesFromStoreFlag(benchCommand.Flags(), &params.ReadAstValuesFromStore, false)
 
 	// Shared benchmark flags
 	addCountFlag(benchCommand.Flags(), &params.count, "benchmark")
 	addBenchmemFlag(benchCommand.Flags(), &params.benchMem, true)
 
-	addE2EFlag(benchCommand.Flags(), &params.e2e, false)
+	addE2EFlag(benchCommand.Flags(), &params.e2e, false, brand)
 	addConfigFileFlag(benchCommand.Flags(), &params.configFile)
 
 	benchCommand.Flags().IntVar(&params.gracefulShutdownPeriod, "shutdown-grace-period", 10, "set the time (in seconds) that the server will wait to gracefully shut down. This flag is valid in 'e2e' mode only.")
 	benchCommand.Flags().IntVar(&params.shutdownWaitPeriod, "shutdown-wait-period", 0, "set the time (in seconds) that the server will wait before initiating shutdown. This flag is valid in 'e2e' mode only.")
 
-	RootCommand.AddCommand(benchCommand)
+	root.AddCommand(benchCommand)
 }
 
 type benchRunner interface {
 	run(ctx context.Context, ectx *evalContext, params benchmarkCommandParams, f func(context.Context, ...rego.EvalOption) error) (testing.BenchmarkResult, error)
 }
 
-func benchMain(args []string, params benchmarkCommandParams, w io.Writer, r benchRunner) (int, error) {
+func benchMain(args []string, params benchmarkCommandParams, w io.Writer, stderr io.Writer, r benchRunner) (int, error) {
 
 	ctx := context.Background()
 
 	if params.e2e {
 		err := benchE2E(ctx, args, params, w)
 		if err != nil {
-			errRender := renderBenchmarkError(params, err, w)
+			errRender := renderBenchmarkError(params, err, w, stderr)
 			return 1, errRender
 		}
 		return 0, nil
@@ -158,9 +168,19 @@ func benchMain(args []string, params benchmarkCommandParams, w io.Writer, r benc
 
 	ectx, err := setupEval(args, params.evalCommandParams)
 	if err != nil {
-		errRender := renderBenchmarkError(params, err, w)
+		errRender := renderBenchmarkError(params, err, w, stderr)
 		return 1, errRender
 	}
+
+	resultHandler := rego.GenerateJSON(func(*ast.Term, *rego.EvalContext) (any, error) {
+		// Do nothing with the result, as we are only interested in benchmarking evaluation —
+		// not the potentially slow process of rendering the result.
+		// Undefined / empty results will still be handled normally (fail the benchmark unless --fail
+		// is set to false).
+		return nil, nil
+	})
+
+	ectx.regoArgs = append(ectx.regoArgs, resultHandler)
 
 	var benchFunc func(context.Context, ...rego.EvalOption) error
 	rg := rego.New(ectx.regoArgs...)
@@ -169,7 +189,7 @@ func benchMain(args []string, params benchmarkCommandParams, w io.Writer, r benc
 		// Take the eval context and prepare anything else we possible can before benchmarking the evaluation
 		pq, err := rg.PrepareForEval(ctx)
 		if err != nil {
-			errRender := renderBenchmarkError(params, err, w)
+			errRender := renderBenchmarkError(params, err, w, stderr)
 			return 1, errRender
 		}
 
@@ -178,7 +198,7 @@ func benchMain(args []string, params benchmarkCommandParams, w io.Writer, r benc
 			if err != nil {
 				return err
 			} else if len(result) == 0 && params.fail {
-				return fmt.Errorf("undefined result")
+				return errors.New("undefined result")
 			}
 			return nil
 		}
@@ -186,7 +206,7 @@ func benchMain(args []string, params benchmarkCommandParams, w io.Writer, r benc
 		// As with normal evaluation, prepare as much as possible up front.
 		pq, err := rg.PrepareForPartial(ctx)
 		if err != nil {
-			errRender := renderBenchmarkError(params, err, w)
+			errRender := renderBenchmarkError(params, err, w, stderr)
 			return 1, errRender
 		}
 
@@ -195,17 +215,17 @@ func benchMain(args []string, params benchmarkCommandParams, w io.Writer, r benc
 			if err != nil {
 				return err
 			} else if len(result.Queries) == 0 && params.fail {
-				return fmt.Errorf("undefined result")
+				return errors.New("undefined result")
 			}
 			return nil
 		}
 	}
 
 	// Run the benchmark as many times as specified, re-use the prepared objects for each
-	for i := 0; i < params.count; i++ {
+	for range params.count {
 		br, err := r.run(ctx, ectx, params, benchFunc)
 		if err != nil {
-			errRender := renderBenchmarkError(params, err, w)
+			errRender := renderBenchmarkError(params, err, w, stderr)
 			return 1, errRender
 		}
 		renderBenchmarkResult(params, br, w)
@@ -217,7 +237,7 @@ func benchMain(args []string, params benchmarkCommandParams, w io.Writer, r benc
 type goBenchRunner struct {
 }
 
-func (r *goBenchRunner) run(ctx context.Context, ectx *evalContext, params benchmarkCommandParams, f func(context.Context, ...rego.EvalOption) error) (testing.BenchmarkResult, error) {
+func (*goBenchRunner) run(ctx context.Context, ectx *evalContext, params benchmarkCommandParams, f func(context.Context, ...rego.EvalOption) error) (testing.BenchmarkResult, error) {
 
 	var hist, m metrics.Metrics
 	if params.metrics {
@@ -230,17 +250,18 @@ func (r *goBenchRunner) run(ctx context.Context, ectx *evalContext, params bench
 	var benchErr error
 
 	br := testing.Benchmark(func(b *testing.B) {
-
 		// Track memory allocations, if enabled
 		if params.benchMem {
 			b.ReportAllocs()
 		}
 
 		// Reset the histogram for each invocation of the bench function
-		hist.Clear()
+		if params.metrics {
+			hist.Clear()
+		}
 
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 
 			// Start the timer (might already be started, but that's ok)
 			b.StartTimer()
@@ -295,7 +316,7 @@ func benchE2E(ctx context.Context, args []string, params benchmarkCommandParams,
 	// We fix the issue here by binding port 0; this will result in the OS
 	// allocating us an open port.
 	rtParams := runtime.Params{
-		Addrs:                  &[]string{fmt.Sprintf("%s:0", host)},
+		Addrs:                  &[]string{host + ":0"},
 		Paths:                  paths,
 		Logger:                 logger,
 		BundleMode:             params.bundlePaths.isFlagSet(),
@@ -304,6 +325,7 @@ func benchE2E(ctx context.Context, args []string, params benchmarkCommandParams,
 		GracefulShutdownPeriod: params.gracefulShutdownPeriod,
 		ShutdownWaitPeriod:     params.shutdownWaitPeriod,
 		ConfigFile:             params.configFile,
+		V0Compatible:           params.v0Compatible,
 		V1Compatible:           params.v1Compatible,
 	}
 
@@ -337,7 +359,7 @@ func benchE2E(ctx context.Context, args []string, params benchmarkCommandParams,
 	baseDelay := time.Duration(100) * time.Millisecond
 	maxDelay := time.Duration(60) * time.Second
 	retries := 3 // Max of around 1 minute total wait time.
-	for i := 0; i < retries; i++ {
+	for i := range retries {
 		if len(rt.Addrs()) == 0 {
 			delay := util.DefaultBackoff(float64(baseDelay), float64(maxDelay), i)
 			time.Sleep(delay)
@@ -352,7 +374,7 @@ func benchE2E(ctx context.Context, args []string, params benchmarkCommandParams,
 	}
 	// Check for port still being unbound after retry loop.
 	if port == 0 {
-		return fmt.Errorf("unable to bind a port for bench testing")
+		return errors.New("unable to bind a port for bench testing")
 	}
 
 	query, err := readQuery(params, args)
@@ -366,7 +388,7 @@ func benchE2E(ctx context.Context, args []string, params benchmarkCommandParams,
 	}
 
 	// Wrap input in "input" attribute
-	inp := make(map[string]interface{})
+	inp := make(map[string]any)
 
 	if input != nil {
 		if err = util.Unmarshal(input, &inp); err != nil {
@@ -374,7 +396,7 @@ func benchE2E(ctx context.Context, args []string, params benchmarkCommandParams,
 		}
 	}
 
-	body := map[string]interface{}{"input": inp}
+	body := map[string]any{"input": inp}
 
 	var path string
 	if params.partial {
@@ -386,7 +408,7 @@ func benchE2E(ctx context.Context, args []string, params benchmarkCommandParams,
 	} else {
 		_, err := ast.ParseBody(query)
 		if err != nil {
-			return fmt.Errorf("error occurred while parsing query")
+			return errors.New("error occurred while parsing query")
 		}
 
 		if strings.HasPrefix(query, "data.") {
@@ -402,7 +424,7 @@ func benchE2E(ctx context.Context, args []string, params benchmarkCommandParams,
 		url += "?metrics=true"
 	}
 
-	for i := 0; i < params.count; i++ {
+	for range params.count {
 		br, err := runE2E(params, url, body)
 		if err != nil {
 			return err
@@ -412,7 +434,7 @@ func benchE2E(ctx context.Context, args []string, params benchmarkCommandParams,
 	return nil
 }
 
-func runE2E(params benchmarkCommandParams, url string, input map[string]interface{}) (testing.BenchmarkResult, error) {
+func runE2E(params benchmarkCommandParams, url string, input map[string]any) (testing.BenchmarkResult, error) {
 	hist := metrics.New()
 
 	var benchErr error
@@ -428,7 +450,7 @@ func runE2E(params benchmarkCommandParams, url string, input map[string]interfac
 		hist.Clear()
 
 		b.ResetTimer()
-		for i := 0; i < b.N; i++ {
+		for range b.N {
 
 			// Start the timer
 			b.StartTimer()
@@ -468,7 +490,7 @@ func runE2E(params benchmarkCommandParams, url string, input map[string]interfac
 	return br, benchErr
 }
 
-func e2eQuery(params benchmarkCommandParams, url string, input map[string]interface{}) (types.MetricsV1, error) {
+func e2eQuery(params benchmarkCommandParams, url string, input map[string]any) (types.MetricsV1, error) {
 
 	reqBody, err := json.Marshal(input)
 	if err != nil {
@@ -493,7 +515,7 @@ func e2eQuery(params benchmarkCommandParams, url string, input map[string]interf
 	}
 
 	if resp.StatusCode != 200 {
-		var e map[string]interface{}
+		var e map[string]any
 		if err = util.Unmarshal(body, &e); err != nil {
 			return nil, err
 		}
@@ -523,7 +545,7 @@ func e2eQuery(params benchmarkCommandParams, url string, input map[string]interf
 		}
 
 		if result.Result == nil && params.fail {
-			return nil, fmt.Errorf("undefined result")
+			return nil, errors.New("undefined result")
 		}
 
 		return result.Metrics, nil
@@ -536,31 +558,31 @@ func e2eQuery(params benchmarkCommandParams, url string, input map[string]interf
 
 	if params.fail {
 		if result.Result == nil {
-			return nil, fmt.Errorf("undefined result")
+			return nil, errors.New("undefined result")
 		}
 
 		i := *result.Result
 
-		peResult, ok := i.(map[string]interface{})
+		peResult, ok := i.(map[string]any)
 		if !ok {
-			return nil, fmt.Errorf("invalid result for compile response")
+			return nil, errors.New("invalid result for compile response")
 		}
 
 		if len(peResult) == 0 {
-			return nil, fmt.Errorf("undefined result")
+			return nil, errors.New("undefined result")
 		}
 
 		if val, ok := peResult["queries"]; ok {
-			queries, ok := val.([]interface{})
+			queries, ok := val.([]any)
 			if !ok {
-				return nil, fmt.Errorf("invalid result for output of partial evaluation")
+				return nil, errors.New("invalid result for output of partial evaluation")
 			}
 
 			if len(queries) == 0 {
-				return nil, fmt.Errorf("undefined result")
+				return nil, errors.New("undefined result")
 			}
 		} else {
-			return nil, fmt.Errorf("invalid result for output of partial evaluation")
+			return nil, errors.New("invalid result for output of partial evaluation")
 		}
 	}
 
@@ -583,9 +605,9 @@ func readQuery(params benchmarkCommandParams, args []string) (string, error) {
 
 func renderBenchmarkResult(params benchmarkCommandParams, br testing.BenchmarkResult, w io.Writer) {
 	switch params.outputFormat.String() {
-	case evalJSONOutput:
+	case formats.JSON:
 		_ = presentation.JSON(w, br)
-	case benchmarkGoBenchOutput:
+	case formats.GoBench:
 		fmt.Fprintf(w, "BenchmarkOPAEval\t%s", br.String())
 		if params.benchMem {
 			fmt.Fprintf(w, "\t%s", br.MemString())
@@ -593,42 +615,37 @@ func renderBenchmarkResult(params benchmarkCommandParams, br testing.BenchmarkRe
 		fmt.Fprintf(w, "\n")
 	default:
 		data := [][]string{
-			{"samples", fmt.Sprintf("%d", br.N)},
+			{"samples", strconv.Itoa(br.N)},
 			{"ns/op", prettyFormatFloat(float64(br.T.Nanoseconds()) / float64(br.N))},
 		}
 		if params.benchMem {
 			data = append(data, []string{
-				"B/op", fmt.Sprintf("%d", br.AllocedBytesPerOp()),
+				"B/op", strconv.FormatInt(br.AllocedBytesPerOp(), 10),
 			}, []string{
-				"allocs/op", fmt.Sprintf("%d", br.AllocsPerOp()),
+				"allocs/op", strconv.FormatInt(br.AllocsPerOp(), 10),
 			})
 		}
 
-		var keys []string
-		for k := range br.Extra {
-			keys = append(keys, k)
-		}
-		sort.Strings(keys)
-		for _, k := range keys {
+		for _, k := range util.KeysSorted(br.Extra) {
 			data = append(data, []string{k, prettyFormatFloat(br.Extra[k])})
 		}
 
-		table := tablewriter.NewWriter(w)
-		table.AppendBulk(data)
-		table.Render()
+		table := tablewriter.NewTable(w, tablewriter.WithAlignment(tw.Alignment{tw.AlignLeft, tw.AlignRight}))
+		_ = table.Bulk(data)
+		_ = table.Render()
 	}
 }
 
-func renderBenchmarkError(params benchmarkCommandParams, err error, w io.Writer) error {
+func renderBenchmarkError(params benchmarkCommandParams, err error, w io.Writer, stderr io.Writer) error {
 	o := presentation.Output{
 		Errors: presentation.NewOutputErrors(err),
 	}
 
 	switch params.outputFormat.String() {
-	case evalJSONOutput:
+	case formats.JSON:
 		return presentation.JSON(w, o)
 	default:
-		return presentation.Pretty(w, o)
+		return presentation.Pretty(w, stderr, o)
 	}
 }
 
@@ -657,11 +674,11 @@ func prettyFormatFloat(x float64) string {
 	return fmt.Sprintf(format, x)
 }
 
-func reportMetrics(b *testing.B, m map[string]interface{}) {
+func reportMetrics(b *testing.B, m map[string]any) {
 	// For each histogram add their values to the benchmark results.
 	// Note: If there are many metrics this gets super verbose.
 	for histName, metric := range m {
-		histValues, ok := metric.(map[string]interface{})
+		histValues, ok := metric.(map[string]any)
 		if !ok {
 			continue
 		}

@@ -9,25 +9,39 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
 
 	"github.com/spf13/cobra"
 
-	"github.com/open-policy-agent/opa/ast"
 	"github.com/open-policy-agent/opa/cmd/internal/env"
-	"github.com/open-policy-agent/opa/format"
 	fileurl "github.com/open-policy-agent/opa/internal/file/url"
-	"github.com/open-policy-agent/opa/loader"
-	"github.com/open-policy-agent/opa/refactor"
+	"github.com/open-policy-agent/opa/v1/ast"
+	"github.com/open-policy-agent/opa/v1/bundle"
+	"github.com/open-policy-agent/opa/v1/format"
+	"github.com/open-policy-agent/opa/v1/loader"
+	"github.com/open-policy-agent/opa/v1/refactor"
 )
 
 type moveCommandParams struct {
-	mapping   repeatedStringFlag
-	ignore    []string
-	overwrite bool
+	mapping      repeatedStringFlag
+	ignore       []string
+	overwrite    bool
+	v0Compatible bool
+	v1Compatible bool
 }
 
-func init() {
+func (m *moveCommandParams) regoVersion() ast.RegoVersion {
+	// v0 takes precedence over v1
+	if m.v0Compatible {
+		return ast.RegoV0
+	}
+	if m.v1Compatible {
+		return ast.RegoV1
+	}
+	return ast.DefaultRegoVersion
+}
+
+func initRefactor(root *cobra.Command, brand string) {
+	executable := root.Name()
 
 	var moveCommandParams moveCommandParams
 
@@ -60,7 +74,7 @@ Example:
 | default allow = false   |
 | _ _ _ _ _ _ _ _ _ _ _ _ |     
 	
-	$ opa refactor move -p data.lib.foo:data.baz.bar policy.rego
+	$ ` + executable + ` refactor move -p data.lib.foo:data.baz.bar policy.rego
 
 The 'move' command outputs the below policy to stdout with the package name rewritten as per the mapping:
 
@@ -76,11 +90,15 @@ The 'move' command outputs the below policy to stdout with the package name rewr
 			}
 			return env.CmdFlags.CheckEnvironmentVariables(cmd)
 		},
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cmd.SilenceErrors = true
+			cmd.SilenceUsage = true
+
 			if err := doMove(moveCommandParams, args, os.Stdout); err != nil {
 				fmt.Fprintln(os.Stderr, "error:", err)
-				os.Exit(1)
+				return err
 			}
+			return nil
 		},
 	}
 
@@ -88,7 +106,9 @@ The 'move' command outputs the below policy to stdout with the package name rewr
 	moveCommand.Flags().BoolVarP(&moveCommandParams.overwrite, "write", "w", false, "overwrite the original source file")
 	addIgnoreFlag(moveCommand.Flags(), &moveCommandParams.ignore)
 	refactorCommand.AddCommand(moveCommand)
-	RootCommand.AddCommand(refactorCommand)
+	addV0CompatibleFlag(moveCommand.Flags(), &moveCommandParams.v0Compatible, false)
+	addV1CompatibleFlag(moveCommand.Flags(), &moveCommandParams.v1Compatible, false)
+	root.AddCommand(refactorCommand)
 }
 
 func doMove(params moveCommandParams, args []string, out io.Writer) error {
@@ -101,23 +121,16 @@ func doMove(params moveCommandParams, args []string, out io.Writer) error {
 		return err
 	}
 
-	modules := map[string]*ast.Module{}
-
-	f := loaderFilter{
-		Ignore: params.ignore,
-	}
-
-	result, err := loader.NewFileLoader().Filtered(args, f.Apply)
+	result, err := loader.NewFileLoader().
+		WithBundleLazyLoadingMode(bundle.HasExtension()).
+		WithRegoVersion(params.regoVersion()).
+		Filtered(args, ignored(params.ignore).Apply)
 	if err != nil {
 		return err
 	}
 
-	for _, m := range result.Modules {
-		modules[m.Name] = m.Parsed
-	}
-
 	mq := refactor.MoveQuery{
-		Modules:       modules,
+		Modules:       result.ParsedModules(),
 		SrcDstMapping: srcDstMap,
 	}.WithValidation(true)
 
@@ -132,7 +145,7 @@ func doMove(params moveCommandParams, args []string, out io.Writer) error {
 			return err
 		}
 
-		formatted, err := format.Ast(mod)
+		formatted, err := format.AstWithOpts(mod, format.Opts{RegoVersion: params.regoVersion()})
 		if err != nil {
 			return newError("failed to parse Rego source file: %v", err)
 		}
@@ -164,12 +177,19 @@ func parseSrcDstMap(data []string) (map[string]string, error) {
 	result := map[string]string{}
 
 	for _, d := range data {
-		parts := strings.Split(d, ":")
-		if len(parts) != 2 {
-			return nil, errors.New("expected mapping of the form <from>:<to>")
+		term, err := ast.ParseTerm("{" + d + "}")
+		if err != nil {
+			return nil, newError("failed to parse mapping: %v", err)
 		}
-
-		result[parts[0]] = parts[1]
+		obj, ok := term.Value.(ast.Object)
+		if !ok {
+			return nil, newError("expected mapping of the form <from>:<to>")
+		}
+		keys := obj.Keys()
+		if len(keys) != 1 {
+			return nil, newError("expected mapping of the form <from>:<to>")
+		}
+		result[keys[0].String()] = obj.Get(keys[0]).String()
 	}
 	return result, nil
 }

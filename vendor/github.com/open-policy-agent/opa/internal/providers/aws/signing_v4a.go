@@ -9,7 +9,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
-	"fmt"
+	"errors"
 	"hash"
 	"io"
 	"math/big"
@@ -32,6 +32,7 @@ const (
 	amzSecurityTokenKey = v4Internal.AmzSecurityTokenKey
 	amzDateKey          = v4Internal.AmzDateKey
 	authorizationHeader = "Authorization"
+	amzContentSha256Key = "x-amz-content-sha256"
 
 	signingAlgorithm = "AWS4-ECDSA-P256-SHA256"
 
@@ -106,7 +107,7 @@ func deriveKeyFromAccessKeyPair(accessKey, secretKey string) (*ecdsa.PrivateKey,
 
 		counter++
 		if counter > 0xFF {
-			return nil, fmt.Errorf("exhausted single byte external counter")
+			return nil, errors.New("exhausted single byte external counter")
 		}
 	}
 	d = d.Add(d, one)
@@ -145,7 +146,7 @@ func retrievePrivateKey(symmetric Credentials) (v4aCredentials, error) {
 
 	privateKey, err := deriveKeyFromAccessKeyPair(symmetric.AccessKey, symmetric.SecretKey)
 	if err != nil {
-		return v4aCredentials{}, fmt.Errorf("failed to derive asymmetric key from credentials")
+		return v4aCredentials{}, errors.New("failed to derive asymmetric key from credentials")
 	}
 
 	creds := v4aCredentials{
@@ -173,7 +174,7 @@ type httpSigner struct {
 	PayloadHash string
 }
 
-func (s *httpSigner) setRequiredSigningFields(headers http.Header, query url.Values) {
+func (s *httpSigner) setRequiredSigningFields(headers http.Header, _ url.Values) {
 	amzDate := s.Time.Format(timeFormat)
 
 	headers.Set(AmzRegionSetKey, strings.Join(s.RegionSet, ","))
@@ -192,7 +193,7 @@ func (s *httpSigner) Build() (signedRequest, error) {
 
 	// seemingly required by S3/MRAP -- 403 Forbidden otherwise
 	headers.Set("host", req.URL.Host)
-	headers.Set("x-amz-content-sha256", s.PayloadHash)
+	headers.Set(amzContentSha256Key, s.PayloadHash)
 
 	s.setRequiredSigningFields(headers, query)
 
@@ -215,7 +216,7 @@ func (s *httpSigner) Build() (signedRequest, error) {
 
 	signedHeaders, signedHeadersStr, canonicalHeaderStr := s.buildCanonicalHeaders(host, v4Internal.IgnoredHeaders, unsignedHeaders, s.Request.ContentLength)
 
-	rawQuery := strings.Replace(query.Encode(), "+", "%20", -1)
+	rawQuery := strings.ReplaceAll(query.Encode(), "+", "%20")
 
 	canonicalURI := v4Internal.GetURIPath(req.URL)
 
@@ -279,7 +280,7 @@ func buildAuthorizationHeader(credentialStr, signedHeadersStr, signingSignature 
 	return parts.String()
 }
 
-func (s *httpSigner) buildCanonicalHeaders(host string, rule v4Internal.Rule, header http.Header, length int64) (signed http.Header, signedHeaders, canonicalHeadersStr string) {
+func (*httpSigner) buildCanonicalHeaders(host string, rule v4Internal.Rule, header http.Header, length int64) (signed http.Header, signedHeaders, canonicalHeadersStr string) {
 	signed = make(http.Header)
 
 	const hostHeader = "host"
@@ -313,7 +314,7 @@ func (s *httpSigner) buildCanonicalHeaders(host string, rule v4Internal.Rule, he
 	var canonicalHeaders strings.Builder
 	n := len(headers)
 	const colon = ':'
-	for i := 0; i < n; i++ {
+	for i := range n {
 		if headers[i] == hostHeader {
 			canonicalHeaders.WriteString(hostHeader)
 			canonicalHeaders.WriteRune(colon)
@@ -381,8 +382,7 @@ type signedRequest struct {
 
 // SignV4a returns a map[string][]string of headers, including an added AWS V4a signature based on the config/credentials provided.
 func SignV4a(headers map[string][]string, method string, theURL *url.URL, body []byte, service string, awsCreds Credentials, theTime time.Time) map[string][]string {
-	bodyHexHash := fmt.Sprintf("%x", sha256.Sum256(body))
-
+	contentSha256 := getContentHash(false, body)
 	key, err := retrievePrivateKey(awsCreds)
 	if err != nil {
 		return map[string][]string{}
@@ -394,7 +394,7 @@ func SignV4a(headers map[string][]string, method string, theURL *url.URL, body [
 
 	signer := &httpSigner{
 		Request:     req,
-		PayloadHash: bodyHexHash,
+		PayloadHash: contentSha256,
 		ServiceName: service,
 		RegionSet:   []string{"*"},
 		Credentials: key,

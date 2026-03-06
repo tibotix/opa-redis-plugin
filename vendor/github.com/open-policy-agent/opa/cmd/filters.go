@@ -8,8 +8,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/open-policy-agent/opa/bundle"
-	"github.com/open-policy-agent/opa/loader"
+	"github.com/open-policy-agent/opa/v1/bundle"
+	"github.com/open-policy-agent/opa/v1/loader"
 )
 
 type loaderFilter struct {
@@ -28,4 +28,12 @@ func (f loaderFilter) Apply(abspath string, info os.FileInfo, depth int) bool {
 		}
 	}
 	return false
+}
+
+func ignored(ignore []string) loaderFilter {
+	return loaderFilter{Ignore: ignore}
+}
+
+func ignoredOnlyRego(ignore []string) loaderFilter {
+	return loaderFilter{Ignore: ignore, OnlyRego: true}
 }

@@ -8,17 +8,21 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"errors"
 	"fmt"
 	"os"
 	"path"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
 
 	"github.com/open-policy-agent/opa/cmd/internal/env"
-	"github.com/open-policy-agent/opa/runtime"
-	"github.com/open-policy-agent/opa/server"
-	"github.com/open-policy-agent/opa/util"
+	fileurl "github.com/open-policy-agent/opa/internal/file/url"
+	"github.com/open-policy-agent/opa/v1/runtime"
+	"github.com/open-policy-agent/opa/v1/server"
+	"github.com/open-policy-agent/opa/v1/util"
 )
 
 const (
@@ -64,27 +68,28 @@ func newRunParams() runCmdParams {
 	}
 }
 
-func init() {
+func initRun(root *cobra.Command, brand string) {
+	executable := root.Name()
 	cmdParams := newRunParams()
 
 	runCommand := &cobra.Command{
 		Use:   "run",
-		Short: "Start OPA in interactive or server mode",
-		Long: `Start an instance of the Open Policy Agent (OPA).
+		Short: `Start ` + brand + ` in interactive or server mode`,
+		Long: `Start an instance of ` + brand + `.
 
 To run the interactive shell:
 
-    $ opa run
+    $ ` + executable + ` run
 
 To run the server:
 
-    $ opa run -s
+    $ ` + executable + ` run -s
 
-The 'run' command starts an instance of the OPA runtime. The OPA runtime can be
+The 'run' command starts an instance of the ` + brand + ` runtime. The ` + brand + ` runtime can be
 started as an interactive shell or a server.
 
 When the runtime is started as a shell, users can define rules and evaluate
-expressions interactively. When the runtime is started as a server, OPA exposes
+expressions interactively. When the runtime is started as a server, ` + brand + ` exposes
 an HTTP API for managing policies, reading and writing data, and executing
 queries.
 
@@ -92,11 +97,11 @@ The runtime can be initialized with one or more files that contain policies or
 data. If the '--bundle' option is specified the paths will be treated as policy
 bundles and loaded following standard bundle conventions. The path can be a
 compressed archive file or a directory which will be treated as a bundle.
-Without the '--bundle' flag OPA will recursively load ALL rego, JSON, and YAML
+Without the '--bundle' flag ` + brand + ` will recursively load ALL rego, JSON, and YAML
 files.
 
 When loading from directories, only files with known extensions are considered.
-The current set of file extensions that OPA will consider are:
+The current set of file extensions that ` + brand + ` will consider are:
 
     .json          # JSON data
     .yaml or .yml  # YAML data
@@ -114,7 +119,7 @@ To set a data file as the input document in the interactive shell use the
 
 Example:
 
-    $ opa run repl.input:input.json
+    $ ` + executable + ` run repl.input:input.json
 
 Which will load the "input.json" file at path "data.repl.input".
 
@@ -123,22 +128,22 @@ Use the "help input" command in the interactive shell to see more options.
 
 File paths can be specified as URLs to resolve ambiguity in paths containing colons:
 
-    $ opa run file:///c:/path/to/data.json
+    $ ` + executable + ` run file:///c:/path/to/data.json
 
 URL paths to remote public bundles (http or https) will be parsed as shorthand
 configuration equivalent of using repeated --set flags to accomplish the same:
 
-	$ opa run -s https://example.com/bundles/bundle.tar.gz
+	$ ` + executable + ` run -s https://example.com/bundles/bundle.tar.gz
 
 The above shorthand command is identical to:
 
-    $ opa run -s --set "services.cli1.url=https://example.com" \
+    $ ` + executable + ` run -s --set "services.cli1.url=https://example.com" \
                  --set "bundles.cli1.service=cli1" \
                  --set "bundles.cli1.resource=/bundles/bundle.tar.gz" \
                  --set "bundles.cli1.persist=true"
 
 The 'run' command can also verify the signature of a signed bundle.
-A signed bundle is a normal OPA bundle that includes a file
+A signed bundle is a normal ` + brand + ` bundle that includes a file
 named ".signatures.json". For more information on signed bundles
 see https://www.openpolicyagent.org/docs/latest/management-bundles/#signing.
 
@@ -159,7 +164,7 @@ bundle signature verification.
 
 Example:
 
-    $ opa run --verification-key secret --signing-alg HS256 --bundle bundle.tar.gz
+    $ ` + executable + ` run --verification-key secret --signing-alg HS256 --bundle bundle.tar.gz
 
 The 'run' command will read the bundle "bundle.tar.gz", check the
 ".signatures.json" file and perform verification using the provided key.
@@ -180,9 +185,10 @@ OPA will automatically perform type checking based on a schema inferred from kno
 resulting from the schema check. Currently this check is performed on OPA's Authorization Policy Input document and will
 be expanded in the future. To disable this, use the --skip-known-schema-check flag.
 
-The --v1-compatible flag can be used to opt-in to OPA features and behaviors that will be enabled by default in a future OPA v1.0 release.
-Current behaviors enabled by this flag include:
-- setting OPA's listening address to "localhost:8181" by default.
+The --v0-compatible flag can be used to opt-in to OPA features and behaviors that were the default in OPA v0.x.
+Behaviors enabled by this flag include:
+- setting OPA's listening address to ":8181" by default, corresponding to listening on every network interface.
+- expecting v0 Rego syntax in policy modules instead of the default v1 Rego syntax.
 
 The --tls-cipher-suites flag can be used to specify the list of enabled TLS 1.0–1.2 cipher suites. Note that TLS 1.3
 cipher suites are not configurable. Following are the supported TLS 1.0 - 1.2 cipher suites (IANA):
@@ -195,31 +201,35 @@ TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256, TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1
 
 See https://godoc.org/crypto/tls#pkg-constants for more information.
 `,
-		PreRunE: func(cmd *cobra.Command, args []string) error {
+		PreRunE: func(cmd *cobra.Command, _ []string) error {
 			return env.CmdFlags.CheckEnvironmentVariables(cmd)
 		},
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cmd.SilenceErrors = true
+			cmd.SilenceUsage = true
+
 			ctx := context.Background()
 			addrSetByUser := cmd.Flags().Changed("addr")
 			rt, err := initRuntime(ctx, cmdParams, args, addrSetByUser)
 			if err != nil {
 				fmt.Println("error:", err)
-				os.Exit(1)
+				return err
 			}
-			startRuntime(ctx, rt, cmdParams.serverMode)
+			return startRuntime(ctx, rt, cmdParams.serverMode)
 		},
 	}
 
 	addConfigFileFlag(runCommand.Flags(), &cmdParams.rt.ConfigFile)
 	runCommand.Flags().BoolVarP(&cmdParams.serverMode, "server", "s", false, "start the runtime in server mode")
 	runCommand.Flags().IntVar(&cmdParams.rt.ReadyTimeout, "ready-timeout", 0, "wait (in seconds) for configured plugins before starting server (value <= 0 disables ready check)")
-	runCommand.Flags().StringVarP(&cmdParams.rt.HistoryPath, "history", "H", historyPath(), "set path of history file")
-	cmdParams.rt.Addrs = runCommand.Flags().StringSliceP("addr", "a", []string{defaultAddr}, "set listening address of the server (e.g., [ip]:<port> for TCP, unix://<path> for UNIX domain socket)")
+	runCommand.Flags().StringVarP(&cmdParams.rt.HistoryPath, "history", "H", historyPath(brand), "set path of history file")
+	cmdParams.rt.Addrs = runCommand.Flags().StringSliceP("addr", "a", []string{defaultLocalAddr}, "set listening address of the server (e.g., [ip]:<port> for TCP, unix://<path> for UNIX domain socket)")
 	cmdParams.rt.DiagnosticAddrs = runCommand.Flags().StringSlice("diagnostic-addr", []string{}, "set read-only diagnostic listening address of the server for /health and /metric APIs (e.g., [ip]:<port> for TCP, unix://<path> for UNIX domain socket)")
 	cmdParams.rt.UnixSocketPerm = runCommand.Flags().String("unix-socket-perm", "755", "specify the permissions for the Unix domain socket if used to listen for incoming connections")
 	runCommand.Flags().BoolVar(&cmdParams.rt.H2CEnabled, "h2c", false, "enable H2C for HTTP listeners")
 	runCommand.Flags().StringVarP(&cmdParams.rt.OutputFormat, "format", "f", "pretty", "set shell output format, i.e, pretty, json")
 	runCommand.Flags().BoolVarP(&cmdParams.rt.Watch, "watch", "w", false, "watch command line files for changes")
+	addV0CompatibleFlag(runCommand.Flags(), &cmdParams.rt.V0Compatible, false)
 	addV1CompatibleFlag(runCommand.Flags(), &cmdParams.rt.V1Compatible, false)
 	addMaxErrorsFlag(runCommand.Flags(), &cmdParams.rt.ErrorLimit)
 	runCommand.Flags().BoolVar(&cmdParams.rt.PprofEnabled, "pprof", false, "enables pprof endpoints")
@@ -229,7 +239,7 @@ See https://godoc.org/crypto/tls#pkg-constants for more information.
 	runCommand.Flags().DurationVar(&cmdParams.tlsCertRefresh, "tls-cert-refresh-period", 0, "set certificate refresh period")
 	runCommand.Flags().Var(cmdParams.authentication, "authentication", "set authentication scheme")
 	runCommand.Flags().Var(cmdParams.authorization, "authorization", "set authorization scheme")
-	runCommand.Flags().Var(cmdParams.minTLSVersion, "min-tls-version", "set minimum TLS version to be used by OPA's server")
+	runCommand.Flags().Var(cmdParams.minTLSVersion, "min-tls-version", "set minimum TLS version to be used by "+brand+"'s server")
 	runCommand.Flags().VarP(cmdParams.logLevel, "log-level", "l", "set log level")
 	runCommand.Flags().Var(cmdParams.logFormat, "log-format", "set log format")
 	runCommand.Flags().StringVar(&cmdParams.logTimestampFormat, "log-timestamp-format", "", "set log timestamp format (OPA_LOG_TIMESTAMP_FORMAT environment variable)")
@@ -240,6 +250,7 @@ See https://godoc.org/crypto/tls#pkg-constants for more information.
 	addConfigOverrides(runCommand.Flags(), &cmdParams.rt.ConfigOverrides)
 	addConfigOverrideFiles(runCommand.Flags(), &cmdParams.rt.ConfigOverrideFiles)
 	addBundleModeFlag(runCommand.Flags(), &cmdParams.rt.BundleMode, false)
+	addReadAstValuesFromStoreFlag(runCommand.Flags(), &cmdParams.rt.ReadAstValuesFromStore, false)
 
 	runCommand.Flags().BoolVar(&cmdParams.skipVersionCheck, "skip-version-check", false, "disables anonymous version reporting (see: https://www.openpolicyagent.org/docs/latest/privacy)")
 	err := runCommand.Flags().MarkDeprecated("skip-version-check", "\"skip-version-check\" is deprecated. Use \"disable-telemetry\" instead")
@@ -268,7 +279,7 @@ Flags:
 
 	runCommand.SetUsageTemplate(usageTemplate)
 
-	RootCommand.AddCommand(runCommand)
+	root.AddCommand(runCommand)
 }
 
 func initRuntime(ctx context.Context, params runCmdParams, args []string, addrSetByUser bool) (*runtime.Runtime, error) {
@@ -290,18 +301,31 @@ func initRuntime(ctx context.Context, params runCmdParams, args []string, addrSe
 		"1.3": tls.VersionTLS13,
 	}
 
-	cert, err := loadCertificate(params.tlsCertFile, params.tlsPrivateKeyFile)
+	tlsCertFilePath, err := fileurl.Clean(params.tlsCertFile)
+	if err != nil {
+		return nil, fmt.Errorf("invalid certificate file path: %w", err)
+	}
+	tlsPrivateKeyFilePath, err := fileurl.Clean(params.tlsPrivateKeyFile)
+	if err != nil {
+		return nil, fmt.Errorf("invalid certificate private key file path: %w", err)
+	}
+	tlsCACertFilePath, err := fileurl.Clean(params.tlsCACertFile)
+	if err != nil {
+		return nil, fmt.Errorf("invalid CA certificate file path: %w", err)
+	}
+
+	cert, err := loadCertificate(tlsCertFilePath, tlsPrivateKeyFilePath)
 	if err != nil {
 		return nil, err
 	}
 
-	params.rt.CertificateFile = params.tlsCertFile
-	params.rt.CertificateKeyFile = params.tlsPrivateKeyFile
+	params.rt.CertificateFile = tlsCertFilePath
+	params.rt.CertificateKeyFile = tlsPrivateKeyFilePath
 	params.rt.CertificateRefresh = params.tlsCertRefresh
-	params.rt.CertPoolFile = params.tlsCACertFile
+	params.rt.CertPoolFile = tlsCACertFilePath
 
-	if params.tlsCACertFile != "" {
-		pool, err := loadCertPool(params.tlsCACertFile)
+	if tlsCACertFilePath != "" {
+		pool, err := loadCertPool(tlsCACertFilePath)
 		if err != nil {
 			return nil, err
 		}
@@ -323,10 +347,7 @@ func initRuntime(ctx context.Context, params runCmdParams, args []string, addrSe
 		TimestampFormat: timestampFormat,
 	}
 	params.rt.Paths = args
-	params.rt.Filter = loaderFilter{
-		Ignore: params.ignore,
-	}.Apply
-
+	params.rt.Filter = ignored(params.ignore).Apply
 	params.rt.EnableVersionCheck = !params.disableTelemetry
 
 	// For backwards compatibility, check if `--skip-version-check` flag set.
@@ -343,7 +364,7 @@ func initRuntime(ctx context.Context, params runCmdParams, args []string, addrSe
 	params.rt.BundleVerificationConfig = bvc
 
 	if params.rt.BundleVerificationConfig != nil && !params.rt.BundleMode {
-		return nil, fmt.Errorf("enable bundle mode (ie. --bundle) to verify bundle files or directories")
+		return nil, errors.New("enable bundle mode (ie. --bundle) to verify bundle files or directories")
 	}
 
 	params.rt.SkipKnownSchemaCheck = params.skipKnownSchemaCheck
@@ -365,19 +386,18 @@ func initRuntime(ctx context.Context, params runCmdParams, args []string, addrSe
 	rt.SetDistributedTracingLogging()
 	rt.Params.AddrSetByUser = addrSetByUser
 
-	if !addrSetByUser && rt.Params.V1Compatible {
-		rt.Params.Addrs = &[]string{defaultLocalAddr}
+	if !addrSetByUser && rt.Params.V0Compatible {
+		rt.Params.Addrs = &[]string{defaultAddr}
 	}
 
 	return rt, nil
 }
 
-func startRuntime(ctx context.Context, rt *runtime.Runtime, serverMode bool) {
+func startRuntime(ctx context.Context, rt *runtime.Runtime, serverMode bool) error {
 	if serverMode {
-		rt.StartServer(ctx)
-	} else {
-		rt.StartREPL(ctx)
+		return rt.Serve(ctx)
 	}
+	return rt.StartREPL(ctx)
 }
 
 func verifyCipherSuites(cipherSuites []string) (*[]uint16, error) {
@@ -391,7 +411,7 @@ func verifyCipherSuites(cipherSuites []string) (*[]uint16, error) {
 		cipherSuitesMap[c.Name] = c
 	}
 
-	cipherSuitesIds := []uint16{}
+	cipherSuitesIDs := []uint16{}
 	for _, c := range cipherSuites {
 		val, ok := cipherSuitesMap[c]
 		if !ok {
@@ -399,28 +419,28 @@ func verifyCipherSuites(cipherSuites []string) (*[]uint16, error) {
 		}
 
 		// verify no TLS 1.3 cipher suites as they are not configurable
-		for _, ver := range val.SupportedVersions {
-			if ver == tls.VersionTLS13 {
-				return nil, fmt.Errorf("TLS 1.3 cipher suite \"%v\" is not configurable", c)
-			}
+		if slices.Contains(val.SupportedVersions, tls.VersionTLS13) {
+			return nil, fmt.Errorf("TLS 1.3 cipher suite \"%v\" is not configurable", c)
 		}
 
-		cipherSuitesIds = append(cipherSuitesIds, val.ID)
+		cipherSuitesIDs = append(cipherSuitesIDs, val.ID)
 	}
 
-	return &cipherSuitesIds, nil
+	return &cipherSuitesIDs, nil
 }
 
-func historyPath() string {
+func historyPath(brand string) string {
+	b := strings.ToLower(brand)
+	historyFile := strings.Replace(defaultHistoryFile, "opa", b, 1)
+
 	home := os.Getenv("HOME")
 	if len(home) == 0 {
-		return defaultHistoryFile
+		return historyFile
 	}
-	return path.Join(home, defaultHistoryFile)
+	return path.Join(home, historyFile)
 }
 
 func loadCertificate(tlsCertFile, tlsPrivateKeyFile string) (*tls.Certificate, error) {
-
 	if tlsCertFile != "" && tlsPrivateKeyFile != "" {
 		cert, err := tls.LoadX509KeyPair(tlsCertFile, tlsPrivateKeyFile)
 		if err != nil {
@@ -428,7 +448,7 @@ func loadCertificate(tlsCertFile, tlsPrivateKeyFile string) (*tls.Certificate, e
 		}
 		return &cert, nil
 	} else if tlsCertFile != "" || tlsPrivateKeyFile != "" {
-		return nil, fmt.Errorf("--tls-cert-file and --tls-private-key-file must be specified together")
+		return nil, errors.New("--tls-cert-file and --tls-private-key-file must be specified together")
 	}
 
 	return nil, nil

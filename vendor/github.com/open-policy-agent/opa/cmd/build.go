@@ -7,19 +7,21 @@ package cmd
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
 
-	"github.com/open-policy-agent/opa/ast"
-	"github.com/open-policy-agent/opa/bundle"
 	"github.com/open-policy-agent/opa/cmd/internal/env"
-	"github.com/open-policy-agent/opa/compile"
-	"github.com/open-policy-agent/opa/keys"
-	"github.com/open-policy-agent/opa/util"
+	"github.com/open-policy-agent/opa/v1/ast"
+	"github.com/open-policy-agent/opa/v1/bundle"
+	"github.com/open-policy-agent/opa/v1/compile"
+	"github.com/open-policy-agent/opa/v1/keys"
+	"github.com/open-policy-agent/opa/v1/util"
 )
 
 const defaultPublicKeyID = "default"
@@ -44,44 +46,61 @@ type buildParams struct {
 	excludeVerifyFiles []string
 	plugin             string
 	ns                 string
+	v0Compatible       bool
 	v1Compatible       bool
+	followSymlinks     bool
+	wasmIncludePrint   bool
+	stderr             io.Writer
 }
 
 func newBuildParams() buildParams {
 	return buildParams{
-		capabilities: newcapabilitiesFlag(),
+		capabilities: newCapabilitiesFlag(),
 		target:       util.NewEnumFlag(compile.TargetRego, compile.Targets),
+		stderr:       os.Stderr,
 	}
 }
 
-func init() {
+func (p *buildParams) regoVersion() ast.RegoVersion {
+	if p.v0Compatible {
+		// v0 takes precedence over v1
+		return ast.RegoV0
+	}
+	if p.v1Compatible {
+		return ast.RegoV1
+	}
+	return ast.DefaultRegoVersion
+}
+
+func initBuild(root *cobra.Command, brand string) {
+	executable := root.Name()
 
 	buildParams := newBuildParams()
 
-	var buildCommand = &cobra.Command{
+	buildCommand := &cobra.Command{
 		Use:   "build <path> [<path> [...]]",
-		Short: "Build an OPA bundle",
-		Long: `Build an OPA bundle.
+		Short: `Build an ` + brand + ` bundle`,
+		Long: `Build an ` + brand + ` bundle.
 
-The 'build' command packages OPA policy and data files into bundles. Bundles are
+The 'build' command packages ` + brand + ` policy and data files into bundles. Bundles are
 gzipped tarballs containing policies and data. Paths referring to directories are
 loaded recursively.
 
     $ ls
     example.rego
 
-    $ opa build -b .
+    $ ` + executable + ` build -b .
 
-You can load bundles into OPA on the command-line:
+You can load bundles into ` + brand + ` on the command-line:
 
     $ ls
     bundle.tar.gz example.rego
 
-    $ opa run bundle.tar.gz
+    $ ` + executable + ` run bundle.tar.gz
 
-You can also configure OPA to download bundles from remote HTTP endpoints:
+You can also configure ` + brand + ` to download bundles from remote HTTP endpoints:
 
-    $ opa run --server \
+    $ ` + executable + ` run --server \
         --set bundles.example.resource=bundle.tar.gz \
         --set services.example.url=http://localhost:8080
 
@@ -121,14 +140,14 @@ The 'build' command supports targets (specified by -t):
             original policy or data files.
 
     plan    The plan target emits a bundle containing a plan, i.e., an intermediate
-            representation compiled from the input files for each specified entrypoint.
-            This is for further processing, OPA cannot evaluate a "plan bundle" like it
-            can evaluate a wasm or rego bundle.
+			representation compiled from the input files for each specified entrypoint.
+			This is for further processing, ` + brand + ` cannot evaluate a "plan bundle" like it
+			can evaluate a wasm or rego bundle.
 
-The -e flag tells the 'build' command which documents (entrypoints) will be queried by 
-the software asking for policy decisions, so that it can focus optimization efforts and 
+The -e flag tells the 'build' command which documents (entrypoints) will be queried by
+the software asking for policy decisions, so that it can focus optimization efforts and
 ensure that document is not eliminated by the optimizer.
-Note: Unless the --prune-unused flag is used, any rule transitively referring to a 
+Note: Unless the --prune-unused flag is used, any rule transitively referring to a
 package or rule declared as an entrypoint will also be enumerated as an entrypoint.
 
 Signing
@@ -146,7 +165,7 @@ https://www.openpolicyagent.org/docs/latest/management-bundles/#signing.
 
 Example:
 
-    $ opa build --verification-key /path/to/public_key.pem --signing-key /path/to/private_key.pem --bundle foo
+    $ ` + executable + ` build --verification-key /path/to/public_key.pem --signing-key /path/to/private_key.pem --bundle foo
 
 Where foo has the following structure:
 
@@ -181,7 +200,7 @@ see https://www.openpolicyagent.org/docs/latest/management-bundles/#signature-fo
 Capabilities
 ------------
 
-The 'build' command can validate policies against a configurable set of OPA capabilities.
+The 'build' command can validate policies against a configurable set of ` + brand + ` capabilities.
 The capabilities define the built-in functions and other language features that policies
 may depend on. For example, the following capabilities file only permits the policy to
 depend on the "plus" built-in function ('+'):
@@ -209,24 +228,28 @@ depend on the "plus" built-in function ('+'):
         ]
     }
 
-Capabilities can be used to validate policies against a specific version of OPA.
-The OPA repository contains a set of capabilities files for each OPA release. For example,
+Capabilities can be used to validate policies against a specific version of ` + brand + `.
+The ` + brand + ` repository contains a set of capabilities files for each ` + brand + ` release. For example,
 the following command builds a directory of policies ('./policies') and validates them
-against OPA v0.22.0:
+against ` + brand + ` v0.22.0:
 
-    opa build ./policies --capabilities v0.22.0
+    ` + executable + ` build ./policies --capabilities v0.22.0
 `,
 		PreRunE: func(Cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {
-				return fmt.Errorf("expected at least one path")
+				return errors.New("expected at least one path")
 			}
 			return env.CmdFlags.CheckEnvironmentVariables(Cmd)
 		},
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cmd.SilenceErrors = true
+			cmd.SilenceUsage = true
+
 			if err := dobuild(buildParams, args); err != nil {
 				fmt.Println("error:", err)
-				os.Exit(1)
+				return err
 			}
+			return nil
 		},
 	}
 
@@ -238,6 +261,8 @@ against OPA v0.22.0:
 	buildCommand.Flags().VarP(&buildParams.revision, "revision", "r", "set output bundle revision")
 	buildCommand.Flags().StringVarP(&buildParams.outputFile, "output", "o", "bundle.tar.gz", "set the output filename")
 	buildCommand.Flags().StringVar(&buildParams.ns, "partial-namespace", "partial", "set the namespace to use for partially evaluated files in an optimized bundle")
+	buildCommand.Flags().BoolVar(&buildParams.followSymlinks, "follow-symlinks", false, "follow symlinks in the input set of paths when building the bundle")
+	buildCommand.Flags().BoolVar(&buildParams.wasmIncludePrint, "wasm-include-print", false, "enable print statements inside of WebAssembly modules compiled by the compiler")
 
 	addBundleModeFlag(buildCommand.Flags(), &buildParams.bundleMode, false)
 	addIgnoreFlag(buildCommand.Flags(), &buildParams.ignore)
@@ -255,13 +280,13 @@ against OPA v0.22.0:
 	addSigningPluginFlag(buildCommand.Flags(), &buildParams.plugin)
 	addClaimsFileFlag(buildCommand.Flags(), &buildParams.claimsFile)
 
+	addV0CompatibleFlag(buildCommand.Flags(), &buildParams.v0Compatible, false)
 	addV1CompatibleFlag(buildCommand.Flags(), &buildParams.v1Compatible, false)
 
-	RootCommand.AddCommand(buildCommand)
+	root.AddCommand(buildCommand)
 }
 
 func dobuild(params buildParams, args []string) error {
-
 	buf := bytes.NewBuffer(nil)
 
 	// generate the bundle verification and signing config
@@ -276,17 +301,29 @@ func dobuild(params buildParams, args []string) error {
 	}
 
 	if (bvc != nil || bsc != nil) && !params.bundleMode {
-		return fmt.Errorf("enable bundle mode (ie. --bundle) to verify or sign bundle files or directories")
+		return errors.New("enable bundle mode (ie. --bundle) to verify or sign bundle files or directories")
 	}
 
-	var capabilities *ast.Capabilities
-	// if capabilities are not provided as a cmd flag,
-	// then ast.CapabilitiesForThisVersion must be called
-	// within dobuild to ensure custom builtins are properly captured
-	if params.capabilities.C != nil {
-		capabilities = params.capabilities.C
-	} else {
-		capabilities = ast.CapabilitiesForThisVersion()
+	// if manifest files are found in the input directories and the -b flag is not set, this is likely a mistake.
+	if !params.bundleMode {
+		for _, arg := range args {
+			stat, err := os.Stat(arg)
+			if err != nil || !stat.IsDir() {
+				continue
+			}
+
+			if _, err := os.Stat(filepath.Join(arg, ".manifest")); err != nil {
+				continue
+			}
+
+			fmt.Fprintf(params.stderr, "Warning: .manifest file found in %q but -b flag not specified. Manifest will be ignored.\n", arg)
+		}
+	}
+
+	capabilities := params.capabilities.C
+	if capabilities == nil {
+		// ensure custom builtins are properly captured
+		capabilities = ast.CapabilitiesForThisVersion(ast.CapabilitiesRegoVersion(params.regoVersion()))
 	}
 
 	compiler := compile.New().
@@ -300,20 +337,20 @@ func dobuild(params buildParams, args []string) error {
 		WithRegoAnnotationEntrypoints(true).
 		WithPaths(args...).
 		WithFilter(buildCommandLoaderFilter(params.bundleMode, params.ignore)).
+		WithBundleLazyLoadingMode(bundle.HasExtension()).
 		WithBundleVerificationConfig(bvc).
 		WithBundleSigningConfig(bsc).
-		WithPartialNamespace(params.ns)
+		WithPartialNamespace(params.ns).
+		WithFollowSymlinks(params.followSymlinks)
 
-	if params.v1Compatible {
-		compiler = compiler.WithRegoVersion(ast.RegoV1)
-	}
+	compiler = compiler.WithRegoVersion(params.regoVersion())
 
 	if params.revision.isSet {
 		compiler = compiler.WithRevision(*params.revision.v)
 	}
 
 	if params.debug {
-		compiler = compiler.WithDebug(os.Stderr)
+		compiler = compiler.WithDebug(params.stderr)
 	}
 
 	if params.claimsFile == "" {
@@ -322,6 +359,10 @@ func dobuild(params buildParams, args []string) error {
 
 	if params.target.String() == compile.TargetPlan {
 		compiler = compiler.WithEnablePrintStatements(true)
+	}
+
+	if params.target.String() == compile.TargetWasm {
+		compiler = compiler.WithEnablePrintStatements(params.wasmIncludePrint)
 	}
 
 	err = compiler.Build(context.Background())
@@ -349,7 +390,7 @@ func buildCommandLoaderFilter(bundleMode bool, ignore []string) func(string, os.
 				return true
 			}
 		}
-		return loaderFilter{Ignore: ignore}.Apply(abspath, info, depth)
+		return ignored(ignore).Apply(abspath, info, depth)
 	}
 }
 

@@ -9,9 +9,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/open-policy-agent/opa/ast"
-	"github.com/open-policy-agent/opa/util"
-	"github.com/open-policy-agent/opa/version"
+	"github.com/open-policy-agent/opa/v1/ast"
+	"github.com/open-policy-agent/opa/v1/util"
+	"github.com/open-policy-agent/opa/v1/version"
 )
 
 // Params controls the types of runtime information to return.
@@ -28,7 +28,7 @@ func Term(params Params) (*ast.Term, error) {
 
 	if params.Config != nil {
 
-		var x interface{}
+		var x any
 		if err := util.Unmarshal(params.Config, &x); err != nil {
 			return nil, err
 		}
@@ -38,7 +38,7 @@ func Term(params Params) (*ast.Term, error) {
 			return nil, err
 		}
 
-		obj.Insert(ast.StringTerm("config"), ast.NewTerm(v))
+		obj.Insert(ast.InternedTerm("config"), ast.NewTerm(v))
 	}
 
 	env := ast.NewObject()
@@ -46,17 +46,17 @@ func Term(params Params) (*ast.Term, error) {
 	for _, s := range os.Environ() {
 		parts := strings.SplitN(s, "=", 2)
 		if len(parts) == 1 {
-			env.Insert(ast.StringTerm(parts[0]), ast.NullTerm())
+			env.Insert(ast.StringTerm(parts[0]), ast.InternedNullTerm)
 		} else if len(parts) > 1 {
 			env.Insert(ast.StringTerm(parts[0]), ast.StringTerm(parts[1]))
 		}
 	}
 
-	obj.Insert(ast.StringTerm("env"), ast.NewTerm(env))
-	obj.Insert(ast.StringTerm("version"), ast.StringTerm(version.Version))
-	obj.Insert(ast.StringTerm("commit"), ast.StringTerm(version.Vcs))
-	obj.Insert(ast.StringTerm("authorization_enabled"), ast.BooleanTerm(params.IsAuthorizationEnabled))
-	obj.Insert(ast.StringTerm("skip_known_schema_check"), ast.BooleanTerm(params.SkipKnownSchemaCheck))
+	obj.Insert(ast.InternedTerm("env"), ast.NewTerm(env))
+	obj.Insert(ast.InternedTerm("version"), ast.StringTerm(version.Version))
+	obj.Insert(ast.InternedTerm("commit"), ast.StringTerm(version.Vcs))
+	obj.Insert(ast.InternedTerm("authorization_enabled"), ast.InternedTerm(params.IsAuthorizationEnabled))
+	obj.Insert(ast.InternedTerm("skip_known_schema_check"), ast.InternedTerm(params.SkipKnownSchemaCheck))
 
 	return ast.NewTerm(obj), nil
 }

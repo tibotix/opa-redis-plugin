@@ -2,6 +2,7 @@ package internal
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"time"
 
@@ -20,6 +21,7 @@ const (
 	defaultMaxRetries  = 3
 	defaultDialTimeout = 8
 	defaultReadTimeout = 2
+	defaultTlsEnabled  = false
 )
 
 type config struct {
@@ -28,6 +30,7 @@ type config struct {
 	MaxRetries  int           `json:"max_retries"`
 	DialTimeout time.Duration `json:"dial_timeout_in_seconds"`
 	ReadTimeout time.Duration `json:"read_timeout_in_seconds"`
+	TlsEnabled  bool          `json:"tls_enabled"`
 	// TODO: support TLS config
 }
 
@@ -49,6 +52,7 @@ func Validate(m *plugins.Manager, bs []byte) (*ParsedConfig, error) {
 		MaxRetries:  defaultMaxRetries,
 		DialTimeout: defaultDialTimeout,
 		ReadTimeout: defaultReadTimeout,
+		TlsEnabled:  defaultTlsEnabled,
 	}
 
 	if err := util.Unmarshal(bs, &config); err != nil {
@@ -66,6 +70,10 @@ func Validate(m *plugins.Manager, bs []byte) (*ParsedConfig, error) {
 	opt.MaxRetries = config.MaxRetries
 	opt.DialTimeout = time.Second * config.DialTimeout
 	opt.ReadTimeout = time.Second * config.ReadTimeout
+
+	if config.TlsEnabled {
+		opt.TLSConfig = &tls.Config{InsecureSkipVerify: true}
+	}
 
 	parsedConfig := ParsedConfig{
 		Enabled: config.Enabled,

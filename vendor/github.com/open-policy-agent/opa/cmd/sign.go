@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -16,10 +17,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/open-policy-agent/opa/bundle"
 	"github.com/open-policy-agent/opa/cmd/internal/env"
 	initload "github.com/open-policy-agent/opa/internal/runtime/init"
-	"github.com/open-policy-agent/opa/util"
+	"github.com/open-policy-agent/opa/v1/bundle"
+	"github.com/open-policy-agent/opa/v1/util"
 )
 
 type signCmdParams struct {
@@ -37,19 +38,20 @@ const (
 	signaturesFile         = ".signatures.json"
 )
 
-var errSigningConfigIncomplete = fmt.Errorf("specify the secret (HMAC) or path of the PEM file containing the private key (RSA and ECDSA)")
+var errSigningConfigIncomplete = errors.New("specify the secret (HMAC) or path of the PEM file containing the private key (RSA and ECDSA)")
 
 func newSignCmdParams() signCmdParams {
 	return signCmdParams{}
 }
 
-func init() {
+func initSign(root *cobra.Command, brand string) {
+	executable := root.Name()
 	cmdParams := newSignCmdParams()
 
 	var signCommand = &cobra.Command{
 		Use:   "sign <path> [<path> [...]]",
-		Short: "Generate an OPA bundle signature",
-		Long: `Generate an OPA bundle signature.
+		Short: `Generate an ` + brand + ` bundle signature`,
+		Long: `Generate an ` + brand + ` bundle signature.
 
 The 'sign' command generates a digital signature for policy bundles. It generates a
 ".signatures.json" file that dictates which files should be included in the bundle,
@@ -69,10 +71,10 @@ the private key.
 For HMAC family of algorithms (eg. HS256), the secret can be provided using
 the --signing-key flag.
 
-OPA 'sign' can ONLY be used with the --bundle flag to load paths that refer to
+` + brand + ` 'sign' can ONLY be used with the --bundle flag to load paths that refer to
 existing bundle files or directories following the bundle structure.
 
-	$ opa sign --signing-key /path/to/private_key.pem --bundle foo
+	$ ` + executable + ` sign --signing-key /path/to/private_key.pem --bundle foo
 
 Where foo has the following structure:
 
@@ -121,7 +123,7 @@ And the decoded JWT payload has the following form:
 	}
 
 The "files" field is generated from the files under the directory path(s)
-provided to the 'sign' command. During bundle signature verification, OPA will check
+provided to the 'sign' command. During bundle signature verification, ` + brand + ` will check
 each file name (ex. "foo/bar/data.json") in the "files" field
 exists in the actual bundle. The file content is hashed using SHA256.
 
@@ -138,11 +140,15 @@ https://www.openpolicyagent.org/docs/latest/management-bundles/#signature-format
 			return env.CmdFlags.CheckEnvironmentVariables(cmd)
 		},
 
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cmd.SilenceErrors = true
+			cmd.SilenceUsage = true
+
 			if err := doSign(args, cmdParams); err != nil {
 				fmt.Println("error:", err)
-				os.Exit(1)
+				return err
 			}
+			return nil
 		},
 	}
 
@@ -156,7 +162,7 @@ https://www.openpolicyagent.org/docs/latest/management-bundles/#signature-format
 
 	signCommand.Flags().StringVarP(&cmdParams.outputFilePath, "output-file-path", "o", ".", "set the location for the .signatures.json file")
 
-	RootCommand.AddCommand(signCommand)
+	root.AddCommand(signCommand)
 }
 
 func doSign(args []string, params signCmdParams) error {
@@ -236,7 +242,7 @@ func readBundleFiles(loaders []initload.BundleLoader, h bundle.SignatureHasher) 
 func hashFileContent(h bundle.SignatureHasher, data []byte, path string) (bundle.FileInfo, error) {
 
 	var fileInfo bundle.FileInfo
-	var value interface{}
+	var value any
 
 	if bundle.IsStructuredDoc(path) {
 		err := util.Unmarshal(data, &value)
@@ -256,7 +262,7 @@ func hashFileContent(h bundle.SignatureHasher, data []byte, path string) (bundle
 }
 
 func writeTokenToFile(token, fileLoc string) error {
-	content := make(map[string]interface{})
+	content := make(map[string]any)
 	content["signatures"] = []string{token}
 
 	bs, err := json.MarshalIndent(content, "", " ")
@@ -273,7 +279,7 @@ func writeTokenToFile(token, fileLoc string) error {
 
 func validateSignParams(args []string, params signCmdParams) error {
 	if len(args) == 0 {
-		return fmt.Errorf("specify atleast one path containing policy and/or data files")
+		return errors.New("specify atleast one path containing policy and/or data files")
 	}
 
 	if params.key == "" {
@@ -281,7 +287,7 @@ func validateSignParams(args []string, params signCmdParams) error {
 	}
 
 	if !params.bundleMode {
-		return fmt.Errorf("enable bundle mode (ie. --bundle) to sign bundle files or directories")
+		return errors.New("enable bundle mode (ie. --bundle) to sign bundle files or directories")
 	}
 	return nil
 }

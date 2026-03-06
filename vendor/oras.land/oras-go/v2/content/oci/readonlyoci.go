@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"sort"
+	"slices"
 
 	"github.com/opencontainers/go-digest"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
@@ -36,7 +36,7 @@ import (
 
 // ReadOnlyStore implements `oras.ReadonlyTarget`, and represents a read-only
 // content store based on file system with the OCI-Image layout.
-// Reference: https://github.com/opencontainers/image-spec/blob/v1.1.0-rc4/image-layout.md
+// Reference: https://github.com/opencontainers/image-spec/blob/v1.1.1/image-layout.md
 type ReadOnlyStore struct {
 	fsys        fs.FS
 	storage     content.ReadOnlyStorage
@@ -83,11 +83,11 @@ func (s *ReadOnlyStore) Exists(ctx context.Context, target ocispec.Descriptor) (
 	return s.storage.Exists(ctx, target)
 }
 
-// Resolve resolves a reference to a descriptor. If the reference to be resolved
-// is a tag, the returned descriptor will be a full descriptor declared by
-// github.com/opencontainers/image-spec/specs-go/v1. If the reference is a
-// digest the returned descriptor will be a plain descriptor (containing only
-// the digest, media type and size).
+// Resolve resolves a reference to a descriptor.
+//   - If the reference to be resolved is a tag, the returned descriptor will be
+//     a full descriptor declared by github.com/opencontainers/image-spec/specs-go/v1.
+//   - If the reference is a digest, the returned descriptor will be a
+//     plain descriptor (containing only the digest, media type and size).
 func (s *ReadOnlyStore) Resolve(ctx context.Context, reference string) (ocispec.Descriptor, error) {
 	if reference == "" {
 		return ocispec.Descriptor{}, errdef.ErrMissingReference
@@ -125,7 +125,7 @@ func (s *ReadOnlyStore) Predecessors(ctx context.Context, node ocispec.Descripto
 //
 // See also `Tags()` in the package `registry`.
 func (s *ReadOnlyStore) Tags(ctx context.Context, last string, fn func(tags []string) error) error {
-	return listTags(ctx, s.tagResolver, last, fn)
+	return listTags(s.tagResolver, last, fn)
 }
 
 // validateOCILayoutFile validates the `oci-layout` file.
@@ -216,7 +216,7 @@ func resolveBlob(fsys fs.FS, dgst string) (ocispec.Descriptor, error) {
 // list.
 //
 // See also `Tags()` in the package `registry`.
-func listTags(ctx context.Context, tagResolver *resolver.Memory, last string, fn func(tags []string) error) error {
+func listTags(tagResolver *resolver.Memory, last string, fn func(tags []string) error) error {
 	var tags []string
 
 	tagMap := tagResolver.Map()
@@ -229,7 +229,7 @@ func listTags(ctx context.Context, tagResolver *resolver.Memory, last string, fn
 		}
 		tags = append(tags, tag)
 	}
-	sort.Strings(tags)
+	slices.Sort(tags)
 
 	return fn(tags)
 }

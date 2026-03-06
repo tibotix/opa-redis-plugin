@@ -6,61 +6,71 @@ package cmd
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 
-	"github.com/open-policy-agent/opa/ast"
-	"github.com/open-policy-agent/opa/bundle"
+	"github.com/olekukonko/tablewriter/tw"
+
+	"github.com/open-policy-agent/opa/cmd/formats"
 	"github.com/open-policy-agent/opa/cmd/internal/env"
 	ib "github.com/open-policy-agent/opa/internal/bundle/inspect"
 	pr "github.com/open-policy-agent/opa/internal/presentation"
 	iStrs "github.com/open-policy-agent/opa/internal/strings"
-	"github.com/open-policy-agent/opa/util"
+	"github.com/open-policy-agent/opa/v1/ast"
+	astJson "github.com/open-policy-agent/opa/v1/ast/json"
+	"github.com/open-policy-agent/opa/v1/bundle"
+	"github.com/open-policy-agent/opa/v1/util"
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 )
 
-const maxTableFieldLen = 50
-const pageWidth = 80
+const (
+	maxTableFieldLen = 50
+	pageWidth        = 80
+)
 
 type inspectCommandParams struct {
 	outputFormat    *util.EnumFlag
 	listAnnotations bool
+	v0Compatible    bool
 	v1Compatible    bool
 }
 
 func (p *inspectCommandParams) regoVersion() ast.RegoVersion {
+	if p.v0Compatible {
+		return ast.RegoV0
+	}
 	if p.v1Compatible {
 		return ast.RegoV1
 	}
-	return ast.RegoV0
+	return ast.DefaultRegoVersion
 }
 
 func newInspectCommandParams() inspectCommandParams {
 	return inspectCommandParams{
-		outputFormat: util.NewEnumFlag(evalPrettyOutput, []string{
-			evalJSONOutput,
-			evalPrettyOutput,
-		}),
+		outputFormat:    formats.Flag(formats.Pretty, formats.JSON),
 		listAnnotations: false,
 	}
 }
 
-func init() {
+func initInspect(root *cobra.Command, brand string) {
+	executable := root.Name()
 
 	params := newInspectCommandParams()
 
-	var inspectCommand = &cobra.Command{
+	inspectCommand := &cobra.Command{
 		Use:   "inspect <path> [<path> [...]]",
-		Short: "Inspect OPA bundle(s)",
-		Long: `Inspect OPA bundle(s).
+		Short: `Inspect ` + brand + ` bundle(s)`,
+		Long: `Inspect ` + brand + ` bundle(s).
 
-The 'inspect' command provides a summary of the contents in OPA bundle(s). Bundles are
-gzipped tarballs containing policies and data. The 'inspect' command reads bundle(s) and lists
+The 'inspect' command provides a summary of the contents in ` + brand + ` bundle(s) or a single Rego file.
+Bundles are gzipped tarballs containing policies and data. The 'inspect' command reads bundle(s) and lists
 the following:
 
 * packages that are contributed by .rego files
@@ -74,10 +84,12 @@ Example:
 
     $ ls
     bundle.tar.gz
-    $ opa inspect bundle.tar.gz
+    $ ` + executable + ` inspect bundle.tar.gz
 
-You can provide exactly one OPA bundle or path to the 'inspect' command on the command-line. If you provide a path
-referring to a directory, the 'inspect' command will load that path as a bundle and summarize its structure and contents.
+You can provide exactly one ` + brand + ` bundle, to a bundle directory, or direct path to a Rego file to the 'inspect'
+command on the command-line. If you provide a path referring to a directory, the 'inspect' command will load that path as
+a bundle and summarize its structure and contents.  If you provide a path referring to a Rego file, the 'inspect' command
+will load that file and summarize its structure and contents.
 `,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if err := validateInspectParams(&params, args); err != nil {
@@ -85,18 +97,23 @@ referring to a directory, the 'inspect' command will load that path as a bundle 
 			}
 			return env.CmdFlags.CheckEnvironmentVariables(cmd)
 		},
-		Run: func(_ *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cmd.SilenceErrors = true
+			cmd.SilenceUsage = true
+
 			if err := doInspect(params, args[0], os.Stdout); err != nil {
 				fmt.Fprintln(os.Stderr, "error:", err)
-				os.Exit(1)
+				return err
 			}
+			return nil
 		},
 	}
 
 	addOutputFormat(inspectCommand.Flags(), params.outputFormat)
 	addListAnnotations(inspectCommand.Flags(), &params.listAnnotations)
+	addV0CompatibleFlag(inspectCommand.Flags(), &params.v0Compatible, false)
 	addV1CompatibleFlag(inspectCommand.Flags(), &params.v1Compatible, false)
-	RootCommand.AddCommand(inspectCommand)
+	root.AddCommand(inspectCommand)
 }
 
 func doInspect(params inspectCommandParams, path string, out io.Writer) error {
@@ -106,11 +123,21 @@ func doInspect(params inspectCommandParams, path string, out io.Writer) error {
 	}
 
 	switch params.outputFormat.String() {
-	case evalJSONOutput:
+	case formats.JSON:
+		astJson.SetOptions(astJson.Options{
+			MarshalOptions: astJson.MarshalOptions{
+				IncludeLocation: astJson.NodeToggle{
+					// Annotation location data is only included if includeAnnotations is set
+					AnnotationsRef: params.listAnnotations,
+				},
+			},
+		})
+		defer astJson.SetOptions(astJson.Defaults())
+
 		return pr.JSON(out, info)
 
 	default:
-		if info.Manifest.Revision != "" || len(*info.Manifest.Roots) != 0 || len(info.Manifest.Metadata) != 0 {
+		if hasManifest(info) {
 			if err := populateManifest(out, info.Manifest); err != nil {
 				return err
 			}
@@ -132,21 +159,33 @@ func doInspect(params inspectCommandParams, path string, out io.Writer) error {
 	}
 }
 
+func hasManifest(info *ib.Info) bool {
+	if info.Manifest == nil {
+		return false
+	}
+	return info.Manifest.Revision != "" || len(*info.Manifest.Roots) != 0 || len(info.Manifest.Metadata) != 0 ||
+		info.Manifest.RegoVersion != nil
+}
+
 func validateInspectParams(p *inspectCommandParams, args []string) error {
 	if len(args) != 1 {
-		return fmt.Errorf("specify exactly one OPA bundle or path")
+		return errors.New("specify exactly one OPA bundle or path")
 	}
 
 	of := p.outputFormat.String()
-	if of == evalJSONOutput || of == evalPrettyOutput {
+	if of == formats.JSON || of == formats.Pretty {
 		return nil
 	}
-	return fmt.Errorf("invalid output format for inspect command")
+	return errors.New("invalid output format for inspect command")
 }
 
-func populateManifest(out io.Writer, m bundle.Manifest) error {
+func populateManifest(out io.Writer, m *bundle.Manifest) error {
 	t := generateTableWithKeys(out, "field", "value")
 	var lines [][]string
+
+	if m.RegoVersion != nil {
+		lines = append(lines, []string{"Rego Version", truncateTableStr(strconv.Itoa(*m.RegoVersion))})
+	}
 
 	if m.Revision != "" {
 		lines = append(lines, []string{"Revision", truncateTableStr(m.Revision)})
@@ -174,10 +213,14 @@ func populateManifest(out io.Writer, m bundle.Manifest) error {
 		lines = append(lines, []string{"Metadata", truncateTableStr(string(metadata))})
 	}
 
-	t.AppendBulk(lines)
-	if t.NumLines() > 0 {
+	if len(lines) > 0 {
+		if err := t.Bulk(lines); err != nil {
+			return err
+		}
 		fmt.Fprintln(out, "MANIFEST:")
-		t.Render()
+		if err := t.Render(); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -186,26 +229,27 @@ func populateManifest(out io.Writer, m bundle.Manifest) error {
 func populateNamespaces(out io.Writer, n map[string][]string) error {
 	t := generateTableWithKeys(out, "namespace", "file")
 	// only auto-merge the namespace column
-	t.SetAutoMergeCells(false)
-	t.SetAutoMergeCellsByColumnIndex([]int{0})
+	t = t.Options(tablewriter.WithConfig(tablewriter.NewConfigBuilder().
+		ForColumn(0).Build().Row().Formatting().WithMergeMode(tw.MergeVertical). // vertical merge column 0.
+		Build().Build().Build(),                                                 //  build the table config.
+	))
+
 	var lines [][]string
 
-	keys := make([]string, 0, len(n))
-	for k := range n {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-
-	for _, k := range keys {
+	for _, k := range util.KeysSorted(n) {
 		for _, file := range n[k] {
 			lines = append(lines, []string{k, truncateFileName(file)})
 		}
 	}
 
-	t.AppendBulk(lines)
-	if t.NumLines() > 0 {
+	if err := t.Bulk(lines); err != nil {
+		return err
+	}
+	if len(lines) > 0 {
 		fmt.Fprintln(out, "NAMESPACES:")
-		t.Render()
+		if err := t.Render(); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -227,7 +271,7 @@ func populateAnnotations(out io.Writer, refs []*ast.AnnotationsRef) error {
 				fmt.Fprintln(out, "Package: ", dropDataPrefix(p.Path))
 			}
 			if r := ref.GetRule(); r != nil {
-				fmt.Fprintln(out, "Rule:    ", r.Head.Name)
+				fmt.Fprintln(out, "Rule:    ", r.Head.Ref().String())
 			}
 			if loc := ref.Location; loc != nil {
 				fmt.Fprintln(out, "Location:", loc.String())
@@ -350,30 +394,35 @@ func printTitle(out io.Writer, ref *ast.AnnotationsRef) {
 		title = dropDataPrefix(ref.Path).String()
 	}
 
-	fmt.Fprintf(out, "%s\n", title)
-
-	var underline []byte
-	for i := 0; i < len(title) && i < pageWidth; i++ {
-		underline = append(underline, '=')
-	}
-	fmt.Fprintln(out, string(underline))
+	fmt.Fprintf(out, "%s\n%s\n", title, strings.Repeat("=", min(len(title), pageWidth)))
 }
 
 func generateTableWithKeys(writer io.Writer, keys ...string) *tablewriter.Table {
-	table := tablewriter.NewWriter(writer)
-	aligns := []int{}
-	hdrs := make([]string, 0, len(keys))
-	for _, k := range keys {
-		hdrs = append(hdrs, strings.Title(k)) //nolint:staticcheck // SA1019, no unicode
-		aligns = append(aligns, tablewriter.ALIGN_LEFT)
+	hdrs := make([]any, len(keys))
+	for i, k := range keys {
+		hdrs[i] = pr.TitleCase.String(k)
 	}
-	table.SetHeader(hdrs)
-	table.SetAlignment(tablewriter.ALIGN_CENTER)
-	table.SetAutoMergeCells(true)
-	table.SetColumnAlignment(aligns)
-	table.SetRowLine(false)
-	table.SetAutoWrapText(false)
-	return table
+
+	t := tablewriter.NewTable(
+		writer,
+		tablewriter.WithConfig(tablewriter.Config{
+			Header: tw.CellConfig{
+				Formatting: tw.CellFormatting{AutoFormat: tw.On},
+				Alignment:  tw.CellAlignment{Global: tw.AlignCenter},
+			},
+			Row: tw.CellConfig{
+				Alignment: tw.CellAlignment{Global: tw.AlignLeft},
+				Formatting: tw.CellFormatting{
+					AutoWrap:  tw.WrapNone,
+					MergeMode: tw.MergeBoth,
+				},
+			},
+		}),
+		tablewriter.WithTrimLine(tw.Off),
+	)
+
+	t.Header(hdrs...)
+	return t
 }
 
 func truncateTableStr(s string) string {

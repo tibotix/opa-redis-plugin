@@ -3,14 +3,15 @@ VERSION := $(VERSION_OPA)-redis$(shell ./scripts/get-plugin-rev.sh)
 
 CGO_ENABLED ?= 1
 WASM_ENABLED ?= 1
+GOFLAGS := $(if $(shell go env GOFLAGS),$(shell go env GOFLAGS),-mod=vendor)
 
-GO := CGO_ENABLED=$(CGO_ENABLED) GOFLAGS=-mod=vendor GOPROXY=off go
+GO := CGO_ENABLED=$(CGO_ENABLED) GOFLAGS=$(GOFLAGS) GOPROXY=off go
 GOVERSION := $(shell ./scripts/get-go-version.sh)
 GOARCH := $(shell go env GOARCH)
 GOOS := $(shell go env GOOS)
 DISABLE_CGO := CGO_ENABLED=0
 
-BIN := opa_redis_$(GOOS)_$(GOARCH)
+BIN := opa_redis_plugin
 
 GO_TAGS := -tags=
 ifeq ($(WASM_ENABLED),1)

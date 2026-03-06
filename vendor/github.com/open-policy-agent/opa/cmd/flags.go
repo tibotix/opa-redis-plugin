@@ -9,8 +9,18 @@ import (
 
 	"github.com/spf13/pflag"
 
-	"github.com/open-policy-agent/opa/ast"
-	"github.com/open-policy-agent/opa/util"
+	"github.com/open-policy-agent/opa/v1/ast"
+	"github.com/open-policy-agent/opa/v1/util"
+)
+
+const (
+	explainModeOff   = "off"
+	explainModeFull  = "full"
+	explainModeNotes = "notes"
+	explainModeFails = "fails"
+	explainModeDebug = "debug"
+
+	stringType = "string"
 )
 
 func addConfigFileFlag(fs *pflag.FlagSet, file *string) {
@@ -78,7 +88,7 @@ func addBenchmemFlag(fs *pflag.FlagSet, benchMem *bool, value bool) {
 }
 
 func addCountFlag(fs *pflag.FlagSet, count *int, cmdType string) {
-	fs.IntVar(count, "count", 1, fmt.Sprintf("number of times to repeat each %s", cmdType))
+	fs.IntVar(count, "count", 1, "number of times to repeat each "+cmdType)
 }
 
 func addMaxErrorsFlag(fs *pflag.FlagSet, errLimit *int) {
@@ -102,7 +112,7 @@ func addSigningKeyFlag(fs *pflag.FlagSet, key *string) {
 }
 
 func addSigningPluginFlag(fs *pflag.FlagSet, plugin *string) {
-	fs.StringVarP(plugin, "signing-plugin", "", "", "name of the plugin to use for signing/verification (see https://www.openpolicyagent.org/docs/latest/management-bundles/#signature-plugin")
+	fs.StringVarP(plugin, "signing-plugin", "", "", "name of the plugin to use for signing/verification (see https://www.openpolicyagent.org/docs/latest/management-bundles/#signature-plugin)")
 }
 
 func addVerificationKeyFlag(fs *pflag.FlagSet, key *string) {
@@ -153,25 +163,30 @@ func addStrictFlag(fs *pflag.FlagSet, strict *bool, value bool) {
 	fs.BoolVarP(strict, "strict", "S", value, "enable compiler strict mode")
 }
 
-func addRegoV1FlagWithDescription(fs *pflag.FlagSet, regoV1 *bool, value bool, description string) {
+func addRegoV0V1FlagWithDescription(fs *pflag.FlagSet, regoV1 *bool, value bool, description string) {
+	fs.BoolVar(regoV1, "v0-v1", value, description)
+
+	// For backwards compatibility
 	fs.BoolVar(regoV1, "rego-v1", value, description)
+	_ = fs.MarkHidden("rego-v1")
+}
+
+func addV0CompatibleFlag(fs *pflag.FlagSet, v1Compatible *bool, value bool) {
+	fs.BoolVar(v1Compatible, "v0-compatible", value, "opt-in to OPA features and behaviors prior to the OPA v1.0 release")
 }
 
 func addV1CompatibleFlag(fs *pflag.FlagSet, v1Compatible *bool, value bool) {
-	fs.BoolVar(v1Compatible, "v1-compatible", value, "opt-in to OPA features and behaviors that will be enabled by default in a future OPA v1.0 release")
+	fs.BoolVar(v1Compatible, "v1-compatible", value, "opt-in to OPA features and behaviors that are enabled by default in OPA v1.0")
+	_ = fs.MarkHidden("v1-compatible")
 }
 
-func addE2EFlag(fs *pflag.FlagSet, e2e *bool, value bool) {
-	fs.BoolVar(e2e, "e2e", value, "run benchmarks against a running OPA server")
+func addReadAstValuesFromStoreFlag(fs *pflag.FlagSet, readAstValuesFromStore *bool, value bool) {
+	fs.BoolVar(readAstValuesFromStore, "optimize-store-for-read-speed", value, "optimize default in-memory store for read speed. Has possible negative impact on memory footprint and write speed. See https://www.openpolicyagent.org/docs/latest/policy-performance/#storage-optimization for more details.")
 }
 
-const (
-	explainModeOff   = "off"
-	explainModeFull  = "full"
-	explainModeNotes = "notes"
-	explainModeFails = "fails"
-	explainModeDebug = "debug"
-)
+func addE2EFlag(fs *pflag.FlagSet, e2e *bool, value bool, brand string) {
+	fs.BoolVar(e2e, "e2e", value, "run benchmarks against a running "+brand+" server")
+}
 
 func newExplainFlag(modes []string) *util.EnumFlag {
 	return util.NewEnumFlag(modes[0], modes)
@@ -186,7 +201,7 @@ type capabilitiesFlag struct {
 	pathOrVersion string
 }
 
-func newcapabilitiesFlag() *capabilitiesFlag {
+func newCapabilitiesFlag() *capabilitiesFlag {
 	return &capabilitiesFlag{
 		// cannot call ast.CapabilitiesForThisVersion here because
 		// custom builtins cannot be registered by this point in execution
@@ -194,7 +209,7 @@ func newcapabilitiesFlag() *capabilitiesFlag {
 	}
 }
 
-func (f *capabilitiesFlag) Type() string {
+func (*capabilitiesFlag) Type() string {
 	return stringType
 }
 
@@ -215,7 +230,6 @@ func (f *capabilitiesFlag) Set(s string) error {
 		return fmt.Errorf("no such file or capabilities version found: %v", s)
 	}
 	return nil
-
 }
 
 type stringptrFlag struct {
@@ -223,7 +237,7 @@ type stringptrFlag struct {
 	isSet bool
 }
 
-func (f *stringptrFlag) Type() string {
+func (*stringptrFlag) Type() string {
 	return stringType
 }
 

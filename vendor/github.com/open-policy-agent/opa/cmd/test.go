@@ -6,37 +6,36 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"os/signal"
+	goRuntime "runtime"
 	"strings"
 	"syscall"
+	"testing"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/open-policy-agent/opa/internal/pathwatcher"
 	initload "github.com/open-policy-agent/opa/internal/runtime/init"
-	"github.com/open-policy-agent/opa/loader"
 	"github.com/spf13/cobra"
 
-	"github.com/open-policy-agent/opa/ast"
-	"github.com/open-policy-agent/opa/bundle"
+	"github.com/open-policy-agent/opa/cmd/formats"
 	"github.com/open-policy-agent/opa/cmd/internal/env"
-	"github.com/open-policy-agent/opa/compile"
-	"github.com/open-policy-agent/opa/cover"
 	"github.com/open-policy-agent/opa/internal/runtime"
-	"github.com/open-policy-agent/opa/storage"
-	"github.com/open-policy-agent/opa/storage/inmem"
-	"github.com/open-policy-agent/opa/tester"
-	"github.com/open-policy-agent/opa/topdown"
-	"github.com/open-policy-agent/opa/topdown/lineage"
-	"github.com/open-policy-agent/opa/util"
-)
-
-const (
-	testPrettyOutput = "pretty"
-	testJSONOutput   = "json"
+	"github.com/open-policy-agent/opa/v1/ast"
+	"github.com/open-policy-agent/opa/v1/bundle"
+	"github.com/open-policy-agent/opa/v1/compile"
+	"github.com/open-policy-agent/opa/v1/cover"
+	"github.com/open-policy-agent/opa/v1/loader"
+	"github.com/open-policy-agent/opa/v1/storage"
+	"github.com/open-policy-agent/opa/v1/storage/inmem"
+	"github.com/open-policy-agent/opa/v1/tester"
+	"github.com/open-policy-agent/opa/v1/topdown"
+	"github.com/open-policy-agent/opa/v1/topdown/lineage"
+	"github.com/open-policy-agent/opa/v1/util"
 )
 
 type testCommandParams struct {
@@ -61,89 +60,97 @@ type testCommandParams struct {
 	stopChan     chan os.Signal
 	output       io.Writer
 	errOutput    io.Writer
+	v0Compatible bool
 	v1Compatible bool
+	varValues    bool
+	parallel     int
+	failOnEmpty  bool
 }
 
 func newTestCommandParams() testCommandParams {
 	return testCommandParams{
-		outputFormat: util.NewEnumFlag(testPrettyOutput, []string{testPrettyOutput, testJSONOutput, benchmarkGoBenchOutput}),
+		outputFormat: formats.Flag(formats.Pretty, formats.JSON, formats.GoBench),
 		explain:      newExplainFlag([]string{explainModeFails, explainModeFull, explainModeNotes, explainModeDebug}),
 		target:       util.NewEnumFlag(compile.TargetRego, []string{compile.TargetRego, compile.TargetWasm}),
-		capabilities: newcapabilitiesFlag(),
+		capabilities: newCapabilitiesFlag(),
 		schema:       &schemaFlags{},
 		output:       os.Stdout,
 		errOutput:    os.Stderr,
 		stopChan:     make(chan os.Signal, 1),
+		parallel:     goRuntime.NumCPU(),
 	}
 }
 
 func (p *testCommandParams) RegoVersion() ast.RegoVersion {
+	// v0 takes precedence over v1
+	if p.v0Compatible {
+		return ast.RegoV0
+	}
 	if p.v1Compatible {
 		return ast.RegoV1
 	}
-	return ast.RegoV0
+	return ast.DefaultRegoVersion
 }
 
-func opaTest(args []string, testParams testCommandParams) (int, error) {
+func opaTest(args []string, testParams testCommandParams) int {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	var err error
-
-	if testParams.outputFormat.String() == benchmarkGoBenchOutput && !testParams.benchmark {
+	if testParams.outputFormat.String() == formats.GoBench && !testParams.benchmark {
 		errMsg := "cannot use output format %s without running benchmarks (--bench)\n"
-		fmt.Fprintf(testParams.errOutput, errMsg, benchmarkGoBenchOutput)
-		return 0, fmt.Errorf(errMsg, benchmarkGoBenchOutput)
+		_, _ = fmt.Fprintf(testParams.errOutput, errMsg, formats.GoBench)
+		return 0
 	}
 
 	if !isThresholdValid(testParams.threshold) {
-		fmt.Fprintln(testParams.errOutput, "Code coverage threshold must be between 0 and 100")
-		return 1, err
-	}
-
-	filter := loaderFilter{
-		Ignore: testParams.ignore,
+		_, _ = fmt.Fprintln(testParams.errOutput, "Code coverage threshold must be between 0 and 100")
+		return 1
 	}
 
 	var modules map[string]*ast.Module
 	var bundles map[string]*bundle.Bundle
 	var store storage.Store
 
-	if testParams.bundleMode {
-		bundles, err = tester.LoadBundlesWithRegoVersion(args, filter.Apply, testParams.RegoVersion())
-		store = inmem.NewWithOpts(inmem.OptRoundTripOnWrite(false))
-	} else {
-		modules, store, err = tester.LoadWithRegoVersion(args, filter.Apply, testParams.RegoVersion())
+	popts := ast.ParserOptions{
+		RegoVersion:       testParams.RegoVersion(),
+		Capabilities:      testParams.capabilities.C,
+		ProcessAnnotation: true,
 	}
 
+	var err error
+	if testParams.bundleMode {
+		bundles, store, err = tester.LoadBundlesWithParserOptions(args, ignored(testParams.ignore).Apply, popts)
+	} else {
+		modules, store, err = tester.LoadWithParserOptions(args, ignored(testParams.ignore).Apply, popts)
+	}
 	if err != nil {
-		fmt.Fprintln(testParams.errOutput, err)
-		return 1, err
+		_, _ = fmt.Fprintln(testParams.errOutput, err)
+		return 1
 	}
 
 	txn, err := store.NewTransaction(ctx, storage.WriteParams)
 	if err != nil {
-		fmt.Fprintln(testParams.errOutput, err)
-		return 1, err
+		_, _ = fmt.Fprintln(testParams.errOutput, err)
+		return 1
 	}
 
 	runner, reporter, err := compileAndSetupTests(ctx, testParams, store, txn, modules, bundles)
 	if err != nil {
 		store.Abort(ctx, txn)
-		fmt.Fprintln(testParams.errOutput, err)
-		return 1, err
+		_, _ = fmt.Fprintln(testParams.errOutput, err)
+		return 1
 	}
 
 	success := true
-	for i := 0; i < testParams.count; i++ {
-		exitCode, err := runTests(ctx, txn, runner, reporter, testParams)
+	for range testParams.count {
+		exitCode, _ := runTests(ctx, txn, runner, reporter, testParams)
 		if exitCode != 0 {
 			success = false
 			store.Abort(ctx, txn)
 			if testParams.watch {
 				break
 			}
-			return exitCode, err
+			return exitCode
 		}
 	}
 
@@ -152,23 +159,38 @@ func opaTest(args []string, testParams testCommandParams) (int, error) {
 	}
 
 	if !testParams.watch {
-		return 0, nil
+		return 0
 	}
 
 	done := make(chan struct{})
-	go startWatcher(ctx, testParams, args, inmem.NewWithOpts(inmem.OptRoundTripOnWrite(false)), done)
+	go func() {
+		var store storage.Store
+
+		if bundle.BundleExtStore != nil {
+			store = bundle.BundleExtStore()
+		} else {
+			store = inmem.NewWithOpts(inmem.OptRoundTripOnWrite(false))
+		}
+
+		startWatcher(ctx, testParams, args, store, done)
+	}()
 
 	signal.Notify(testParams.stopChan, syscall.SIGINT, syscall.SIGTERM)
 
 	<-testParams.stopChan
 	done <- struct{}{}
-	return 0, nil
+	return 0
 }
 
 func runTests(ctx context.Context, txn storage.Transaction, runner *tester.Runner, reporter tester.Reporter, testParams testCommandParams) (int, error) {
 	var err error
 	var ch chan *tester.Result
 	if testParams.benchmark {
+		// Initialize testing package for benchmarking. This is needed to set default values for some flags that may
+		// otherwise be dereferenced on some code paths causing panics, as reported in:
+		// https://github.com/open-policy-agent/opa/issues/7205
+		testing.Init()
+
 		benchOpts := tester.BenchmarkOptions{
 			ReportAllocations: testParams.benchMem,
 		}
@@ -178,16 +200,18 @@ func runTests(ctx context.Context, txn storage.Transaction, runner *tester.Runne
 	}
 
 	if err != nil {
-		fmt.Fprintln(testParams.errOutput, err)
+		_, _ = fmt.Fprintln(testParams.errOutput, err)
 		return 1, err
 	}
 
+	testRan := false
 	exitCode := 0
 	dup := make(chan *tester.Result)
 
 	go func() {
 		defer close(dup)
 		for tr := range ch {
+			testRan = true
 			if !tr.Pass() {
 				if !(tr.Skip && testParams.skipExitZero) {
 					exitCode = 2
@@ -199,12 +223,18 @@ func runTests(ctx context.Context, txn storage.Transaction, runner *tester.Runne
 	}()
 
 	if err := reporter.Report(dup); err != nil {
-		fmt.Fprintln(testParams.errOutput, err)
+		_, _ = fmt.Fprintln(testParams.errOutput, err)
 		if !testParams.benchmark {
-			if _, ok := err.(*cover.CoverageThresholdError); ok {
+			var coverageThresholdError *cover.CoverageThresholdError
+			if errors.As(err, &coverageThresholdError) {
 				return 2, err
 			}
 		}
+		return 1, err
+	}
+
+	if !testRan && testParams.failOnEmpty {
+		_, _ = fmt.Fprintln(testParams.errOutput, "no tests were run")
 		return 1, err
 	}
 
@@ -244,7 +274,7 @@ func isThresholdValid(t float64) bool {
 func startWatcher(ctx context.Context, testParams testCommandParams, paths []string, store storage.Store, done chan struct{}) {
 	watcher, err := pathwatcher.CreatePathWatcher(paths)
 	if err != nil {
-		fmt.Fprintln(testParams.errOutput, "Error creating path watcher: ", err)
+		_, _ = fmt.Fprintln(testParams.errOutput, "Error creating path watcher: ", err)
 		os.Exit(1)
 	}
 	readWatcher(ctx, testParams, watcher, paths, store, done)
@@ -252,9 +282,8 @@ func startWatcher(ctx context.Context, testParams testCommandParams, paths []str
 
 func readWatcher(ctx context.Context, testParams testCommandParams, watcher *fsnotify.Watcher, paths []string, store storage.Store, done chan struct{}) {
 	for {
-
-		fmt.Fprintln(testParams.output, strings.Repeat("*", 80))
-		fmt.Fprintln(testParams.output, "Watching for changes ...")
+		_, _ = fmt.Fprintln(testParams.output, strings.Repeat("*", 80))
+		_, _ = fmt.Fprintln(testParams.output, "Watching for changes ...")
 		select {
 		case evt := <-watcher.Events:
 			removalMask := fsnotify.Remove | fsnotify.Rename
@@ -267,23 +296,21 @@ func readWatcher(ctx context.Context, testParams testCommandParams, watcher *fsn
 				processWatcherUpdate(ctx, testParams, paths, removed, store)
 			}
 		case <-done:
-			watcher.Close()
+			_ = watcher.Close()
 			return
 		}
 	}
 }
 
 func processWatcherUpdate(ctx context.Context, testParams testCommandParams, paths []string, removed string, store storage.Store) {
-	filter := loaderFilter{
-		Ignore: testParams.ignore,
-	}
+	filter := ignored(testParams.ignore).Apply
 
 	var loadResult *initload.LoadPathsResult
 
-	err := pathwatcher.ProcessWatcherUpdate(ctx, paths, removed, store, filter.Apply, testParams.bundleMode,
+	err := pathwatcher.ProcessWatcherUpdateForRegoVersion(ctx, testParams.RegoVersion(), paths, removed, store, filter, testParams.bundleMode, false,
 		func(ctx context.Context, txn storage.Transaction, loaded *initload.LoadPathsResult) error {
 			if len(loaded.Files.Documents) > 0 || removed != "" {
-				if err := store.Write(ctx, txn, storage.AddOp, storage.Path{}, loaded.Files.Documents); err != nil {
+				if err := store.Write(ctx, txn, storage.AddOp, storage.RootPath, loaded.Files.Documents); err != nil {
 					return fmt.Errorf("storage error: %w", err)
 				}
 			}
@@ -294,7 +321,7 @@ func processWatcherUpdate(ctx context.Context, testParams testCommandParams, pat
 		})
 
 	if err != nil {
-		fmt.Fprintln(testParams.output, err)
+		_, _ = fmt.Fprintln(testParams.output, err)
 		return
 	}
 
@@ -309,7 +336,7 @@ func processWatcherUpdate(ctx context.Context, testParams testCommandParams, pat
 			return err
 		}
 
-		for i := 0; i < testParams.count; i++ {
+		for range testParams.count {
 			exitCode, err := runTests(ctx, txn, runner, reporter, testParams)
 			if exitCode != 0 {
 				return err
@@ -319,7 +346,7 @@ func processWatcherUpdate(ctx context.Context, testParams testCommandParams, pat
 	})
 
 	if err != nil {
-		fmt.Fprintln(testParams.output, err)
+		_, _ = fmt.Fprintln(testParams.output, err)
 	}
 }
 
@@ -348,7 +375,8 @@ func compileAndSetupTests(ctx context.Context, testParams testCommandParams, sto
 		WithEnablePrintStatements(!testParams.benchmark).
 		WithCapabilities(capabilities).
 		WithSchemas(schemaSet).
-		WithUseTypeCheckAnnotations(true)
+		WithUseTypeCheckAnnotations(true).
+		WithRewriteTestRules(testParams.varValues)
 
 	info, err := runtime.Term(runtime.Params{})
 	if err != nil {
@@ -365,8 +393,8 @@ func compileAndSetupTests(ctx context.Context, testParams testCommandParams, sto
 	if testParams.coverage {
 		if testParams.benchmark {
 			errMsg := "coverage reporting is not supported when benchmarking tests"
-			fmt.Fprintln(testParams.errOutput, errMsg)
-			return nil, nil, fmt.Errorf(errMsg)
+			_, _ = fmt.Fprintln(testParams.errOutput, errMsg)
+			return nil, nil, errors.New(errMsg)
 		}
 		cov = cover.New()
 		coverTracer = cov
@@ -384,14 +412,18 @@ func compileAndSetupTests(ctx context.Context, testParams testCommandParams, sto
 		SetCompiler(compiler).
 		SetStore(store).
 		CapturePrintOutput(true).
-		EnableTracing(testParams.verbose).
+		EnableTracing(testParams.verbose || testParams.varValues).
 		SetCoverageQueryTracer(coverTracer).
 		SetRuntime(info).
 		SetModules(modules).
 		SetBundles(bundles).
 		SetTimeout(timeout).
 		Filter(testParams.runRegex).
-		Target(testParams.target.String())
+		SetParallel(testParams.parallel)
+
+	if testParams.target.IsSet() {
+		runner = runner.Target(testParams.target.String())
+	}
 
 	var reporter tester.Reporter
 
@@ -399,11 +431,11 @@ func compileAndSetupTests(ctx context.Context, testParams testCommandParams, sto
 
 	if !testParams.coverage {
 		switch testParams.outputFormat.String() {
-		case testJSONOutput:
+		case formats.JSON:
 			reporter = tester.JSONReporter{
 				Output: testParams.output,
 			}
-		case benchmarkGoBenchOutput:
+		case formats.GoBench:
 			goBench = true
 			fallthrough
 		default:
@@ -413,6 +445,8 @@ func compileAndSetupTests(ctx context.Context, testParams testCommandParams, sto
 				BenchmarkResults:         testParams.benchmark,
 				BenchMarkShowAllocations: testParams.benchMem,
 				BenchMarkGoBenchFormat:   goBench,
+				FailureLine:              testParams.varValues,
+				LocalVars:                testParams.varValues,
 			}
 		}
 	} else {
@@ -428,14 +462,16 @@ func compileAndSetupTests(ctx context.Context, testParams testCommandParams, sto
 	return runner, reporter, nil
 }
 
-func init() {
+func initTest(root *cobra.Command, brand string) {
+	executable := root.Name()
+
 	var testParams = newTestCommandParams()
 
 	var testCommand = &cobra.Command{
 		Use:   "test <path> [path [...]]",
 		Short: "Execute Rego test cases",
 		Long: `Execute Rego test cases.
-	
+
 The 'test' command takes a file or directory path as input and executes all
 test cases discovered in matching files. Test cases are rules whose names have the prefix "test_".
 
@@ -451,8 +487,6 @@ Example policy (example/authz.rego):
 
 	package authz
 
-	import rego.v1
-
 	allow if {
 		input.path == ["users"]
 		input.method == "POST"
@@ -466,8 +500,6 @@ Example policy (example/authz.rego):
 Example test (example/authz_test.rego):
 
 	package authz_test
-
-	import rego.v1
 
 	import data.authz.allow
 
@@ -493,23 +525,23 @@ Example test (example/authz_test.rego):
 
 Example test run:
 
-	$ opa test ./example/
+	$ ` + executable + ` test ./example/
 
 If used with the '--bench' option then tests will be benchmarked.
 
 Example benchmark run:
 
-	$ opa test --bench ./example/
+	$  ` + executable + ` test --bench ./example/
 
 The optional "gobench" output format conforms to the Go Benchmark Data Format.
 
-The --watch flag can be used to monitor policy and data file-system changes. When a change is detected, OPA reloads
+The --watch flag can be used to monitor policy and data file-system changes. When a change is detected, ` + brand + ` reloads
 the policy and data and then re-runs the tests. Watching individual files (rather than directories) is generally not
 recommended as some updates might cause them to be dropped by OPA.
 `,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {
-				return fmt.Errorf("specify at least one file")
+				return errors.New("specify at least one file")
 			}
 
 			// If an --explain flag was set, turn on verbose output
@@ -520,9 +552,15 @@ recommended as some updates might cause them to be dropped by OPA.
 			return env.CmdFlags.CheckEnvironmentVariables(cmd)
 		},
 
-		Run: func(cmd *cobra.Command, args []string) {
-			exitCode, _ := opaTest(args, testParams)
-			os.Exit(exitCode)
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cmd.SilenceErrors = true
+			cmd.SilenceUsage = true
+
+			exit := opaTest(args, testParams)
+			if exit != 0 {
+				return newExitError(exit)
+			}
+			return nil
 		},
 	}
 
@@ -530,14 +568,17 @@ recommended as some updates might cause them to be dropped by OPA.
 	testCommand.Flags().BoolVarP(&testParams.skipExitZero, "exit-zero-on-skipped", "z", false, "skipped tests return status 0")
 	testCommand.Flags().BoolVarP(&testParams.verbose, "verbose", "v", false, "set verbose reporting mode")
 	testCommand.Flags().DurationVar(&testParams.timeout, "timeout", 0, "set test timeout (default 5s, 30s when benchmarking)")
-	testCommand.Flags().VarP(testParams.outputFormat, "format", "f", "set output format")
 	testCommand.Flags().BoolVarP(&testParams.coverage, "coverage", "c", false, "report coverage (overrides debug tracing)")
 	testCommand.Flags().Float64VarP(&testParams.threshold, "threshold", "", 0, "set coverage threshold and exit with non-zero status if coverage is less than threshold %")
 	testCommand.Flags().BoolVar(&testParams.benchmark, "bench", false, "benchmark the unit tests")
-	testCommand.Flags().StringVarP(&testParams.runRegex, "run", "r", "", "run only test cases matching the regular expression.")
+	testCommand.Flags().StringVarP(&testParams.runRegex, "run", "r", "", "run only test cases matching the regular expression")
 	testCommand.Flags().BoolVarP(&testParams.watch, "watch", "w", false, "watch command line files for changes")
+	testCommand.Flags().BoolVar(&testParams.varValues, "var-values", false, "show local variable values in test output")
+	testCommand.Flags().IntVarP(&testParams.parallel, "parallel", "p", goRuntime.NumCPU(), "the number of tests that can run in parallel, defaulting to the number of CPUs (explicitly set with 0). Benchmarks are always run sequentially.")
+	testCommand.Flags().BoolVar(&testParams.failOnEmpty, "fail-on-empty", false, "Whether to fail the test when no test was run")
 
 	// Shared flags
+	addOutputFormat(testCommand.Flags(), testParams.outputFormat)
 	addBundleModeFlag(testCommand.Flags(), &testParams.bundleMode, false)
 	addBenchmemFlag(testCommand.Flags(), &testParams.benchMem, true)
 	addCountFlag(testCommand.Flags(), &testParams.count, "test")
@@ -547,7 +588,8 @@ recommended as some updates might cause them to be dropped by OPA.
 	addTargetFlag(testCommand.Flags(), testParams.target)
 	addCapabilitiesFlag(testCommand.Flags(), testParams.capabilities)
 	addSchemaFlags(testCommand.Flags(), testParams.schema)
+	addV0CompatibleFlag(testCommand.Flags(), &testParams.v0Compatible, false)
 	addV1CompatibleFlag(testCommand.Flags(), &testParams.v1Compatible, false)
 
-	RootCommand.AddCommand(testCommand)
+	root.AddCommand(testCommand)
 }

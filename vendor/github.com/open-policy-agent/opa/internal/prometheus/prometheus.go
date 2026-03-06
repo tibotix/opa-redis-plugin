@@ -14,14 +14,13 @@ import (
 	"runtime"
 	"strconv"
 
-	// Need to keep deprecated package for compatibility with prometheus/client_golang
-	"github.com/golang/protobuf/jsonpb" // nolint:staticcheck
-	"github.com/golang/protobuf/proto"  // nolint:staticcheck
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
-	"github.com/open-policy-agent/opa/metrics"
+	"github.com/open-policy-agent/opa/v1/metrics"
 )
 
 // Provider wraps a metrics.Metrics provider with a Prometheus registry that can
@@ -34,7 +33,7 @@ type Provider struct {
 	logger               loggerFunc
 }
 
-type loggerFunc func(attrs map[string]interface{}, f string, a ...interface{})
+type loggerFunc func(attrs map[string]any, f string, a ...any)
 
 // New returns a new Provider object.
 func New(inner metrics.Metrics, logger loggerFunc, httpRequestBuckets []float64) *Provider {
@@ -94,7 +93,7 @@ func (p *Provider) InstrumentHandler(handler http.Handler, label string) http.Ha
 }
 
 // Info returns attributes that describe the metric provider.
-func (p *Provider) Info() metrics.Info {
+func (*Provider) Info() metrics.Info {
 	return metrics.Info{
 		Name: "prometheus",
 	}
@@ -102,13 +101,13 @@ func (p *Provider) Info() metrics.Info {
 
 // All returns the union of the inner metric provider and the underlying
 // prometheus registry.
-func (p *Provider) All() map[string]interface{} {
+func (p *Provider) All() map[string]any {
 
 	all := p.inner.All()
 
 	families, err := p.registry.Gather()
 	if err != nil && p.logger != nil {
-		p.logger(map[string]interface{}{
+		p.logger(map[string]any{
 			"err": err,
 		}, "Failed to gather metrics from Prometheus registry.")
 	}
@@ -122,11 +121,8 @@ func (p *Provider) All() map[string]interface{} {
 
 type wrap struct{ family proto.Message }
 
-var marshaler = jsonpb.Marshaler{}
-
 func (w wrap) MarshalJSON() ([]byte, error) {
-	s, err := marshaler.MarshalToString(w.family)
-	return []byte(s), err
+	return protojson.Marshal(w.family)
 }
 
 // MarshalJSON returns a JSON representation of the unioned metrics.
@@ -190,6 +186,14 @@ func (c *captureStatusResponseWriter) WriteHeader(statusCode int) {
 	c.status = statusCode
 }
 
+var _ http.Flusher = (*captureStatusResponseWriter)(nil)
+
+func (c *captureStatusResponseWriter) Flush() {
+	if h, ok := c.ResponseWriter.(http.Flusher); ok {
+		h.Flush()
+	}
+}
+
 func prettyByteSize(b uint64) string {
 	bf := float64(b)
 	for _, unit := range []string{"", "K", "M", "G", "T", "P", "E", "Z"} {
@@ -208,10 +212,10 @@ func allocHandler(rsp http.ResponseWriter, req *http.Request) {
 	total := m.HeapInuse + m.StackInuse + m.MCacheInuse + m.MSpanInuse
 
 	var alloc string
-	if req.URL.Query().Get("pretty") == "true" {
+	if req.URL.RawQuery != "" && req.URL.Query().Get("pretty") == "true" {
 		alloc = prettyByteSize(total)
 	} else {
-		alloc = fmt.Sprintf("%d", total)
+		alloc = strconv.FormatUint(total, 10)
 	}
 
 	rsp.WriteHeader(200)

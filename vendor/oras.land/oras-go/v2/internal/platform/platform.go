@@ -38,6 +38,14 @@ import (
 // Note: Variant, OSVersion and OSFeatures are optional fields, will skip
 // the comparison if the target platform does not provide specific value.
 func Match(got *ocispec.Platform, want *ocispec.Platform) bool {
+	if got == nil && want == nil {
+		return true
+	}
+
+	if got == nil || want == nil {
+		return false
+	}
+
 	if got.Architecture != want.Architecture || got.OS != want.OS {
 		return false
 	}
@@ -119,7 +127,7 @@ func SelectManifest(ctx context.Context, src content.ReadOnlyStorage, root ocisp
 // fields in config blob.
 func getPlatformFromConfig(ctx context.Context, src content.ReadOnlyStorage, desc ocispec.Descriptor, targetConfigMediaType string) (*ocispec.Platform, error) {
 	if desc.MediaType != targetConfigMediaType {
-		return nil, fmt.Errorf("fail to recognize platform from unknown config %s: expect %s", desc.MediaType, targetConfigMediaType)
+		return nil, fmt.Errorf("fail to recognize platform from unknown config %s: expect %s: %w", desc.MediaType, targetConfigMediaType, errdef.ErrUnsupported)
 	}
 
 	rc, err := src.Fetch(ctx, desc)
